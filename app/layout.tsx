@@ -28,6 +28,9 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
+        {/* Google Site Verification */}
+        <meta name="google-site-verification" content={process.env.NEXT_PUBLIC_GOOGLE_VERIFICATION || "your-google-verification-code"} />
+        
         {/* Structured Data */}
         <StructuredData type="Organization" data={organizationStructuredData} />
         <StructuredData type="WebSite" data={websiteStructuredData} />

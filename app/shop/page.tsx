@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import OptimizedImage from '../components/OptimizedImage';
+import SimpleImage from '../components/SimpleImage';
 
 interface EtsyProduct {
   title: string;
@@ -142,11 +142,10 @@ const ShopPage = () => {
                 {/* Product Image */}
                 {product.image && (
                   <div className="relative h-64 w-full overflow-hidden">
-                    <OptimizedImage
+                    <SimpleImage
                       src={product.image}
                       alt={product.title}
-                      fill
-                      className="object-cover transition-transform duration-300 hover:scale-105"
+                      className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
                     />
                   </div>
                 )}

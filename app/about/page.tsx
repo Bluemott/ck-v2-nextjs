@@ -1,9 +1,9 @@
-import OptimizedImage from '../components/OptimizedImage';
+import SimpleImage from '../components/SimpleImage';
 
 const AboutPage = () => {
   return (
     <div className="min-h-screen w-full relative">
-      <OptimizedImage
+      <SimpleImage
         src="/images/CK_Web_Head_Under_Construction.jpg"
         alt="Cowboy Kimonos Under Construction"
         fill

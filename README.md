@@ -138,13 +138,13 @@ If the SSR build fails, switch to static export:
 4. **Image Loading Issues**:
    - **Problem**: Images loading slowly or not at all on deployed site
    - **Solution**: Added `unoptimized: true` to Next.js config for better Amplify compatibility
-   - **Enhanced**: Created `OptimizedImage` component with loading states and error handling
+   - **Enhanced**: Created `SimpleImage` component with loading states, error handling, and full AWS Amplify compatibility
    - **Fallbacks**: Added placeholder images and graceful error states
 
 5. **Image Optimization**:
    - All external image domains are properly configured
    - Static export version includes `unoptimized: true` for images
-   - Custom `OptimizedImage` component provides loading states and fallbacks
+   - Custom `SimpleImage` component provides loading states, fallbacks, and maximum compatibility with static hosting platforms like AWS Amplify
 
 #### Build Configuration Options
 
@@ -234,3 +234,31 @@ After deployment:
 ## License
 
 Private repository - All rights reserved.
+
+## Image Optimization & AWS Amplify Compatibility
+
+### Migration to SimpleImage Component
+
+This project has been fully migrated from Next.js Image components to a custom `SimpleImage` component for maximum AWS Amplify compatibility:
+
+- **Removed**: OptimizedImage component (Next.js Image wrapper)
+- **Added**: SimpleImage component using standard `<img>` tags
+- **Benefits**: 
+  - Full compatibility with AWS Amplify static hosting
+  - Robust loading states and error handling
+  - Graceful fallbacks to placeholder images
+  - No hydration issues in production
+
+### Optimized Images
+
+The `/public/images` directory contains optimized versions of images:
+- WebP format for better compression and performance
+- Properly sized images for web display
+- Fallback formats (PNG, JPG) for older browsers
+
+### Image Loading Strategy
+
+1. **Local Images**: Served directly from `/public/images`
+2. **External Images**: Loaded from WordPress, Etsy (with CORS handling)
+3. **Fallbacks**: Placeholder SVG for failed image loads
+4. **Loading States**: Visual feedback during image loading

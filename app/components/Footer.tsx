@@ -9,7 +9,7 @@ const Footer = () => {
         <div className="mb-6">
           <Link href="/">
             <Image 
-              src="/images/CK_Logo_Title-01.png" 
+              src="/images/CK_Logo_Title-01.webp" 
               alt="Cowboy Kimonos Logo" 
               width={200} 
               height={80}

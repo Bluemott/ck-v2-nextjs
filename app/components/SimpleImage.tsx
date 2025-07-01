@@ -1,9 +1,8 @@
 'use client';
 
-import { useState } from 'react';
-import Image from 'next/image';
+import { useState, useEffect } from 'react';
 
-interface OptimizedImageProps {
+interface SimpleImageProps {
   src: string;
   alt: string;
   width?: number;
@@ -11,12 +10,11 @@ interface OptimizedImageProps {
   fill?: boolean;
   className?: string;
   priority?: boolean;
-  sizes?: string;
   objectFit?: 'contain' | 'cover' | 'fill' | 'none' | 'scale-down';
   fallbackSrc?: string;
 }
 
-const OptimizedImage = ({
+const SimpleImage = ({
   src,
   alt,
   width,
@@ -24,10 +22,9 @@ const OptimizedImage = ({
   fill,
   className = '',
   priority = false,
-  sizes,
   objectFit = 'cover',
   fallbackSrc = '/images/placeholder.svg'
-}: OptimizedImageProps) => {
+}: SimpleImageProps) => {
   const [isLoading, setIsLoading] = useState(true);
   const [hasError, setHasError] = useState(false);
   const [imgSrc, setImgSrc] = useState(src);
@@ -44,27 +41,35 @@ const OptimizedImage = ({
     }
   };
 
-  const imageProps = {
-    src: imgSrc,
-    alt: alt || '',
-    onLoad: handleLoad,
-    onError: handleError,
-    className: `transition-opacity duration-300 ${
-      isLoading ? 'opacity-0' : 'opacity-100'
-    } ${className}`,
-    priority,
-    sizes,
-    style: fill ? { objectFit } : undefined,
-    ...(fill ? { fill: true } : { width, height }),
-  };
+  // Use effect to reset state when src changes
+  useEffect(() => {
+    setIsLoading(true);
+    setHasError(false);
+    setImgSrc(src);
+  }, [src]);
+
+  const imgStyle = fill 
+    ? { 
+        position: 'absolute' as const,
+        top: 0,
+        left: 0,
+        width: '100%',
+        height: '100%',
+        objectFit: objectFit
+      } 
+    : { 
+        width: width ? `${width}px` : '100%',
+        height: height ? `${height}px` : 'auto',
+        objectFit: objectFit
+      };
 
   return (
-    <div className="relative">
+    <div className={fill ? "relative w-full h-full" : "relative"}>
       {/* Loading placeholder */}
       {isLoading && (
         <div 
-          className={`absolute inset-0 bg-gray-200 animate-pulse flex items-center justify-center ${className}`}
-          style={fill ? {} : { width, height }}
+          className={`${fill ? 'absolute inset-0' : ''} bg-gray-200 animate-pulse flex items-center justify-center ${className}`}
+          style={fill ? {} : { width: width ? `${width}px` : '100%', height: height ? `${height}px` : '200px' }}
         >
           <svg
             className="w-8 h-8 text-gray-400"
@@ -82,14 +87,24 @@ const OptimizedImage = ({
         </div>
       )}
 
-      {/* Actual image */}
-      <Image {...imageProps} />
+      {/* Actual image using standard HTML img tag */}
+      <img
+        src={imgSrc}
+        alt={alt || ''}
+        onLoad={handleLoad}
+        onError={handleError}
+        className={`transition-opacity duration-300 ${
+          isLoading ? 'opacity-0' : 'opacity-100'
+        } ${className}`}
+        style={imgStyle}
+        loading={priority ? 'eager' : 'lazy'}
+      />
 
       {/* Error state */}
       {hasError && imgSrc === fallbackSrc && (
         <div 
-          className={`absolute inset-0 bg-gray-100 flex items-center justify-center ${className}`}
-          style={fill ? {} : { width, height }}
+          className={`${fill ? 'absolute inset-0' : ''} bg-gray-100 flex items-center justify-center ${className}`}
+          style={fill ? {} : { width: width ? `${width}px` : '100%', height: height ? `${height}px` : '200px' }}
         >
           <div className="text-center text-gray-500">
             <svg
@@ -113,4 +128,4 @@ const OptimizedImage = ({
   );
 };
 
-export default OptimizedImage;
+export default SimpleImage;

@@ -1,11 +1,11 @@
-import OptimizedImage from "./components/OptimizedImage";
+import SimpleImage from "./components/SimpleImage";
 import Link from "next/link";
 
 export default function Home() {
   return (
     <>
       <div className="relative w-full h-[300px] sm:h-[400px] md:h-[500px] lg:h-[600px]">
-        <OptimizedImage
+        <SimpleImage
           src="/images/Ck_New_Hero_Red_Head-1.webp"
           alt="Hero Image"
           fill
@@ -17,7 +17,7 @@ export default function Home() {
       <section className="flex flex-col lg:flex-row items-center justify-evenly py-16 px-8 bg-[#FFEBCD]">
         {/* Circular Image */}
         <div className="w-80 h-80 rounded-full overflow-hidden flex items-center justify-center bg-gray-100 flex-shrink-0">
-          <OptimizedImage
+          <SimpleImage
             src="/images/Paint_application_CU.png"
             alt="Circular Image"
             width={320}
@@ -38,8 +38,8 @@ export default function Home() {
       <section className="py-12 px-8 bg-[#f0f8ff]">
         <div className="max-w-6xl mx-auto">
           <div className="flex justify-center mb-8">
-            <OptimizedImage
-              src={"/images/CK_Logo_Titles_NewCowboyKimono.png"}
+            <SimpleImage
+              src={"/images/CK_Logo_Title-01.webp"}
               alt="A New Kimono in Town."
               width={800}
               height={178}
@@ -50,7 +50,7 @@ export default function Home() {
             {/* Blog Post 1 */}
             <div className="bg-white rounded-lg shadow-md overflow-hidden">
               <div className="aspect-square relative">
-                <OptimizedImage
+                <SimpleImage
                   src="/images/Little_Dino_Work_Table.jpg"
                   alt="Dino Jacket"
                   fill
@@ -69,8 +69,8 @@ export default function Home() {
             {/* Blog Post 2 */}
             <div className="bg-white rounded-lg shadow-md overflow-hidden">
               <div className="aspect-square relative">
-                <OptimizedImage
-                  src="/images/CK_Shop_images_PoodoodleBrown.jpg"
+                <SimpleImage
+                  src="/images/CK_Shop_Images_PoodoodleBrown.jpg"
                   alt="Poodoodle Dot Grid Journal (Brown)"
                   fill
                   objectFit="cover"
@@ -88,7 +88,7 @@ export default function Home() {
             {/* Blog Post 3 */}
             <div className="bg-white rounded-lg shadow-md overflow-hidden">
               <div className="aspect-square relative">
-                <OptimizedImage
+                <SimpleImage
                   src="/images/Green_Velvet_Model_SQ.jpg"
                   alt="Green Velvet Skirt"
                   fill

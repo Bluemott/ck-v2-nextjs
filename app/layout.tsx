@@ -1,6 +1,9 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import Navbar from "./components/Navbar";
+import Footer from "./components/Footer";
+import FloatingSocialMedia from "./components/FloatingSocialMedia";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -26,8 +29,12 @@ export default function RootLayout({
     <html lang="en">
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        style={{ marginTop: "67px" }} // Adjust margin to match the height of the Navbar
       >
+        <Navbar />
         {children}
+        <FloatingSocialMedia />
+        <Footer />
       </body>
     </html>
   );

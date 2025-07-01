@@ -24,3 +24,67 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+/* Blog post typography styles */
+.prose {
+  color: #111827 !important;
+  max-width: none;
+}
+
+.prose h1, .prose h2, .prose h3, .prose h4, .prose h5, .prose h6 {
+  color: #111827 !important;
+  font-weight: 600;
+  margin-top: 1.5em;
+  margin-bottom: 0.5em;
+}
+
+.prose h1 { font-size: 2.25rem; }
+.prose h2 { font-size: 1.875rem; }
+.prose h3 { font-size: 1.5rem; }
+
+.prose p {
+  color: #111827 !important;
+  margin-bottom: 1em;
+  line-height: 1.75;
+}
+
+.prose li {
+  color: #111827 !important;
+  margin: 0.25em 0;
+}
+
+.prose strong {
+  color: #111827 !important;
+}
+
+.prose img {
+  margin: 1.5em 0;
+  border-radius: 0.5rem;
+}
+
+.prose a {
+  color: #2563eb;
+  text-decoration: underline;
+}
+
+.prose a:hover {
+  color: #1d4ed8;
+}
+
+.prose blockquote {
+  color: #374151 !important;
+  border-left: 4px solid #e5e7eb;
+  padding-left: 1rem;
+  margin: 1.5em 0;
+  font-style: italic;
+}
+
+.prose ul, .prose ol {
+  margin: 1em 0;
+  padding-left: 1.5rem;
+}
+
+.prose li {
+  color: #111827 !important;
+  margin: 0.25em 0;
+}

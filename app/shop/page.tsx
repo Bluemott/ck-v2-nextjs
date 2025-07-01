@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import Image from 'next/image';
+import OptimizedImage from '../components/OptimizedImage';
 
 interface EtsyProduct {
   title: string;
@@ -142,7 +142,7 @@ const ShopPage = () => {
                 {/* Product Image */}
                 {product.image && (
                   <div className="relative h-64 w-full overflow-hidden">
-                    <Image
+                    <OptimizedImage
                       src={product.image}
                       alt={product.title}
                       fill

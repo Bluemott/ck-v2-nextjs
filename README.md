@@ -135,9 +135,16 @@ If the SSR build fails, switch to static export:
    - Using `npm ci` instead of `npm install` for faster, more reliable installs
    - Caching node_modules between builds
 
-4. **Image Optimization**:
+4. **Image Loading Issues**:
+   - **Problem**: Images loading slowly or not at all on deployed site
+   - **Solution**: Added `unoptimized: true` to Next.js config for better Amplify compatibility
+   - **Enhanced**: Created `OptimizedImage` component with loading states and error handling
+   - **Fallbacks**: Added placeholder images and graceful error states
+
+5. **Image Optimization**:
    - All external image domains are properly configured
    - Static export version includes `unoptimized: true` for images
+   - Custom `OptimizedImage` component provides loading states and fallbacks
 
 #### Build Configuration Options
 

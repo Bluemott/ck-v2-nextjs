@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
-import Image from 'next/image';
+import OptimizedImage from '../../components/OptimizedImage';
 import Link from 'next/link';
 
 interface WordPressPost {
@@ -107,10 +107,10 @@ const BlogPostPage = () => {
         {/* Featured Image */}
         {post._embedded?.['wp:featuredmedia']?.[0] && (
           <div className="relative h-64 md:h-96 w-full mb-8 rounded-lg overflow-hidden">
-            <Image
+            <OptimizedImage
               src={post._embedded['wp:featuredmedia'][0].source_url}
               alt={post._embedded['wp:featuredmedia'][0].alt_text || post.title.rendered}
-              layout="fill"
+              fill
               objectFit="cover"
             />
           </div>

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import Image from 'next/image';
+import OptimizedImage from '../components/OptimizedImage';
 import Link from 'next/link';
 
 interface WordPressPost {
@@ -200,19 +200,18 @@ const BlogPage = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
               {posts.map((post) => (
                 <Link key={post.id} href={`/blog/${post.slug}`} className="block">
-                  <article className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 cursor-pointer h-full">
-                    {/* Featured Image */}
-                    {post._embedded?.['wp:featuredmedia']?.[0] && (
-                      <div className="relative h-48 w-full overflow-hidden">
-                        <Image
-                          src={post._embedded['wp:featuredmedia'][0].source_url}
-                          alt={post._embedded['wp:featuredmedia'][0].alt_text || stripHtml(post.title.rendered)}
-                          layout="fill"
-                          objectFit="cover"
-                          className="transition-transform duration-300 hover:scale-105"
-                        />
-                      </div>
-                    )}
+                  <article className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 cursor-pointer h-full">                  {/* Featured Image */}
+                  {post._embedded?.['wp:featuredmedia']?.[0] && (
+                    <div className="relative h-48 w-full overflow-hidden">
+                      <OptimizedImage
+                        src={post._embedded['wp:featuredmedia'][0].source_url}
+                        alt={post._embedded['wp:featuredmedia'][0].alt_text || stripHtml(post.title.rendered)}
+                        fill
+                        objectFit="cover"
+                        className="transition-transform duration-300 hover:scale-105"
+                      />
+                    </div>
+                  )}
                     
                     {/* Content */}
                     <div className="p-6">

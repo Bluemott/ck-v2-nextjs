@@ -92,6 +92,71 @@ This project is configured for deployment to AWS Amplify via GitHub integration.
    - Amplify will build and deploy your app
    - Subsequent pushes to your main branch will trigger automatic deployments
 
+### Troubleshooting Deployment Issues
+
+If your deployment fails, try these solutions:
+
+#### Option 1: Standard SSR Build (Current Configuration)
+The current setup uses `output: 'standalone'` for server-side rendering:
+
+```typescript
+// next.config.ts
+output: 'standalone'
+```
+
+#### Option 2: Static Export (If SSR fails)
+If the SSR build fails, switch to static export:
+
+1. **Replace `next.config.ts` with `next.config.static.ts`**:
+   ```bash
+   mv next.config.ts next.config.backup.ts
+   mv next.config.static.ts next.config.ts
+   ```
+
+2. **Replace `amplify.yml` with `amplify.static.yml`**:
+   ```bash
+   mv amplify.yml amplify.backup.yml
+   mv amplify.static.yml amplify.yml
+   ```
+
+3. **Commit and push the changes**
+
+#### Common Issues and Solutions:
+
+1. **Node.js Version**: 
+   - Amplify uses Node.js 18 by default
+   - Added `engines` field to package.json to specify Node.js >= 18
+
+2. **Build Timeout**:
+   - Increased verbosity in build commands for better debugging
+   - Added caching to speed up builds
+
+3. **Memory Issues**:
+   - Using `npm ci` instead of `npm install` for faster, more reliable installs
+   - Caching node_modules between builds
+
+4. **Image Optimization**:
+   - All external image domains are properly configured
+   - Static export version includes `unoptimized: true` for images
+
+#### Build Configuration Options
+
+**Current (SSR):**
+```yaml
+artifacts:
+  baseDirectory: .next
+  files:
+    - '**/*'
+```
+
+**Static Export Alternative:**
+```yaml
+artifacts:
+  baseDirectory: out
+  files:
+    - '**/*'
+```
+
 ### Build Configuration
 
 The `amplify.yml` file is configured for Next.js SSR deployment:

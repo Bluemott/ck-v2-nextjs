@@ -3,7 +3,7 @@ frontend:
   phases:
     preBuild:
       commands:
-        - echo "Starting preBuild phase"
+        - echo "Starting preBuild phase for static export"
         - node --version
         - npm --version
         - echo "Installing dependencies..."
@@ -11,12 +11,12 @@ frontend:
         - echo "Dependencies installed successfully"
     build:
       commands:
-        - echo "Starting build phase"
-        - echo "Running Next.js build..."
+        - echo "Starting build phase for static export"
+        - echo "Running Next.js static export build..."
         - npm run build
         - echo "Build completed successfully"
   artifacts:
-    baseDirectory: .next
+    baseDirectory: out
     files:
       - '**/*'
   cache:

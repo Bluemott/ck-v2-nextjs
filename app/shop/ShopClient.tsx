@@ -13,7 +13,7 @@ interface EtsyProduct {
   price?: string;
 }
 
-const ShopPage = () => {
+const ShopClient = () => {
   const [products, setProducts] = useState<EtsyProduct[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -206,4 +206,4 @@ const ShopPage = () => {
   );
 };
 
-export default ShopPage;
+export default ShopClient;

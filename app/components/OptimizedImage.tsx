@@ -46,7 +46,7 @@ const OptimizedImage = ({
 
   const imageProps = {
     src: imgSrc,
-    alt: alt || '',
+    alt: alt || 'Image',
     onLoad: handleLoad,
     onError: handleError,
     className: `transition-opacity duration-300 ${
@@ -97,6 +97,7 @@ const OptimizedImage = ({
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
+              aria-label="Error icon"
             >
               <path
                 strokeLinecap="round"

@@ -110,6 +110,8 @@ const BlogPostPage = () => {
             <SimpleImage
               src={post._embedded['wp:featuredmedia'][0].source_url}
               alt={post._embedded['wp:featuredmedia'][0].alt_text || post.title.rendered}
+              width={800}
+              height={400}
               className="w-full h-full object-cover"
             />
           </div>

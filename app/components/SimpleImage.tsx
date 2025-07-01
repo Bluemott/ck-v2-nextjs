@@ -35,9 +35,11 @@ const SimpleImage = ({
 
   const handleError = () => {
     setIsLoading(false);
-    setHasError(true);
     if (imgSrc !== fallbackSrc) {
       setImgSrc(fallbackSrc);
+      setHasError(false); // Reset error state when trying fallback
+    } else {
+      setHasError(true); // Only set error if fallback also fails
     }
   };
 
@@ -58,8 +60,9 @@ const SimpleImage = ({
         objectFit: objectFit
       } 
     : { 
-        width: width ? `${width}px` : '100%',
-        height: height ? `${height}px` : 'auto',
+        width: width ? `${width}px` : undefined,
+        height: height ? `${height}px` : undefined,
+        maxWidth: '100%',
         objectFit: objectFit
       };
 

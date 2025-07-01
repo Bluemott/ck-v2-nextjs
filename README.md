@@ -262,3 +262,157 @@ The `/public/images` directory contains optimized versions of images:
 2. **External Images**: Loaded from WordPress, Etsy (with CORS handling)
 3. **Fallbacks**: Placeholder SVG for failed image loads
 4. **Loading States**: Visual feedback during image loading
+
+## SEO & Analytics Setup
+
+### 🔍 Complete SEO Implementation
+
+The site now includes comprehensive SEO optimization:
+
+#### Core SEO Components:
+- **Meta Tags**: Dynamic title, description, keywords for each page
+- **Open Graph**: Social media sharing optimization
+- **Twitter Cards**: Optimized Twitter sharing
+- **Structured Data**: JSON-LD schema markup for better search engine understanding
+- **Sitemap**: Auto-generated XML sitemap
+- **Robots.txt**: Search engine crawling instructions
+- **Manifest**: PWA capabilities for mobile optimization
+
+#### SEO Files Added:
+- `app/lib/seo.ts` - Main SEO configuration and metadata generation
+- `app/components/StructuredData.tsx` - JSON-LD structured data
+- `app/sitemap.ts` - XML sitemap generation
+- `app/robots.ts` - Robots.txt configuration
+- `app/manifest.ts` - PWA manifest
+
+### 📊 Google Analytics 4 Integration
+
+#### Analytics Components:
+- `app/components/Analytics.tsx` - GA4 implementation with Next.js Script optimization
+- `app/lib/analytics.ts` - Custom event tracking utilities
+
+#### Analytics Features:
+- **Page View Tracking**: Automatic page view tracking
+- **Custom Events**: Button clicks, navigation, product views, etc.
+- **E-commerce Tracking**: Product interactions and external link clicks
+- **Performance Optimized**: Uses Next.js Script component with `afterInteractive` strategy
+
+#### Setup Instructions:
+1. **Get Google Analytics ID**:
+   - Create a GA4 property at [Google Analytics](https://analytics.google.com)
+   - Copy your Measurement ID (format: G-XXXXXXXXXX)
+
+2. **Configure Environment Variables**:
+   ```bash
+   # In .env.local
+   NEXT_PUBLIC_GA_MEASUREMENT_ID=G-XXXXXXXXXX
+   NEXT_PUBLIC_SITE_URL=https://cowboykimonos.com
+   ```
+
+3. **Verification Codes** (optional):
+   ```bash
+   NEXT_PUBLIC_GOOGLE_VERIFICATION=your-google-verification-code
+   NEXT_PUBLIC_BING_VERIFICATION=your-bing-verification-code
+   ```
+
+### 🎯 SEO Best Practices Implemented
+
+#### Page-Level SEO:
+- **Homepage**: Optimized for brand and product keywords
+- **About Page**: Company story and brand keywords
+- **Blog**: Article-specific metadata and structured data
+- **Shop**: Product and e-commerce focused optimization
+
+#### Technical SEO:
+- **Mobile-First**: Responsive design and mobile optimization
+- **Page Speed**: Optimized images and lazy loading
+- **Accessibility**: Proper alt tags, semantic HTML
+- **Schema Markup**: Organization, Website, Blog, and Article schemas
+
+#### Content SEO:
+- **Keyword Optimization**: Strategic keyword placement
+- **Meta Descriptions**: Compelling, action-oriented descriptions
+- **Image SEO**: Optimized alt tags and file names
+- **Internal Linking**: Strategic cross-page linking
+
+### 🚀 Search Console Setup
+
+#### Next Steps for Complete SEO:
+1. **Google Search Console**:
+   - Add and verify your domain
+   - Submit your sitemap
+   - Monitor search performance
+
+2. **Bing Webmaster Tools**:
+   - Add and verify your domain
+   - Submit your sitemap
+
+3. **Social Media**:
+   - Test Open Graph tags with Facebook Debugger
+   - Test Twitter Cards with Twitter Card Validator
+
+### 📈 Analytics Events Implemented
+
+The site includes comprehensive event tracking:
+
+#### Automatic Tracking:
+- Page views
+- External link clicks
+- Social media interactions
+- Product views
+- Navigation events
+
+#### Custom Events Available:
+- `trackButtonClick(buttonName, location)`
+- `trackProductView(productName, productId)`
+- `trackBlogPostView(postTitle)`
+- `trackExternalLink(url, linkText)`
+- `trackSocialMediaClick(platform, location)`
+
+### 🔧 Configuration Files
+
+#### Environment Variables (.env.local):
+```bash
+# Google Analytics
+NEXT_PUBLIC_GA_MEASUREMENT_ID=G-XXXXXXXXXX
+
+# Site Configuration
+NEXT_PUBLIC_SITE_URL=https://cowboykimonos.com
+NEXT_PUBLIC_SITE_NAME="Cowboy Kimonos"
+
+# Social Media
+NEXT_PUBLIC_INSTAGRAM_URL=https://www.instagram.com/cowboykimonos
+NEXT_PUBLIC_FACEBOOK_URL=https://www.facebook.com/cowboykimonos
+NEXT_PUBLIC_ETSY_URL=https://www.etsy.com/shop/CowboyKimono
+
+# SEO Verification Codes
+NEXT_PUBLIC_GOOGLE_VERIFICATION=your-google-verification-code
+NEXT_PUBLIC_BING_VERIFICATION=your-bing-verification-code
+```
+
+### ✅ SEO Checklist
+
+#### Before Deployment:
+- [ ] Add actual Google Analytics Measurement ID
+- [ ] Update Google Search Console verification code
+- [ ] Update Bing Webmaster Tools verification code
+- [ ] Test all meta tags with social media debuggers
+- [ ] Verify sitemap accessibility
+- [ ] Check robots.txt functionality
+- [ ] Test structured data with Google's Rich Results Test
+
+#### After Deployment:
+- [ ] Submit sitemap to Google Search Console
+- [ ] Submit sitemap to Bing Webmaster Tools
+- [ ] Monitor Core Web Vitals
+- [ ] Set up Google Analytics goals and conversions
+- [ ] Monitor search rankings and traffic
+
+### 📱 Progressive Web App (PWA) Features
+
+The site includes basic PWA capabilities:
+- Web App Manifest for mobile app-like experience
+- Proper theme colors and icons
+- Offline-ready structure (can be extended)
+
+---

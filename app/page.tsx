@@ -1,12 +1,21 @@
 import SimpleImage from "./components/SimpleImage";
 import Link from "next/link";
+import { Metadata } from "next";
+import { generateSEOMetadata } from "./lib/seo";
+
+export const metadata: Metadata = generateSEOMetadata({
+  title: "Home",
+  description: "Welcome to Cowboy Kimonos - Discover unique handcrafted western-inspired robes and apparel that blend Eastern elegance with Western spirit. Shop our exclusive collection of artistic kimonos, robes, and accessories.",
+  keywords: ["handcrafted kimonos", "western robes", "artistic apparel", "unique fashion", "cowboy style"],
+  canonical: "/",
+});
 
 export default function Home() {
   return (
     <>
       <div className="relative w-full h-[300px] sm:h-[400px] md:h-[500px] lg:h-[600px]">
         <SimpleImage
-          src="/images/Ck_New_Hero_Red_Head-1.webp"
+          src="/images/CK_New_Hero_Red_Head-1.webp"
           alt="Hero Image"
           fill
           objectFit="cover"
@@ -41,8 +50,8 @@ export default function Home() {
             <SimpleImage
               src={"/images/CK_Logo_Title-01.webp"}
               alt="A New Kimono in Town."
-              width={800}
-              height={178}
+              width={400}
+              height={89}
               className="max-w-full h-auto"
             />
           </div>

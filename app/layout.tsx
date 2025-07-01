@@ -34,14 +34,14 @@ export default function RootLayout({
         {/* Structured Data */}
         <StructuredData type="Organization" data={organizationStructuredData} />
         <StructuredData type="WebSite" data={websiteStructuredData} />
-        
-        {/* Google Analytics */}
-        <Analytics measurementId={process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID || "G-XXXXXXXXXX"} />
       </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
         style={{ marginTop: "67px" }} // Adjust margin to match the height of the Navbar
       >
+        {/* Google Analytics */}
+        <Analytics measurementId={process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID || "G-XXXXXXXXXX"} />
+        
         <Navbar />
         {children}
         <FloatingSocialMedia />

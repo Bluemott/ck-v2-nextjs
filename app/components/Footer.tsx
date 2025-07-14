@@ -10,7 +10,7 @@ const Footer = () => {
           <Link href="/">
             <Image 
               src="/images/CK_Logo_Title-01.webp" 
-              alt="Cowboy Kimonos Logo" 
+              alt="Cowboy Kimono Logo" 
               width={200} 
               height={80}
               className="mx-auto"
@@ -36,7 +36,7 @@ const Footer = () => {
         
         {/* Copyright */}
         <div className="text-sm text-gray-400 border-t border-gray-700 pt-4">
-          <p>&copy; {new Date().getFullYear()} Cowboy Kimonos. All rights reserved.</p>
+          <p>&copy; {new Date().getFullYear()} Cowboy Kimono. All rights reserved.</p>
         </div>
       </div>
     </footer>

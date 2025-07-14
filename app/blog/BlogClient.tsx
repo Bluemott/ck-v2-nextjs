@@ -1,8 +1,9 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import SimpleImage from '../components/SimpleImage';
+import Image from 'next/image';
 import Link from 'next/link';
+import BlogSidebar from '../components/BlogSidebar';
 
 interface WordPressPost {
   id: number;
@@ -117,7 +118,7 @@ const BlogClient = () => {
           onClick={() => handlePageChange(i)}
           className={`px-3 py-2 mx-1 border rounded transition-colors ${
             i === currentPage
-              ? 'bg-blue-600 text-white border-blue-600'
+              ? 'bg-[#1e2939] text-white border-[#1e2939]'
               : 'bg-white text-gray-600 border-gray-300 hover:bg-gray-50'
           }`}
         >
@@ -166,7 +167,7 @@ const BlogClient = () => {
           <p className="text-red-600 mb-4">{error}</p>
           <button 
             onClick={() => window.location.reload()} 
-            className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition-colors"
+            className="bg-[#1e2939] text-white px-4 py-2 rounded hover:bg-[#2a3441] transition-colors"
           >
             Try Again
           </button>
@@ -177,12 +178,20 @@ const BlogClient = () => {
 
   return (
     <div className="min-h-screen bg-[#f0f8ff] py-12">
-      <div className="max-w-6xl mx-auto px-8">
+      <div className="max-w-7xl mx-auto px-8">
         {/* Header Section */}
         <div className="text-center mb-12">
-          <h1 className="text-4xl font-bold text-gray-800 mb-4">Blog</h1>
+          <div className="flex justify-center mb-6">
+            <Image
+              src="/images/CK_Logo_Blog.png" // Update with your actual blog header image
+              alt="Blog Header"
+              width={400}
+              height={100}
+              className="max-w-full h-auto"
+            />
+          </div>
           <p className="text-gray-600 text-lg">
-            Discover stories, inspiration, and insights from the world of Cowboy Kimonos
+            Discover stories, inspiration, and insights from the world of Cowboy Kimono
           </p>
           {totalPosts > 0 && (
             <p className="text-sm text-gray-500 mt-2">
@@ -191,61 +200,73 @@ const BlogClient = () => {
           )}
         </div>
         
-        {posts.length === 0 ? (
-          <div className="text-center py-12">
-            <p className="text-gray-600 text-lg">No blog posts found.</p>
-          </div>
-        ) : (
-          <>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {posts.map((post) => (
-                <Link key={post.id} href={`/blog/${post.slug}`} className="block">
-                  <article className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 cursor-pointer h-full">                  {/* Featured Image */}
-                  {post._embedded?.['wp:featuredmedia']?.[0] && (
-                    <div className="relative h-48 w-full overflow-hidden">
-                      <SimpleImage
-                        src={post._embedded['wp:featuredmedia'][0].source_url}
-                        alt={post._embedded['wp:featuredmedia'][0].alt_text || stripHtml(post.title.rendered)}
-                        width={400}
-                        height={192}
-                        className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
-                      />
-                    </div>
-                  )}
-                    
-                    {/* Content */}
-                    <div className="p-6">
-                      <h2 className="text-xl font-semibold mb-3 text-gray-900 line-clamp-2 leading-tight">
-                        {stripHtml(post.title.rendered)}
-                      </h2>
-                      
-                      <p className="text-gray-600 text-sm mb-3 font-medium">
-                        {formatDate(post.date)}
-                      </p>
-                      
-                      <div 
-                        className="text-gray-900 mb-6 line-clamp-3 leading-relaxed"
-                        dangerouslySetInnerHTML={{ 
-                          __html: post.excerpt.rendered.substring(0, 120) + '...' 
-                        }}
-                      />
-                      
-                      <div className="inline-flex items-center text-blue-600 hover:text-blue-800 font-medium transition-colors group">
-                        Read More 
-                        <span className="ml-1 transform group-hover:translate-x-1 transition-transform">
-                          →
-                        </span>
-                      </div>
-                    </div>
-                  </article>
-                </Link>
-              ))}
-            </div>
+        {/* Main Content with Sidebar */}
+        <div className="flex flex-col lg:flex-row gap-8">
+          {/* Main Content */}
+          <div className="flex-1">
+            {posts.length === 0 ? (
+              <div className="text-center py-12">
+                <p className="text-gray-600 text-lg">No blog posts found.</p>
+              </div>
+            ) : (
+              <>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                  {posts.map((post) => (
+                    <Link key={post.id} href={`/blog/${post.slug}`} className="block">
+                      <article className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 cursor-pointer flex flex-col">
+                        {/* Featured Image - Natural Aspect Ratio */}
+                        {post._embedded?.['wp:featuredmedia']?.[0] && (
+                          <div className="relative w-full overflow-hidden">
+                            <Image
+                              src={post._embedded['wp:featuredmedia'][0].source_url}
+                              alt={post._embedded['wp:featuredmedia'][0].alt_text || stripHtml(post.title.rendered)}
+                              width={0}
+                              height={0}
+                              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                              className="w-full h-auto transition-transform duration-300 hover:scale-105"
+                              style={{ width: '100%', height: 'auto' }}
+                            />
+                          </div>
+                        )}
+                        
+                        {/* Content - Flexible Height */}
+                        <div className="p-6 flex-1 flex flex-col">
+                          <h2 className="text-xl font-semibold mb-3 text-gray-900 line-clamp-2 leading-tight"
+                              dangerouslySetInnerHTML={{ __html: post.title.rendered }}
+                          />
+                          
+                          <p className="text-gray-600 text-sm mb-3 font-medium">
+                            {formatDate(post.date)}
+                          </p>
+                          
+                          <div 
+                            className="text-gray-900 mb-6 line-clamp-3 leading-relaxed flex-1"
+                            dangerouslySetInnerHTML={{ 
+                              __html: post.excerpt.rendered.substring(0, 120) + '...'
+                            }}
+                          />
+                          
+                          <div className="inline-flex items-center text-[#1e2939] hover:text-[#2a3441] font-medium transition-colors group mt-auto">
+                            Read More 
+                            <span className="ml-1 transform group-hover:translate-x-1 transition-transform">
+                              →
+                            </span>
+                          </div>
+                        </div>
+                      </article>
+                    </Link>
+                  ))}
+                </div>
 
-            {/* Pagination */}
-            {renderPagination()}
-          </>
-        )}
+                {/* Pagination */}
+                {renderPagination()}
+              </>
+            )}
+          </div>
+
+          {/* Sidebar */}
+          <BlogSidebar />
+        </div>
       </div>
     </div>
   );

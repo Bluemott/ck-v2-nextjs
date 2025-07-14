@@ -9,7 +9,7 @@ interface StructuredDataProps {
 export const organizationStructuredData = {
   '@context': 'https://schema.org',
   '@type': 'Organization',
-  name: 'Cowboy Kimonos',
+  name: 'Cowboy Kimono',
   description: 'Handcrafted Western-inspired robes and apparel blending Western and Eastern aesthetics.',
   url: 'https://cowboykimonos.com',
   logo: 'https://cowboykimonos.com/images/CK_Logo_Title-01.webp',
@@ -34,12 +34,12 @@ export const organizationStructuredData = {
 export const websiteStructuredData = {
   '@context': 'https://schema.org',
   '@type': 'WebSite',
-  name: 'Cowboy Kimonos',
+  name: 'Cowboy Kimono',
   url: 'https://cowboykimonos.com',
   description: 'Handcrafted Western-inspired robes and apparel',
   publisher: {
     '@type': 'Organization',
-    name: 'Cowboy Kimonos'
+    name: 'Cowboy Kimono'
   },
   potentialAction: {
     '@type': 'SearchAction',
@@ -52,12 +52,12 @@ export const websiteStructuredData = {
 export const blogStructuredData = {
   '@context': 'https://schema.org',
   '@type': 'Blog',
-  name: 'Cowboy Kimonos Blog',
-  description: 'Stories, inspiration, and insights from the world of Cowboy Kimonos',
+  name: 'Cowboy Kimono Blog',
+  description: 'Stories, inspiration, and insights from the world of Cowboy Kimono',
   url: 'https://cowboykimonos.com/blog',
   publisher: {
     '@type': 'Organization',
-    name: 'Cowboy Kimonos',
+    name: 'Cowboy Kimono',
     logo: {
       '@type': 'ImageObject',
       url: 'https://cowboykimonos.com/images/CK_Logo_Title-01.webp'
@@ -82,7 +82,7 @@ export function generateArticleStructuredData({
   image,
   datePublished,
   dateModified,
-  author = 'Cowboy Kimonos'
+  author = 'Cowboy Kimono'
 }: ArticleStructuredDataProps) {
   return {
     '@context': 'https://schema.org',
@@ -100,7 +100,7 @@ export function generateArticleStructuredData({
     },
     publisher: {
       '@type': 'Organization',
-      name: 'Cowboy Kimonos',
+      name: 'Cowboy Kimono',
       logo: {
         '@type': 'ImageObject',
         url: 'https://cowboykimonos.com/images/CK_Logo_Title-01.webp'

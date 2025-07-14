@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import SimpleImage from '../components/SimpleImage';
+import Image from 'next/image';
 
 interface EtsyProduct {
   title: string;
@@ -142,7 +142,7 @@ const ShopClient = () => {
                 {/* Product Image */}
                 {product.image && (
                   <div className="relative h-64 w-full overflow-hidden">
-                    <SimpleImage
+                    <Image
                       src={product.image}
                       alt={product.title}
                       width={400}

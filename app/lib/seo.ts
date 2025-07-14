@@ -15,7 +15,7 @@ interface SEOProps {
 }
 
 const defaultSEO = {
-  title: 'Cowboy Kimonos - Handcrafted Western-Inspired Robes & Apparel',
+  title: 'Cowboy Kimono - Handcrafted Western-Inspired Robes & Apparel',
   description: 'Discover unique handcrafted cowboy kimonos blending Western and Eastern aesthetics. Premium quality robes, jackets, and apparel with artistic flair.',
   keywords: [
     'cowboy kimono',
@@ -31,8 +31,8 @@ const defaultSEO = {
   ],
   ogImage: '/images/CK_New_Hero_Red_Head-1.webp',
   ogType: 'website' as const,
-  author: 'Cowboy Kimonos',
-  siteUrl: process.env.NEXT_PUBLIC_SITE_URL || 'https://cowboykimonos.com'
+  author: 'Cowboy Kimono',
+  siteUrl: process.env.NEXT_PUBLIC_SITE_URL || 'https://cowboykimono.com'
 };
 
 export function generateSEOMetadata({
@@ -60,7 +60,7 @@ export function generateSEOMetadata({
     keywords: seoKeywords.join(', '),
     authors: [{ name: seoAuthor }],
     creator: seoAuthor,
-    publisher: 'Cowboy Kimonos',
+    publisher: 'Cowboy Kimono',
     formatDetection: {
       email: false,
       address: false,
@@ -74,7 +74,7 @@ export function generateSEOMetadata({
       title: seoTitle,
       description: seoDescription,
       url: canonical || '/',
-      siteName: 'Cowboy Kimonos',
+      siteName: 'Cowboy Kimono',
       images: [
         {
           url: seoImage,
@@ -95,8 +95,8 @@ export function generateSEOMetadata({
       title: seoTitle,
       description: seoDescription,
       images: [seoImage],
-      creator: '@cowboykimonos',
-      site: '@cowboykimonos',
+      creator: '@cowboykimono',
+      site: '@cowboykimono',
     },
     robots: {
       index: true,

@@ -1,11 +1,11 @@
-import SimpleImage from "./components/SimpleImage";
+import Image from "next/image";
 import Link from "next/link";
 import { Metadata } from "next";
 import { generateSEOMetadata } from "./lib/seo";
 
 export const metadata: Metadata = generateSEOMetadata({
   title: "Home",
-  description: "Welcome to Cowboy Kimonos - Discover unique handcrafted western-inspired robes and apparel that blend Eastern elegance with Western spirit. Shop our exclusive collection of artistic kimonos, robes, and accessories.",
+  description: "Welcome to Cowboy Kimono - Discover unique handcrafted western-inspired robes and apparel that blend Eastern elegance with Western spirit. Shop our exclusive collection of artistic kimonos, robes, and accessories.",
   keywords: ["handcrafted kimonos", "western robes", "artistic apparel", "unique fashion", "cowboy style"],
   canonical: "/",
 });
@@ -14,23 +14,23 @@ export default function Home() {
   return (
     <>
       <div className="relative w-full h-[300px] sm:h-[400px] md:h-[500px] lg:h-[600px]">
-        <SimpleImage
+        <Image
           src="/images/CK_New_Hero_Red_Head-1.webp"
           alt="Hero Image"
           fill
-          objectFit="cover"
+          style={{ objectFit: "cover", objectPosition: "left" }}
           priority
         />
       </div>
 
       <section className="flex flex-col lg:flex-row items-center justify-evenly py-16 px-8 bg-[#FFEBCD]">
         {/* Circular Image */}
-        <div className="w-80 h-80 rounded-full overflow-hidden flex items-center justify-center bg-gray-100 flex-shrink-0">
-          <SimpleImage
+        <div className="w-96 h-96 rounded-full overflow-hidden flex items-center justify-center bg-gray-100 flex-shrink-0">
+          <Image
             src="/images/Paint_application_CU.png"
             alt="Circular Image"
-            width={320}
-            height={320}
+            width={384}
+            height={384}
             className="object-cover w-full h-full"
           />
         </div>
@@ -47,68 +47,68 @@ export default function Home() {
       <section className="py-12 px-8 bg-[#f0f8ff]">
         <div className="max-w-6xl mx-auto">
           <div className="flex justify-center mb-8">
-            <SimpleImage
-              src={"/images/CK_Logo_Title-01.webp"}
+            <Image
+              src="/images/CK_Logo_Titles_NewCowboyKimono.png"
               alt="A New Kimono in Town."
-              width={400}
-              height={89}
+              width={2551}
+              height={567}
               className="max-w-full h-auto"
             />
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {/* Blog Post 1 */}
-            <div className="bg-white rounded-lg shadow-md overflow-hidden">
+            <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
               <div className="aspect-square relative">
-                <SimpleImage
+                <Image
                   src="/images/Little_Dino_Work_Table.jpg"
                   alt="Dino Jacket"
                   fill
-                  objectFit="cover"
-                  className="rounded-t-lg"
+                  style={{ objectFit: "cover" }}
+                  className="rounded-t-lg transition-transform duration-300 hover:scale-105"
                 />
               </div>
               <div className="p-6">
                 <p className="text-gray-600 mb-4">Dino Jacket</p>
-                <Link href="/blog/post-1" legacyBehavior>
-                  <a className="text-blue-600 hover:text-blue-800 font-medium">Read More →</a>
+                <Link href="/blog/post-1" className="text-[#1e2939] hover:text-[#2a3441] font-medium">
+                  Read More →
                 </Link>
               </div>
             </div>
 
             {/* Blog Post 2 */}
-            <div className="bg-white rounded-lg shadow-md overflow-hidden">
+            <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
               <div className="aspect-square relative">
-                <SimpleImage
+                <Image
                   src="/images/CK_Shop_Images_PoodoodleBrown.jpg"
                   alt="Poodoodle Dot Grid Journal (Brown)"
                   fill
-                  objectFit="cover"
-                  className="rounded-t-lg"
+                  style={{ objectFit: "cover" }}
+                  className="rounded-t-lg transition-transform duration-300 hover:scale-105"
                 />
               </div>
               <div className="p-6">
                 <p className="text-gray-600 mb-4">Poodoodle Dot Grid Journal (Brown)</p>
-                <Link href="/blog/post-2" legacyBehavior>
-                  <a className="text-blue-600 hover:text-blue-800 font-medium">Read More →</a>
+                <Link href="/blog/post-2" className="text-[#1e2939] hover:text-[#2a3441] font-medium">
+                  Read More →
                 </Link>
               </div>
             </div>
 
             {/* Blog Post 3 */}
-            <div className="bg-white rounded-lg shadow-md overflow-hidden">
+            <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
               <div className="aspect-square relative">
-                <SimpleImage
+                <Image
                   src="/images/Green_Velvet_Model_SQ.jpg"
                   alt="Green Velvet Skirt"
                   fill
-                  objectFit="cover"
-                  className="rounded-t-lg"
+                  style={{ objectFit: "cover" }}
+                  className="rounded-t-lg transition-transform duration-300 hover:scale-105"
                 />
               </div>
               <div className="p-6">
                 <p className="text-gray-600 mb-4">Green Velvet Skirt</p>
-                <Link href="/blog/post-3" legacyBehavior>
-                  <a className="text-blue-600 hover:text-blue-800 font-medium">Read More →</a>
+                <Link href="/blog/post-3" className="text-[#1e2939] hover:text-[#2a3441] font-medium">
+                  Read More →
                 </Link>
               </div>
             </div>

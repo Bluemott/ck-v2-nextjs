@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 
 const FloatingSocialMedia = () => {
   const [isExpanded, setIsExpanded] = useState(false);
@@ -13,7 +14,7 @@ const FloatingSocialMedia = () => {
   const socialLinks = [
     {
       name: 'Instagram',
-      url: 'https://instagram.com/cowboykimonos',
+      url: 'https://www.instagram.com/cowboykimono/',
       icon: '📷',
       bgColor: 'bg-pink-500 hover:bg-pink-600'
     },
@@ -62,14 +63,24 @@ const FloatingSocialMedia = () => {
       {/* Main Toggle Button */}
       <button
         onClick={toggleExpanded}
-        className={`w-14 h-14 rounded-full bg-gray-700 hover:bg-gray-800 text-white flex items-center justify-center text-2xl shadow-lg transition-all duration-300 transform ${
+        className={`w-14 h-14 rounded-full bg-white hover:bg-gray-100 flex items-center justify-center shadow-lg transition-all duration-300 transform ${
           isExpanded ? 'rotate-45' : 'rotate-0'
-        } hover:scale-110`}
+        } hover:scale-110 border-2 border-gray-300`}
         aria-label="Toggle social media links"
       >
-        <span className={`transition-transform duration-300 ${isExpanded ? 'rotate-45' : 'rotate-0'}`}>
-          {isExpanded ? '✕' : '🔗'}
-        </span>
+        <div className={`transition-transform duration-300 ${isExpanded ? 'rotate-45' : 'rotate-0'}`}>
+          {isExpanded ? (
+            <span className="text-2xl text-gray-700">✕</span>
+          ) : (
+            <Image
+              src="\images\CK_Social_Link.png"
+              alt="Social Media"
+              width={36}
+              height={36}
+              className="w-9 h-9"
+            />
+          )}
+        </div>
       </button>
     </div>
   );

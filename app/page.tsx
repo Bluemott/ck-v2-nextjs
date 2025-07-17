@@ -23,7 +23,7 @@ export default function Home() {
         />
       </div>
 
-      <section className="flex flex-col lg:flex-row items-center justify-evenly py-16 px-8 bg-white">
+      <section className="flex flex-col lg:flex-row items-center justify-evenly py-16 px-8 bg-white gap-x-8">
         {/* Circular Image */}
         <div className="w-96 h-96 rounded-full overflow-hidden flex items-center justify-center bg-gray-100 flex-shrink-0">
           <Image
@@ -37,7 +37,7 @@ export default function Home() {
 
         {/* Paragraphs */}
         <div className="ml-0 mt-12 lg:mt-0 space-y-6 max-w-2xl text-xl text-gray-800">
-          <h1 className="serif text-4xl md:text-5xl font-bold">Not My First Hand Painted Jacket</h1>
+          <h1 className="serif text-3xl md:text-4xl font-bold">Not My First Hand Painted Jacket</h1>
           <p>I’m Marisa Mott, the artist behind Cowboy Kimonos—hand-painted, recycled denim jackets that blend art, sustainability, and cultural tradition. My journey began in 1997, making hand-painted jackets as gifts for friends and family. What started as a personal project grew into a passion for transforming everyday denim into vibrant works of art that help keep waste out of landfills.</p>
           <p>As an illustrator, I’m inspired by global textile traditions and symbolic designs. This passion led me to create one-of-a-kind pieces that combine bold imagery, historic patterns, and creativity. Each Cowboy Kimono is more than just clothing—it’s a canvas for stories, a conversation starter, and a timeless piece of wearable art.</p>
           <p>I believe clothing should express individuality, and with every jacket I design, I aim to offer something unique—an art piece you’ll wear and love for years.</p>

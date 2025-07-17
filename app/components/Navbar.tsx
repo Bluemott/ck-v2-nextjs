@@ -22,9 +22,6 @@ const Navbar = () => {
         <Link href="/downloads" className="hover:underline">
           Downloads
         </Link>
-        <Link href="/about" className="hover:underline">
-          About
-        </Link>
       </div>
     </nav>
   );

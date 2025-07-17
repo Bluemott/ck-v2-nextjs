@@ -1,3 +1,12 @@
+/*
+  Font Usage:
+  - Default: Geist Sans (via --font-geist-sans)
+  - Mono: Geist Mono (via --font-geist-mono)
+  - Serif: Playfair Display (via --font-playfair)
+  
+  Use the .serif class or font-family: var(--font-playfair), serif for Playfair Display.
+*/
+
 @import "tailwindcss";
 
 :root {
@@ -18,6 +27,10 @@ body {
   font-family: Arial, Helvetica, 'Apple Color Emoji', 'Segoe UI Emoji', 'Noto Color Emoji', sans-serif;
 }
 
+.serif {
+  font-family: var(--font-playfair), serif;
+}
+
 /* Blog post typography styles */
 .prose {
   color: #111827 !important;
@@ -31,9 +44,14 @@ body {
   margin-bottom: 0.5em;
 }
 
-.prose h1 { font-size: 2.25rem; }
-.prose h2 { font-size: 1.875rem; }
-.prose h3 { font-size: 1.5rem; }
+.prose h1 {
+  font-size: 2.25rem;
+  font-family: var(--font-playfair), serif;
+}
+
+.prose h2, .prose h3, .prose h4, .prose h5, .prose h6 {
+  font-family: var(--font-playfair), serif;
+}
 
 .prose p {
   color: #111827 !important;

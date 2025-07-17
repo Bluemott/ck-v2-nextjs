@@ -364,3 +364,27 @@ This documentation serves as the single source of truth for the Cowboy Kimono v2
 - Updated the global font stack in `globals.css` to include 'Apple Color Emoji', 'Segoe UI Emoji', and 'Noto Color Emoji' for proper emoji and special character rendering across all platforms and browsers.
 - Blog post titles and excerpts now use `dangerouslySetInnerHTML` to preserve special Unicode and emoji characters, ensuring correct display in the blog UI.
 - Shop product titles and descriptions are now decoded for HTML entities before rendering, so characters like quotes and apostrophes display correctly instead of as &quot; or &#39;.
+
+## [2024-06-10] Font Update: Playfair Display for Serif/Headings
+
+### New Google Font Integration
+- **Playfair Display** has been added via `next/font/google` for all serif and heading use.
+- The font is available as a CSS variable: `--font-playfair`.
+- Use the `.serif` class or `font-family: var(--font-playfair), serif` in CSS to apply Playfair Display.
+- All `.prose` headings (h1–h6) now use Playfair Display by default.
+- Example usage:
+  ```tsx
+  <h1 className="serif">Heading</h1>
+  ```
+
+### Technology Stack (update)
+- **Google Fonts**: Playfair Display (serif/heading), Geist Sans (default), Geist Mono (mono)
+
+### Styling and Design System (update)
+- **Font Families**:
+  - Default: Geist Sans (`--font-geist-sans`)
+  - Mono: Geist Mono (`--font-geist-mono`)
+  - Serif/Headings: Playfair Display (`--font-playfair`)
+- **How to Use**:
+  - Add `className="serif"` to any element for Playfair Display
+  - All `.prose` headings use Playfair Display automatically

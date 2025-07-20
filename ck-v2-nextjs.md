@@ -80,6 +80,7 @@ ck-v2-nextjs/
 - **GoogleTagManager**: GTM implementation
 - **BlogSidebar**: Blog navigation and filtering
 - **WordPressBlog**: WordPress CMS integration component
+- **Admin Access**: WordPress admin portal integration via navbar and `/admin` route
 
 ### Component Patterns
 
@@ -423,14 +424,20 @@ This documentation serves as the single source of truth for the Cowboy Kimono v2
 - **Category Filtering**: WordPress taxonomy integration
 - **Media Management**: WordPress media library for images and assets
 - **SEO Integration**: WordPress SEO metadata and structured data
+- **Admin Access**: Direct access to WordPress admin via navbar link and `/admin` route
+- **Blog Components**: All blog components now use centralized WordPress API utilities
 
 ### Technology Stack (update)
 - **WordPress REST API**: Headless CMS for content management
 - **TypeScript Interfaces**: Full typing for WordPress data structures
 - **Next.js Integration**: Seamless WordPress content in Next.js components
+- **Admin Portal**: WordPress admin access via `admin.cowboykimono.com` subdomain
+- **Centralized API**: All blog components use `app/lib/wordpress.ts` utilities
 
 ### Development Guidelines (update)
 - **WordPress API**: Use `fetchPosts()`, `fetchPostBySlug()`, `fetchCategories()` functions
 - **Component Integration**: Use `WordPressBlog` component for blog pages
 - **Environment Setup**: Configure WordPress API URLs in environment variables
 - **Image Optimization**: WordPress media works with Next.js Image component
+- **Admin Access**: Use `getWordPressAdminUrl()` utility for admin portal links
+- **Blog Components**: All blog components updated to use centralized WordPress API utilities

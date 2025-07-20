@@ -3,30 +3,11 @@
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-
-interface WordPressPost {
-  id: number;
-  title: {
-    rendered: string;
-  };
-  excerpt: {
-    rendered: string;
-  };
-  date: string;
-  slug: string;
-  _embedded?: {
-    'wp:featuredmedia'?: Array<{
-      source_url: string;
-      alt_text: string;
-    }>;
-  };
-}
+import { fetchPosts, type WordPressPost } from '../lib/wordpress';
 
 interface BlogSidebarProps {
   currentPostId?: number;
 }
-
-const WORDPRESS_API_URL = 'https://cowboykimono.com/blog.html/wp-json/wp/v2/posts';
 
 const BlogSidebar = ({ currentPostId }: BlogSidebarProps) => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -37,35 +18,32 @@ const BlogSidebar = ({ currentPostId }: BlogSidebarProps) => {
 
   // Fetch recent posts and suggested post
   useEffect(() => {
-    const fetchSidebarData = async () => {
+    const loadSidebarData = async () => {
       try {
         // Fetch recent posts
-        const recentResponse = await fetch(`${WORDPRESS_API_URL}?_embed&per_page=5`);
-        if (recentResponse.ok) {
-          const recentData = await recentResponse.json();
-          setRecentPosts(recentData);
+        const recentData = await fetchPosts({ per_page: 5 });
+        setRecentPosts(recentData);
 
-          // Set suggested post (next post after current, or random if no current)
-          if (currentPostId) {
-            const currentIndex = recentData.findIndex((post: WordPressPost) => post.id === currentPostId);
-            if (currentIndex !== -1 && currentIndex < recentData.length - 1) {
-              setSuggestedPost(recentData[currentIndex + 1]);
-            } else {
-              // If current is last or not found, suggest the first different post
-              const differentPost = recentData.find((post: WordPressPost) => post.id !== currentPostId);
-              setSuggestedPost(differentPost || null);
-            }
+        // Set suggested post (next post after current, or random if no current)
+        if (currentPostId) {
+          const currentIndex = recentData.findIndex((post: WordPressPost) => post.id === currentPostId);
+          if (currentIndex !== -1 && currentIndex < recentData.length - 1) {
+            setSuggestedPost(recentData[currentIndex + 1]);
           } else {
-            // On blog listing page, suggest the most recent post
-            setSuggestedPost(recentData[0] || null);
+            // If current is last or not found, suggest the first different post
+            const differentPost = recentData.find((post: WordPressPost) => post.id !== currentPostId);
+            setSuggestedPost(differentPost || null);
           }
+        } else {
+          // On blog listing page, suggest the most recent post
+          setSuggestedPost(recentData[0] || null);
         }
       } catch (error) {
         console.error('Error fetching sidebar data:', error);
       }
     };
 
-    fetchSidebarData();
+    loadSidebarData();
   }, [currentPostId]);
 
   // Search functionality
@@ -79,11 +57,11 @@ const BlogSidebar = ({ currentPostId }: BlogSidebarProps) => {
 
       setIsSearching(true);
       try {
-        const response = await fetch(`${WORDPRESS_API_URL}?_embed&search=${encodeURIComponent(searchTerm)}&per_page=5`);
-        if (response.ok) {
-          const data = await response.json();
-          setSearchResults(data);
-        }
+        const data = await fetchPosts({ 
+          search: searchTerm,
+          per_page: 5 
+        });
+        setSearchResults(data);
       } catch (error) {
         console.error('Error searching posts:', error);
       } finally {
@@ -160,11 +138,11 @@ const BlogSidebar = ({ currentPostId }: BlogSidebarProps) => {
           </h3>
           <Link href={`/blog/${suggestedPost.slug}`} className="block">
             <div className="group">
-              {suggestedPost._embedded?.['wp:featuredmedia']?.[0] && (
+              {suggestedPost.featured_media && (
                 <div className="relative w-full h-32 mb-3 rounded-lg overflow-hidden">
                   <Image
-                    src={suggestedPost._embedded['wp:featuredmedia'][0].source_url}
-                    alt={suggestedPost._embedded['wp:featuredmedia'][0].alt_text || stripHtml(suggestedPost.title.rendered)}
+                    src={`${process.env.NEXT_PUBLIC_WORDPRESS_MEDIA_URL}/${suggestedPost.featured_media}.jpg`}
+                    alt={stripHtml(suggestedPost.title.rendered)}
                     fill
                     className="object-cover group-hover:scale-105 transition-transform duration-300"
                   />
@@ -195,11 +173,11 @@ const BlogSidebar = ({ currentPostId }: BlogSidebarProps) => {
             {recentPosts.slice(0, 4).map((post) => (
               <Link key={post.id} href={`/blog/${post.slug}`} className="block">
                 <div className="flex space-x-3 group">
-                  {post._embedded?.['wp:featuredmedia']?.[0] && (
+                  {post.featured_media && (
                     <div className="relative w-16 h-16 rounded-lg overflow-hidden flex-shrink-0">
                       <Image
-                        src={post._embedded['wp:featuredmedia'][0].source_url}
-                        alt={post._embedded['wp:featuredmedia'][0].alt_text || stripHtml(post.title.rendered)}
+                        src={`${process.env.NEXT_PUBLIC_WORDPRESS_MEDIA_URL}/${post.featured_media}.jpg`}
+                        alt={stripHtml(post.title.rendered)}
                         fill
                         className="object-cover group-hover:scale-105 transition-transform duration-300"
                       />

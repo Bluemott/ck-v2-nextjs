@@ -6,26 +6,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import BlogSidebar from '../../components/BlogSidebar';
 import StructuredData, { generateArticleStructuredData } from '../../components/StructuredData';
-
-interface WordPressPost {
-  id: number;
-  title: {
-    rendered: string;
-  };
-  content: {
-    rendered: string;
-  };
-  date: string;
-  slug: string;
-  _embedded?: {
-    'wp:featuredmedia'?: Array<{
-      source_url: string;
-      alt_text: string;
-    }>;
-  };
-}
-
-const WORDPRESS_API_URL = 'https://cowboykimono.com/blog.html/wp-json/wp/v2/posts';
+import { fetchPostBySlug, type WordPressPost } from '../../lib/wordpress';
 
 const BlogPostPage = () => {
   const params = useParams();
@@ -36,17 +17,13 @@ const BlogPostPage = () => {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const fetchPost = async () => {
+    const loadPost = async () => {
       try {
-        const response = await fetch(`${WORDPRESS_API_URL}?slug=${slug}&_embed`);
-        if (!response.ok) {
-          throw new Error('Failed to fetch post');
-        }
-        const data = await response.json();
-        if (data.length === 0) {
+        const fetchedPost = await fetchPostBySlug(slug);
+        if (!fetchedPost) {
           throw new Error('Post not found');
         }
-        setPost(data[0]);
+        setPost(fetchedPost);
       } catch (err) {
         setError('Failed to load blog post. Please try again later.');
         console.error('Error fetching post:', err);
@@ -56,7 +33,7 @@ const BlogPostPage = () => {
     };
 
     if (slug) {
-      fetchPost();
+      loadPost();
     }
   }, [slug]);
 
@@ -105,7 +82,7 @@ const BlogPostPage = () => {
             title: post.title.rendered,
             description: post.content.rendered.replace(/<[^>]+>/g, '').slice(0, 160),
             url: `${typeof window !== 'undefined' ? window.location.origin : ''}/blog/${post.slug}`,
-            image: post._embedded?.['wp:featuredmedia']?.[0]?.source_url,
+            image: post.featured_media ? `${process.env.NEXT_PUBLIC_WORDPRESS_MEDIA_URL}/${post.featured_media}.jpg` : undefined,
             datePublished: post.date,
             author: 'Cowboy Kimono',
           })}
@@ -127,11 +104,11 @@ const BlogPostPage = () => {
             {/* Main Content */}
             <div className="flex-1 max-w-4xl">
               {/* Featured Image */}
-              {post._embedded?.['wp:featuredmedia']?.[0] && (
+              {post.featured_media && (
                 <div className="relative h-64 md:h-96 w-full mb-8 rounded-lg overflow-hidden">
                   <Image
-                    src={post._embedded['wp:featuredmedia'][0].source_url}
-                    alt={post._embedded['wp:featuredmedia'][0].alt_text || post.title.rendered}
+                    src={`${process.env.NEXT_PUBLIC_WORDPRESS_MEDIA_URL}/${post.featured_media}.jpg`}
+                    alt={post.title.rendered}
                     width={800}
                     height={400}
                     className="w-full h-full object-cover"
@@ -142,7 +119,7 @@ const BlogPostPage = () => {
               {/* Post Header */}
               <header className="mb-8">
                 <h1 
-                  className="text-4xl font-bold mb-4 text-gray-900"
+                  className="text-4xl font-bold mb-4 text-gray-900 serif"
                   dangerouslySetInnerHTML={{ __html: post.title.rendered }}
                 />
                 <p className="text-gray-700 font-medium">

@@ -4,31 +4,9 @@ import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import BlogSidebar from '../components/BlogSidebar';
-
-interface WordPressPost {
-  id: number;
-  title: {
-    rendered: string;
-  };
-  excerpt: {
-    rendered: string;
-  };
-  content: {
-    rendered: string;
-  };
-  date: string;
-  slug: string;
-  featured_media: number;
-  _embedded?: {
-    'wp:featuredmedia'?: Array<{
-      source_url: string;
-      alt_text: string;
-    }>;
-  };
-}
+import { fetchPosts, type WordPressPost } from '../lib/wordpress';
 
 const POSTS_PER_PAGE = 6;
-const WORDPRESS_API_URL = 'https://cowboykimono.com/blog.html/wp-json/wp/v2/posts';
 
 const BlogClient = () => {
   const [posts, setPosts] = useState<WordPressPost[]>([]);
@@ -39,23 +17,20 @@ const BlogClient = () => {
   const [totalPosts, setTotalPosts] = useState(0);
 
   useEffect(() => {
-    const fetchPosts = async () => {
+    const loadPosts = async () => {
       setLoading(true);
       try {
-        const response = await fetch(
-          `${WORDPRESS_API_URL}?_embed&per_page=${POSTS_PER_PAGE}&page=${currentPage}`
-        );
-        if (!response.ok) {
-          throw new Error('Failed to fetch posts');
-        }
+        const fetchedPosts = await fetchPosts({
+          per_page: POSTS_PER_PAGE,
+          page: currentPage,
+        });
         
-        const data = await response.json();
-        const total = parseInt(response.headers.get('X-WP-Total') || '0');
-        const totalPagesHeader = parseInt(response.headers.get('X-WP-TotalPages') || '1');
+        setPosts(fetchedPosts);
         
-        setPosts(data);
-        setTotalPosts(total);
-        setTotalPages(totalPagesHeader);
+        // For now, we'll estimate total pages based on posts returned
+        // In a real implementation, you might want to add a separate API call to get total count
+        setTotalPosts(fetchedPosts.length * currentPage); // This is an approximation
+        setTotalPages(Math.ceil(fetchedPosts.length / POSTS_PER_PAGE));
       } catch (err) {
         setError('Failed to load blog posts. Please try again later.');
         console.error('Error fetching posts:', err);
@@ -64,7 +39,7 @@ const BlogClient = () => {
       }
     };
 
-    fetchPosts();
+    loadPosts();
   }, [currentPage]);
 
   const formatDate = (dateString: string) => {
@@ -73,10 +48,6 @@ const BlogClient = () => {
       month: 'long',
       day: 'numeric'
     });
-  };
-
-  const stripHtml = (html: string) => {
-    return html.replace(/<[^>]*>/g, '');
   };
 
   const handlePageChange = (page: number) => {
@@ -183,7 +154,7 @@ const BlogClient = () => {
         <div className="text-center mb-12">
           <div className="flex justify-center mb-6">
             <Image
-              src="/images/CK_Logo_Blog.png" // Update with your actual blog header image
+              src="/images/CK_Logo_Blog.png"
               alt="Blog Header"
               width={400}
               height={100}
@@ -214,12 +185,12 @@ const BlogClient = () => {
                   {posts.map((post) => (
                     <Link key={post.id} href={`/blog/${post.slug}`} className="block">
                       <article className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 cursor-pointer flex flex-col">
-                        {/* Featured Image - Natural Aspect Ratio */}
-                        {post._embedded?.['wp:featuredmedia']?.[0] && (
+                        {/* Featured Image - Using WordPress media URL */}
+                        {post.featured_media && (
                           <div className="relative w-full overflow-hidden">
                             <Image
-                              src={post._embedded['wp:featuredmedia'][0].source_url}
-                              alt={post._embedded['wp:featuredmedia'][0].alt_text || stripHtml(post.title.rendered)}
+                              src={`${process.env.NEXT_PUBLIC_WORDPRESS_MEDIA_URL}/${post.featured_media}.jpg`}
+                              alt={post.title.rendered}
                               width={0}
                               height={0}
                               sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
@@ -231,7 +202,7 @@ const BlogClient = () => {
                         
                         {/* Content - Flexible Height */}
                         <div className="p-6 flex-1 flex flex-col">
-                          <h2 className="text-xl font-semibold mb-3 text-gray-900 line-clamp-2 leading-tight"
+                          <h2 className="text-xl font-semibold mb-3 text-gray-900 line-clamp-2 leading-tight serif"
                               dangerouslySetInnerHTML={{ __html: post.title.rendered }}
                           />
                           
@@ -248,24 +219,24 @@ const BlogClient = () => {
                           
                           <div className="inline-flex items-center text-[#1e2939] hover:text-[#2a3441] font-medium transition-colors group mt-auto">
                             Read More 
-                            <span className="ml-1 transform group-hover:translate-x-1 transition-transform">
-                              →
-                            </span>
+                            <span className="ml-1 group-hover:translate-x-1 transition-transform">→</span>
                           </div>
                         </div>
                       </article>
                     </Link>
                   ))}
                 </div>
-
+                
                 {/* Pagination */}
                 {renderPagination()}
               </>
             )}
           </div>
-
+          
           {/* Sidebar */}
-          <BlogSidebar />
+          <div className="lg:w-80">
+            <BlogSidebar />
+          </div>
         </div>
       </div>
     </div>

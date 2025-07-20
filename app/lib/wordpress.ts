@@ -371,4 +371,9 @@ export async function fetchTags(): Promise<Record<string, unknown>[]> {
     console.error('Error fetching tags:', error);
     return [];
   }
+}
+
+// Get WordPress admin URL
+export function getWordPressAdminUrl(): string {
+  return process.env.NEXT_PUBLIC_WORDPRESS_ADMIN_URL || 'https://admin.cowboykimono.com';
 } 

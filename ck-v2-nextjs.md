@@ -25,6 +25,7 @@
 - `@tailwindcss/typography`: Enhanced typography styles
 - `rss-parser`: RSS feed processing
 - `next/font`: Google Fonts integration (Geist fonts)
+- WordPress REST API: Headless CMS integration
 
 ### Development Tools
 - **ESLint 9**: Code linting and quality
@@ -70,7 +71,7 @@ ck-v2-nextjs/
 #### Page Components
 - **Home**: Landing page with hero image and featured content
 - **Shop**: E-commerce product listings
-- **Blog**: Content blog with sidebar navigation
+- **Blog**: Content blog with WordPress integration
 - **About**: Company information and story
 - **Downloads**: Free resource downloads
 
@@ -78,6 +79,7 @@ ck-v2-nextjs/
 - **Analytics**: Google Analytics integration
 - **GoogleTagManager**: GTM implementation
 - **BlogSidebar**: Blog navigation and filtering
+- **WordPressBlog**: WordPress CMS integration component
 
 ### Component Patterns
 
@@ -187,11 +189,20 @@ export default function PageComponent() {
 
 ## Content Management
 
+### WordPress Headless CMS Integration
+- **WordPress REST API**: Content fetching from headless WordPress
+- **Dynamic Routes**: `[slug]` for individual blog posts
+- **Client Components**: Interactive blog features with WordPress data
+- **Category Filtering**: WordPress taxonomy integration
+- **Media Management**: WordPress media library integration
+- **SEO Integration**: WordPress SEO metadata
+
 ### Blog Structure
+- **WordPress API**: Real-time content from WordPress CMS
 - **Dynamic Routes**: `[slug]` for individual blog posts
 - **Client Components**: Interactive blog features
-- **Sidebar Navigation**: Category and tag filtering
-- **RSS Feeds**: Automated RSS generation
+- **Category Navigation**: WordPress taxonomy filtering
+- **RSS Feeds**: Automated RSS generation from WordPress
 
 ### Download Resources
 - **Craft Templates**: PDF templates for DIY projects
@@ -215,6 +226,12 @@ export default function PageComponent() {
 
 ### Environment Variables
 ```env
+# WordPress API Configuration
+NEXT_PUBLIC_WORDPRESS_API_URL=https://api.cowboykimono.com/wp-json/wp/v2
+NEXT_PUBLIC_WORDPRESS_ADMIN_URL=https://admin.cowboykimono.com
+NEXT_PUBLIC_WORDPRESS_MEDIA_URL=https://api.cowboykimono.com/wp-content/uploads
+
+# Analytics and SEO
 NEXT_PUBLIC_GA_MEASUREMENT_ID=G-VYVT6J7XLS
 NEXT_PUBLIC_GOOGLE_VERIFICATION=your-google-verification-code
 NEXT_PUBLIC_SITE_URL=https://cowboykimono.com
@@ -222,9 +239,10 @@ NEXT_PUBLIC_SITE_URL=https://cowboykimono.com
 
 ### Amplify Configuration
 - **Static Site Generation**: Optimized for static hosting
-- **Image Domains**: Configured for external image sources
+- **Image Domains**: Configured for external image sources including WordPress
 - **Build Commands**: Automated build and deployment
-- **Environment Setup**: Production-ready configuration
+- **Environment Setup**: Production-ready configuration with WordPress API
+- **WordPress Integration**: API endpoints for dynamic content
 
 ## File Organization Standards
 
@@ -239,6 +257,7 @@ NEXT_PUBLIC_SITE_URL=https://cowboykimono.com
 - **Downloads**: Categorized in `/public/downloads/`
 - **Icons**: SVG icons in `/public/`
 - **Favicon**: Multiple formats for different devices
+- **WordPress Media**: External media from WordPress CMS
 
 ### Import Patterns
 ```typescript
@@ -310,9 +329,10 @@ import { generateSEOMetadata } from "./lib/seo";
 ### Planned Features
 - **E-commerce Integration**: Full shopping cart and checkout
 - **User Authentication**: User accounts and profiles
-- **Content Management**: Admin panel for content updates
+- **Content Management**: WordPress headless CMS integration
 - **Search Functionality**: Site-wide search implementation
 - **Internationalization**: Multi-language support
+- **WordPress Admin**: Content management interface
 
 ### Performance Improvements
 - **Service Workers**: Offline functionality
@@ -388,3 +408,29 @@ This documentation serves as the single source of truth for the Cowboy Kimono v2
 - **How to Use**:
   - Add `className="serif"` to any element for Playfair Display
   - All `.prose` headings use Playfair Display automatically
+
+## [2024-12-19] WordPress Headless CMS Integration
+
+### WordPress API Integration
+- **WordPress REST API**: Full integration with headless WordPress CMS
+- **API Utilities**: `app/lib/wordpress.ts` provides TypeScript interfaces and API functions
+- **Blog Component**: `app/components/WordPressBlog.tsx` for dynamic blog content
+- **Environment Variables**: WordPress API configuration for different environments
+
+### WordPress Features
+- **Content Management**: WordPress admin interface for non-technical users
+- **Dynamic Blog Posts**: Real-time content from WordPress CMS
+- **Category Filtering**: WordPress taxonomy integration
+- **Media Management**: WordPress media library for images and assets
+- **SEO Integration**: WordPress SEO metadata and structured data
+
+### Technology Stack (update)
+- **WordPress REST API**: Headless CMS for content management
+- **TypeScript Interfaces**: Full typing for WordPress data structures
+- **Next.js Integration**: Seamless WordPress content in Next.js components
+
+### Development Guidelines (update)
+- **WordPress API**: Use `fetchPosts()`, `fetchPostBySlug()`, `fetchCategories()` functions
+- **Component Integration**: Use `WordPressBlog` component for blog pages
+- **Environment Setup**: Configure WordPress API URLs in environment variables
+- **Image Optimization**: WordPress media works with Next.js Image component

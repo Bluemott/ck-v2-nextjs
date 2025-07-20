@@ -20,6 +20,7 @@ export default function Home() {
           fill
           style={{ objectFit: "cover", objectPosition: "left" }}
           priority
+          sizes="100vw"
         />
       </div>
 

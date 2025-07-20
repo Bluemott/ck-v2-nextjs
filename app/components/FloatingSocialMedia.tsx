@@ -20,19 +20,19 @@ const FloatingSocialMedia = () => {
     },
     {
       name: 'Facebook',
-      url: 'https://facebook.com/cowboykimonos',
+      url: 'https://www.facebook.com/me.marisa.mott/',
       icon: '📘',
       bgColor: 'bg-blue-600 hover:bg-blue-700'
     },
     {
-      name: 'Twitter',
-      url: 'https://twitter.com/cowboykimonos',
+      name: 'LinkedIn',
+      url: 'https://www.linkedin.com/in/marisa-mott-2149335/',
       icon: '🐦',
       bgColor: 'bg-sky-500 hover:bg-sky-600'
     },
     {
       name: 'Pinterest',
-      url: 'https://pinterest.com/cowboykimonos',
+      url: 'https://www.pinterest.com/mottmarisa6quincy1fl/',
       icon: '📌',
       bgColor: 'bg-red-600 hover:bg-red-700'
     }

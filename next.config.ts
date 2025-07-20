@@ -12,6 +12,8 @@ const nextConfig: NextConfig = {
     imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
     domains: [
       'cowboykimono.com',
+      'api.cowboykimono.com',
+      'admin.cowboykimono.com',
       'i.etsystatic.com',
       'img.etsystatic.com',
       'v5.airtableusercontent.com',

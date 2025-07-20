@@ -1,6 +1,5 @@
-import { redirect } from 'next/navigation';
 import { Metadata } from 'next';
-import { getWordPressAdminUrl } from '../lib/wordpress';
+import AdminRedirect from './AdminRedirect';
 
 export const metadata: Metadata = {
   title: 'Admin - Cowboy Kimono',
@@ -9,6 +8,5 @@ export const metadata: Metadata = {
 };
 
 export default function AdminPage() {
-  // Redirect to WordPress admin
-  redirect(getWordPressAdminUrl());
+  return <AdminRedirect />;
 } 

@@ -426,6 +426,7 @@ This documentation serves as the single source of truth for the Cowboy Kimono v2
 - **SEO Integration**: WordPress SEO metadata and structured data
 - **Admin Access**: Direct access to WordPress admin via navbar link and `/admin` route
 - **Blog Components**: All blog components now use centralized WordPress API utilities
+- **Admin Redirect**: Improved admin redirect with client-side handling and fallback options
 
 ### Technology Stack (update)
 - **WordPress REST API**: Headless CMS for content management
@@ -433,6 +434,7 @@ This documentation serves as the single source of truth for the Cowboy Kimono v2
 - **Next.js Integration**: Seamless WordPress content in Next.js components
 - **Admin Portal**: WordPress admin access via `admin.cowboykimono.com` subdomain
 - **Centralized API**: All blog components use `app/lib/wordpress.ts` utilities
+- **Client-Side Redirects**: Improved admin redirect handling with user feedback
 
 ### Development Guidelines (update)
 - **WordPress API**: Use `fetchPosts()`, `fetchPostBySlug()`, `fetchCategories()` functions
@@ -441,3 +443,4 @@ This documentation serves as the single source of truth for the Cowboy Kimono v2
 - **Image Optimization**: WordPress media works with Next.js Image component
 - **Admin Access**: Use `getWordPressAdminUrl()` utility for admin portal links
 - **Blog Components**: All blog components updated to use centralized WordPress API utilities
+- **Admin Redirect**: Admin pages use client-side redirect with loading states and fallback links

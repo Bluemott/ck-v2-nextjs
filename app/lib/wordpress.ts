@@ -375,5 +375,7 @@ export async function fetchTags(): Promise<Record<string, unknown>[]> {
 
 // Get WordPress admin URL
 export function getWordPressAdminUrl(): string {
-  return process.env.NEXT_PUBLIC_WORDPRESS_ADMIN_URL || 'https://admin.cowboykimono.com';
+  const baseUrl = process.env.NEXT_PUBLIC_WORDPRESS_ADMIN_URL || 'https://admin.cowboykimono.com';
+  // Ensure we're pointing to the WordPress admin login
+  return baseUrl.endsWith('/wp-admin') ? baseUrl : `${baseUrl}/wp-admin`;
 } 

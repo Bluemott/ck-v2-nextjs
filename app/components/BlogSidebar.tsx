@@ -1,9 +1,9 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import Image from 'next/image';
 import Link from 'next/link';
-import { fetchPosts, type WordPressPost } from '../lib/wordpress';
+import { fetchPosts, type WordPressPost, decodeHtmlEntities } from '../lib/wordpress';
+import WordPressImage from './WordPressImage';
 
 interface BlogSidebarProps {
   currentPostId?: number;
@@ -15,13 +15,21 @@ const BlogSidebar = ({ currentPostId }: BlogSidebarProps) => {
   const [recentPosts, setRecentPosts] = useState<WordPressPost[]>([]);
   const [suggestedPost, setSuggestedPost] = useState<WordPressPost | null>(null);
   const [isSearching, setIsSearching] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   // Fetch recent posts and suggested post
   useEffect(() => {
     const loadSidebarData = async () => {
       try {
+        setLoading(true);
+        setError(null);
+        
         // Fetch recent posts
-        const recentData = await fetchPosts({ per_page: 5 });
+        const recentData = await fetchPosts({ 
+          per_page: 5,
+          _embed: true
+        });
         setRecentPosts(recentData);
 
         // Set suggested post (next post after current, or random if no current)
@@ -38,8 +46,11 @@ const BlogSidebar = ({ currentPostId }: BlogSidebarProps) => {
           // On blog listing page, suggest the most recent post
           setSuggestedPost(recentData[0] || null);
         }
-      } catch (error) {
-        console.error('Error fetching sidebar data:', error);
+      } catch (err) {
+        console.error('Error fetching sidebar data:', err);
+        setError('Failed to load sidebar data');
+      } finally {
+        setLoading(false);
       }
     };
 
@@ -59,11 +70,12 @@ const BlogSidebar = ({ currentPostId }: BlogSidebarProps) => {
       try {
         const data = await fetchPosts({ 
           search: searchTerm,
-          per_page: 5 
+          per_page: 5,
+          _embed: true
         });
         setSearchResults(data);
-      } catch (error) {
-        console.error('Error searching posts:', error);
+      } catch (err) {
+        console.error('Error searching posts:', err);
       } finally {
         setIsSearching(false);
       }
@@ -73,10 +85,6 @@ const BlogSidebar = ({ currentPostId }: BlogSidebarProps) => {
     return () => clearTimeout(debounceTimer);
   }, [searchTerm]);
 
-  const stripHtml = (html: string) => {
-    return html.replace(/<[^>]*>/g, '');
-  };
-
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', {
       month: 'short',
@@ -85,11 +93,30 @@ const BlogSidebar = ({ currentPostId }: BlogSidebarProps) => {
     });
   };
 
+  if (loading) {
+    return (
+      <div className="w-full lg:w-80 space-y-8">
+        <div className="bg-white rounded-lg shadow-md p-6 animate-pulse">
+          <div className="h-6 bg-gray-200 rounded mb-4"></div>
+          <div className="h-10 bg-gray-200 rounded"></div>
+        </div>
+        <div className="bg-white rounded-lg shadow-md p-6 animate-pulse">
+          <div className="h-6 bg-gray-200 rounded mb-4"></div>
+          <div className="space-y-3">
+            {[...Array(3)].map((_, i) => (
+              <div key={i} className="h-4 bg-gray-200 rounded"></div>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="w-full lg:w-80 space-y-8">
       {/* Search Section */}
       <div className="bg-white rounded-lg shadow-md p-6">
-        <h3 className="text-lg font-semibold mb-4 text-gray-800">Search Blog</h3>
+        <h3 className="text-lg font-semibold mb-4 text-gray-800 serif">Search Blog</h3>
         <div className="relative">
           <input
             type="text"
@@ -99,101 +126,102 @@ const BlogSidebar = ({ currentPostId }: BlogSidebarProps) => {
             className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1e2939] focus:border-transparent placeholder:text-gray-600"
           />
           {isSearching && (
-            <div className="absolute right-3 top-2.5">
-              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-[#1e2939]"></div>
+            <div className="absolute right-3 top-2">
+              <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-[#1e2939]"></div>
             </div>
           )}
         </div>
 
         {/* Search Results */}
-        {searchTerm.length >= 2 && (
-          <div className="mt-4">
-            {searchResults.length > 0 ? (
-              <div className="space-y-3">
-                {searchResults.map((post) => (
-                  <Link key={post.id} href={`/blog/${post.slug}`} className="block">
-                    <div className="p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
-                      <h4 className="text-sm font-medium text-gray-900 line-clamp-2">
-                        {stripHtml(post.title.rendered)}
-                      </h4>
-                      <p className="text-xs text-gray-500 mt-1">
-                        {formatDate(post.date)}
-                      </p>
-                    </div>
-                  </Link>
-                ))}
-              </div>
-            ) : !isSearching ? (
-              <p className="text-sm text-gray-500 mt-2">No posts found</p>
-            ) : null}
+        {searchResults.length > 0 && (
+          <div className="mt-4 space-y-2">
+            <h4 className="text-sm font-medium text-gray-700">Search Results:</h4>
+            {searchResults.map((post) => (
+              <Link
+                key={post.id}
+                href={`/blog/${post.slug}`}
+                className="block p-2 rounded hover:bg-gray-50 transition-colors"
+              >
+                <h5 className="text-sm font-medium text-gray-900 line-clamp-2">
+                  {decodeHtmlEntities(post.title.rendered)}
+                </h5>
+                <p className="text-xs text-gray-500 mt-1">
+                  {formatDate(post.date)}
+                </p>
+              </Link>
+            ))}
           </div>
         )}
       </div>
 
-      {/* Suggested Next Read */}
+      {/* Recent Posts Section */}
+      <div className="bg-white rounded-lg shadow-md p-6">
+        <h3 className="text-lg font-semibold mb-4 text-gray-800 serif">Recent Posts</h3>
+        <div className="space-y-4">
+          {recentPosts.map((post) => (
+            <Link
+              key={post.id}
+              href={`/blog/${post.slug}`}
+              className="block group"
+            >
+              <div className="flex items-start space-x-3">
+                {post.featured_media && (
+                  <div className="relative w-16 h-16 flex-shrink-0 rounded overflow-hidden">
+                    <WordPressImage
+                      post={post}
+                      size="medium"
+                      fill
+                      className="object-cover group-hover:scale-105 transition-transform duration-300"
+                    />
+                  </div>
+                )}
+                <div className="flex-1 min-w-0">
+                  <h4 className="text-sm font-medium text-gray-900 group-hover:text-[#1e2939] line-clamp-2 transition-colors">
+                    {decodeHtmlEntities(post.title.rendered)}
+                  </h4>
+                  <p className="text-xs text-gray-500 mt-1">
+                    {formatDate(post.date)}
+                  </p>
+                </div>
+              </div>
+            </Link>
+          ))}
+        </div>
+      </div>
+
+      {/* Suggested Post Section */}
       {suggestedPost && (
         <div className="bg-white rounded-lg shadow-md p-6">
-          <h3 className="text-lg font-semibold mb-4 text-gray-800">
-            {currentPostId ? 'Next Read' : 'Featured Post'}
-          </h3>
-          <Link href={`/blog/${suggestedPost.slug}`} className="block">
-            <div className="group">
-              {suggestedPost.featured_media && (
-                <div className="relative w-full h-32 mb-3 rounded-lg overflow-hidden">
-                  <Image
-                    src={`${process.env.NEXT_PUBLIC_WORDPRESS_MEDIA_URL}/${suggestedPost.featured_media}.jpg`}
-                    alt={stripHtml(suggestedPost.title.rendered)}
-                    fill
-                    className="object-cover group-hover:scale-105 transition-transform duration-300"
-                  />
-                </div>
-              )}
-              <h4 className="font-medium text-gray-900 line-clamp-2 group-hover:text-[#1e2939] transition-colors">
-                {stripHtml(suggestedPost.title.rendered)}
-              </h4>
-              <p className="text-sm text-gray-500 mt-2">
-                {formatDate(suggestedPost.date)}
-              </p>
-              <div 
-                className="text-sm text-gray-600 mt-2 line-clamp-2"
-                dangerouslySetInnerHTML={{ 
-                  __html: suggestedPost.excerpt.rendered.substring(0, 80) + '...' 
-                }}
-              />
-            </div>
+          <h3 className="text-lg font-semibold mb-4 text-gray-800 serif">You Might Like</h3>
+          <Link href={`/blog/${suggestedPost.slug}`} className="block group">
+            {suggestedPost.featured_media && (
+              <div className="relative w-full h-32 mb-3 rounded overflow-hidden">
+                <WordPressImage
+                  post={suggestedPost}
+                  size="medium"
+                  fill
+                  className="object-cover group-hover:scale-105 transition-transform duration-300"
+                />
+              </div>
+            )}
+            <h4 className="text-sm font-medium text-gray-900 group-hover:text-[#1e2939] line-clamp-2 transition-colors">
+              {decodeHtmlEntities(suggestedPost.title.rendered)}
+            </h4>
+            <p className="text-xs text-gray-500 mt-1">
+              {formatDate(suggestedPost.date)}
+            </p>
           </Link>
         </div>
       )}
 
-      {/* Recent Posts */}
-      {recentPosts.length > 0 && (
+      {/* Error State */}
+      {error && (
         <div className="bg-white rounded-lg shadow-md p-6">
-          <h3 className="text-lg font-semibold mb-4 text-gray-800">Recent Posts</h3>
-          <div className="space-y-4">
-            {recentPosts.slice(0, 4).map((post) => (
-              <Link key={post.id} href={`/blog/${post.slug}`} className="block">
-                <div className="flex space-x-3 group">
-                  {post.featured_media && (
-                    <div className="relative w-16 h-16 rounded-lg overflow-hidden flex-shrink-0">
-                      <Image
-                        src={`${process.env.NEXT_PUBLIC_WORDPRESS_MEDIA_URL}/${post.featured_media}.jpg`}
-                        alt={stripHtml(post.title.rendered)}
-                        fill
-                        className="object-cover group-hover:scale-105 transition-transform duration-300"
-                      />
-                    </div>
-                  )}
-                  <div className="flex-1 min-w-0">
-                    <h4 className="text-sm font-medium text-gray-900 line-clamp-2 group-hover:text-[#1e2939] transition-colors">
-                      {stripHtml(post.title.rendered)}
-                    </h4>
-                    <p className="text-xs text-gray-500 mt-1">
-                      {formatDate(post.date)}
-                    </p>
-                  </div>
-                </div>
-              </Link>
-            ))}
+          <div className="text-center text-red-600">
+            <svg className="w-8 h-8 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+            </svg>
+            <p className="text-sm">{error}</p>
           </div>
         </div>
       )}

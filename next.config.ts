@@ -5,24 +5,27 @@ const nextConfig: NextConfig = {
   output: 'standalone',
   
   images: {
-    // Disable optimization for better Amplify compatibility
-    unoptimized: true,
+    // Enable optimization for better performance
+    unoptimized: false,
     formats: ['image/webp', 'image/avif'],
     deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 3840],
     imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
-    domains: [
-      'cowboykimono.com',
-      'api.cowboykimono.com',
-      'admin.cowboykimono.com',
-      'i.etsystatic.com',
-      'img.etsystatic.com',
-      'v5.airtableusercontent.com',
-      'images.unsplash.com' // Add more domains as needed
-    ],
     remotePatterns: [
       {
         protocol: 'https',
         hostname: 'cowboykimono.com',
+        port: '',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'api.cowboykimono.com',
+        port: '',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'admin.cowboykimono.com',
         port: '',
         pathname: '/**',
       },

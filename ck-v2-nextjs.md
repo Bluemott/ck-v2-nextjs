@@ -6,7 +6,7 @@
 
 ### Key Features
 - **E-commerce Platform**: Shop for handcrafted kimonos and apparel
-- **Content Blog**: Artistic content and lifestyle posts
+- **Content Blog**: Artistic content and lifestyle posts with WordPress headless CMS
 - **Download Resources**: Free craft templates and tutorials
 - **SEO Optimized**: Comprehensive SEO implementation
 - **Responsive Design**: Mobile-first approach with Tailwind CSS
@@ -25,7 +25,7 @@
 - `@tailwindcss/typography`: Enhanced typography styles
 - `rss-parser`: RSS feed processing
 - `next/font`: Google Fonts integration (Geist fonts)
-- WordPress REST API: Headless CMS integration
+- **WordPress REST API**: Headless CMS integration
 
 ### Development Tools
 - **ESLint 9**: Code linting and quality
@@ -39,16 +39,26 @@
 ck-v2-nextjs/
 ├── app/                          # Next.js App Router
 │   ├── components/               # Reusable UI components
+│   │   ├── WordPressBlog.tsx    # WordPress blog component
+│   │   ├── BlogSidebar.tsx      # Blog sidebar with search
+│   │   └── ...                  # Other components
 │   ├── lib/                      # Utility functions and configurations
-│   ├── [page]/                   # Route pages
-│   ├── globals.css              # Global styles
-│   ├── layout.tsx               # Root layout
-│   └── page.tsx                 # Home page
+│   │   ├── wordpress.ts         # WordPress API integration
+│   │   ├── seo.ts              # SEO utilities
+│   │   └── analytics.ts        # Analytics utilities
+│   ├── blog/                    # Blog pages
+│   │   ├── page.tsx            # Blog listing page
+│   │   └── [slug]/             # Individual blog posts
+│   ├── globals.css             # Global styles
+│   ├── layout.tsx              # Root layout
+│   └── page.tsx                # Home page
 ├── public/                       # Static assets
 │   ├── images/                  # Image assets
 │   └── downloads/               # Downloadable resources
 ├── next.config.ts               # Next.js configuration
 ├── package.json                 # Dependencies and scripts
+├── amplify.yml                  # AWS Amplify deployment config
+├── .env.local                   # Environment variables
 └── tsconfig.json               # TypeScript configuration
 ```
 
@@ -75,12 +85,10 @@ ck-v2-nextjs/
 - **About**: Company information and story
 - **Downloads**: Free resource downloads
 
-#### Utility Components
-- **Analytics**: Google Analytics integration
-- **GoogleTagManager**: GTM implementation
-- **BlogSidebar**: Blog navigation and filtering
-- **WordPressBlog**: WordPress CMS integration component
-- **Admin Access**: WordPress admin portal integration via navbar and `/admin` route
+#### WordPress Components
+- **WordPressBlog**: Main blog component with posts, categories, and pagination
+- **BlogSidebar**: Blog sidebar with search, recent posts, and suggestions
+- **WordPress API**: Centralized WordPress API utilities in `app/lib/wordpress.ts`
 
 ### Component Patterns
 
@@ -101,25 +109,25 @@ interface SEOProps {
 }
 ```
 
-#### Component Structure
+#### WordPress Component Structure
 ```typescript
-// Standard component pattern
-import { Metadata } from "next";
-import { generateSEOMetadata } from "./lib/seo";
+// WordPress blog component pattern
+import { fetchPosts, type WordPressPost } from '../lib/wordpress';
 
-export const metadata: Metadata = generateSEOMetadata({
-  title: "Page Title",
-  description: "Page description",
-  keywords: ["keyword1", "keyword2"],
-  canonical: "/page-path",
-});
+interface WordPressBlogProps {
+  initialPosts?: WordPressPost[];
+  postsPerPage?: number;
+  showCategories?: boolean;
+  showPagination?: boolean;
+}
 
-export default function PageComponent() {
-  return (
-    <div className="container mx-auto px-4">
-      {/* Component content */}
-    </div>
-  );
+export default function WordPressBlog({ 
+  initialPosts = [], 
+  postsPerPage = 6,
+  showCategories = true,
+  showPagination = true
+}: WordPressBlogProps) {
+  // Component implementation
 }
 ```
 
@@ -191,19 +199,52 @@ export default function PageComponent() {
 ## Content Management
 
 ### WordPress Headless CMS Integration
-- **WordPress REST API**: Content fetching from headless WordPress
-- **Dynamic Routes**: `[slug]` for individual blog posts
-- **Client Components**: Interactive blog features with WordPress data
+- **WordPress REST API**: Clean, centralized API integration in `app/lib/wordpress.ts`
+- **TypeScript Interfaces**: Full typing for WordPress data structures
+- **Error Handling**: Comprehensive error handling and loading states
+- **SEO Integration**: WordPress SEO metadata and structured data
+- **Admin Access**: WordPress admin portal via `admin.cowboykimono.com`
+
+### WordPress Features
+- **Content Management**: WordPress admin interface for non-technical users
+- **Dynamic Blog Posts**: Real-time content from WordPress CMS
 - **Category Filtering**: WordPress taxonomy integration
-- **Media Management**: WordPress media library integration
-- **SEO Integration**: WordPress SEO metadata
+- **Search Functionality**: Real-time search with debouncing
+- **Media Management**: WordPress media library for images and assets
+- **Recent Posts**: Sidebar with recent posts and intelligent suggestions
+- **Responsive Design**: Mobile-optimized blog layout
 
 ### Blog Structure
 - **WordPress API**: Real-time content from WordPress CMS
 - **Dynamic Routes**: `[slug]` for individual blog posts
-- **Client Components**: Interactive blog features
+- **Client Components**: Interactive blog features with WordPress data
 - **Category Navigation**: WordPress taxonomy filtering
-- **RSS Feeds**: Automated RSS generation from WordPress
+- **Search Integration**: Real-time search functionality
+- **Sidebar Features**: Search, recent posts, and suggested content
+
+### WordPress API Utilities
+```typescript
+// Core WordPress functions
+export async function fetchPosts(params?: {
+  per_page?: number;
+  page?: number;
+  categories?: number[];
+  tags?: number[];
+  search?: string;
+  _embed?: boolean;
+}): Promise<WordPressPost[]>
+
+export async function fetchPostBySlug(slug: string): Promise<WordPressPost | null>
+export async function fetchCategories(): Promise<WordPressCategory[]>
+export async function fetchTags(): Promise<WordPressTag[]>
+export async function fetchMedia(mediaId: number): Promise<WordPressMedia | null>
+export async function fetchAuthor(authorId: number): Promise<WordPressAuthor | null>
+
+// Utility functions
+export function decodeHtmlEntities(text: string): string
+export function getWordPressAdminUrl(): string
+export function getMediaUrl(mediaId: number, size?: string): string
+```
 
 ### Download Resources
 - **Craft Templates**: PDF templates for DIY projects
@@ -270,9 +311,11 @@ import Link from "next/link";
 // Component imports
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
+import WordPressBlog from "./components/WordPressBlog";
 
 // Utility imports
 import { generateSEOMetadata } from "./lib/seo";
+import { fetchPosts, type WordPressPost } from "./lib/wordpress";
 ```
 
 ## Error Handling and Validation
@@ -281,6 +324,13 @@ import { generateSEOMetadata } from "./lib/seo";
 - **React Error Boundaries**: Catch and handle component errors
 - **Graceful Degradation**: Fallback UI for failed components
 - **User Feedback**: Clear error messages for users
+
+### WordPress Error Handling
+- **API Error Handling**: Comprehensive error handling for WordPress API calls
+- **Loading States**: Skeleton loading states for better UX
+- **Fallback Content**: Graceful fallbacks when content fails to load
+- **Retry Mechanisms**: User-friendly retry options
+- **Error Boundaries**: React error boundaries for component-level error handling
 
 ### Form Validation
 - **Client-side Validation**: Real-time form validation
@@ -330,8 +380,7 @@ import { generateSEOMetadata } from "./lib/seo";
 ### Planned Features
 - **E-commerce Integration**: Full shopping cart and checkout
 - **User Authentication**: User accounts and profiles
-- **Content Management**: WordPress headless CMS integration
-- **Search Functionality**: Site-wide search implementation
+- **Advanced Search**: Enhanced search with filters and sorting
 - **Internationalization**: Multi-language support
 - **WordPress Admin**: Content management interface
 
@@ -410,37 +459,480 @@ This documentation serves as the single source of truth for the Cowboy Kimono v2
   - Add `className="serif"` to any element for Playfair Display
   - All `.prose` headings use Playfair Display automatically
 
-## [2024-12-19] WordPress Headless CMS Integration
+## [2024-12-19] WordPress Headless CMS Integration - Clean Implementation
 
 ### WordPress API Integration
-- **WordPress REST API**: Full integration with headless WordPress CMS
-- **API Utilities**: `app/lib/wordpress.ts` provides TypeScript interfaces and API functions
-- **Blog Component**: `app/components/WordPressBlog.tsx` for dynamic blog content
-- **Environment Variables**: WordPress API configuration for different environments
+- **WordPress REST API**: Clean, centralized integration in `app/lib/wordpress.ts`
+- **TypeScript Interfaces**: Complete typing for all WordPress data structures
+- **Error Handling**: Comprehensive error handling with user-friendly messages
+- **Loading States**: Skeleton loading states for better user experience
+- **SEO Integration**: WordPress SEO metadata and structured data
+- **Admin Access**: WordPress admin portal via `admin.cowboykimono.com`
+- **SSL Certificates**: Both subdomains secured with Let's Encrypt certificates
+- **Image Handling**: Proper WordPress media URL extraction and fallback handling
+- **Next.js Image Configuration**: Updated to use `remotePatterns` instead of deprecated `domains` array
+
+### Troubleshooting and Maintenance
+- **Diagnostic Tools**: PHP diagnostic script (`wordpress-diagnostic.php`) for server health checks
+- **Fix Scripts**: Automated fix script (`wordpress-fix.sh`) for common WordPress issues
+- **Error Handling**: Comprehensive troubleshooting guide for 503 errors and server issues
+- **Monitoring**: Health check scripts and backup procedures for production stability
+- **Recovery Procedures**: Step-by-step recovery process for database and file issues
 
 ### WordPress Features
 - **Content Management**: WordPress admin interface for non-technical users
 - **Dynamic Blog Posts**: Real-time content from WordPress CMS
-- **Category Filtering**: WordPress taxonomy integration
-- **Media Management**: WordPress media library for images and assets
-- **SEO Integration**: WordPress SEO metadata and structured data
-- **Admin Access**: Direct access to WordPress admin via navbar link and `/admin` route
-- **Blog Components**: All blog components now use centralized WordPress API utilities
-- **Admin Redirect**: Improved admin redirect with client-side handling and fallback options
+- **Category Filtering**: WordPress taxonomy integration with clean UI
+- **Search Functionality**: Real-time search with debouncing
+- **Media Management**: WordPress media library integration with proper image URL extraction
+- **Recent Posts**: Sidebar with recent posts and intelligent suggestions
+- **Responsive Design**: Mobile-optimized blog layout
+- **HTTPS Security**: All WordPress endpoints secured with SSL certificates
+- **Featured Images**: Proper handling of WordPress featured images with fallback placeholders
 
 ### Technology Stack (update)
 - **WordPress REST API**: Headless CMS for content management
 - **TypeScript Interfaces**: Full typing for WordPress data structures
 - **Next.js Integration**: Seamless WordPress content in Next.js components
 - **Admin Portal**: WordPress admin access via `admin.cowboykimono.com` subdomain
+- **API Endpoint**: WordPress REST API via `api.cowboykimono.com` subdomain
 - **Centralized API**: All blog components use `app/lib/wordpress.ts` utilities
-- **Client-Side Redirects**: Improved admin redirect handling with user feedback
+- **Error Handling**: Comprehensive error handling with retry mechanisms
+- **SSL Security**: Let's Encrypt certificates for both subdomains
+- **Image Optimization**: Proper WordPress media URL extraction and Next.js Image component integration
 
 ### Development Guidelines (update)
-- **WordPress API**: Use `fetchPosts()`, `fetchPostBySlug()`, `fetchCategories()` functions
+- **WordPress API**: Use centralized functions from `app/lib/wordpress.ts`
 - **Component Integration**: Use `WordPressBlog` component for blog pages
 - **Environment Setup**: Configure WordPress API URLs in environment variables
 - **Image Optimization**: WordPress media works with Next.js Image component
 - **Admin Access**: Use `getWordPressAdminUrl()` utility for admin portal links
-- **Blog Components**: All blog components updated to use centralized WordPress API utilities
-- **Admin Redirect**: Admin pages use client-side redirect with loading states and fallback links
+- **Error Handling**: Implement proper error states and loading indicators
+- **SEO**: Ensure all WordPress content includes proper metadata
+- **SSL Security**: All WordPress endpoints use HTTPS with valid certificates
+- **Image Handling**: Use `getFeaturedImageUrl()` and `getFeaturedImageAlt()` for proper image display
+
+### WordPress Component Architecture
+- **WordPressBlog**: Main blog component with posts, categories, and pagination
+- **BlogSidebar**: Sidebar with search, recent posts, and suggestions
+- **Individual Posts**: Dynamic routes with `[slug]` for individual blog posts
+- **Error States**: User-friendly error messages with retry options
+- **Loading States**: Skeleton loading for better perceived performance
+- **Image Handling**: Proper featured image display with fallback placeholders
+
+### WordPress API Utilities
+```typescript
+// Core WordPress functions
+export async function fetchPosts(params?: {
+  per_page?: number;
+  page?: number;
+  categories?: number[];
+  tags?: number[];
+  search?: string;
+  _embed?: boolean;
+}): Promise<WordPressPost[]>
+
+export async function fetchPostBySlug(slug: string): Promise<WordPressPost | null>
+export async function fetchCategories(): Promise<WordPressCategory[]>
+export async function fetchTags(): Promise<WordPressTag[]>
+export async function fetchMedia(mediaId: number): Promise<WordPressMedia | null>
+export async function fetchAuthor(authorId: number): Promise<WordPressAuthor | null>
+
+// Image handling utilities
+export function getFeaturedImageUrl(post: WordPressPost, size: 'thumbnail' | 'medium' | 'large' | 'full' = 'medium'): string | null
+export function getFeaturedImageAlt(post: WordPressPost): string
+export function getMediaUrl(mediaId: number): string
+
+// Utility functions
+export function decodeHtmlEntities(text: string): string
+export function getWordPressAdminUrl(): string
+```
+
+### WordPress Error Handling
+- **API Error Handling**: Comprehensive error handling for WordPress API calls
+- **Loading States**: Skeleton loading states for better UX
+- **Fallback Content**: Graceful fallbacks when content fails to load
+- **Retry Mechanisms**: User-friendly retry options
+- **Error Boundaries**: React error boundaries for component-level error handling
+- **Image Fallbacks**: Placeholder images when featured images are not available
+
+### Production Environment Variables
+```env
+# WordPress API Configuration (Production with SSL)
+NEXT_PUBLIC_WORDPRESS_API_URL=https://api.cowboykimono.com/wp-json/wp/v2
+NEXT_PUBLIC_WORDPRESS_ADMIN_URL=https://admin.cowboykimono.com
+NEXT_PUBLIC_WORDPRESS_MEDIA_URL=https://api.cowboykimono.com/wp-content/uploads
+
+# Analytics and SEO
+NEXT_PUBLIC_GA_MEASUREMENT_ID=G-VYVT6J7XLS
+NEXT_PUBLIC_GOOGLE_VERIFICATION=your-google-verification-code
+NEXT_PUBLIC_SITE_URL=https://cowboykimono.com
+```
+
+### SSL Certificate Management
+- **Let's Encrypt Certificates**: Automatic SSL certificates for both subdomains
+- **Auto-Renewal**: Certificates automatically renew every 60 days
+- **HTTPS Redirects**: All HTTP traffic automatically redirects to HTTPS
+- **Security Headers**: CORS headers configured for API access
+- **Certificate Monitoring**: Regular checks for certificate expiration
+
+### Subdomain Configuration
+- **API Subdomain**: `api.cowboykimono.com` - WordPress REST API endpoint
+- **Admin Subdomain**: `admin.cowboykimono.com` - WordPress admin interface
+- **DNS Records**: Route 53 A records pointing to EC2 instance
+- **Virtual Hosts**: Apache virtual host configuration for both subdomains
+- **SSL Certificates**: Individual certificates for each subdomain
+
+## [2024-12-19] WordPress Image Handling Fixes
+
+### Image Display Issues Resolved
+- **Featured Image Extraction**: Proper extraction of WordPress featured image URLs from `_embedded` data
+- **Image URL Construction**: Fixed WordPress media URL construction to use actual file paths
+- **Fallback Handling**: Added placeholder images when no featured image is available
+- **Alt Text Support**: Proper alt text extraction from WordPress media data
+- **Image Optimization**: WordPress images now work correctly with Next.js Image component
+
+### WordPress Media Integration
+- **Embedded Media**: Proper handling of WordPress `_embedded` media data
+- **Multiple Sizes**: Support for thumbnail, medium, large, and full image sizes
+- **Source URL Extraction**: Correct extraction of `source_url` from WordPress media objects
+- **Media Details**: Proper parsing of WordPress media details and file information
+- **Error Handling**: Graceful fallback when media data is missing or corrupted
+
+### Image Handling Functions
+```typescript
+// Get featured image URL with proper WordPress media handling
+export function getFeaturedImageUrl(post: WordPressPost, size: 'thumbnail' | 'medium' | 'large' | 'full' = 'medium'): string | null
+
+// Get featured image alt text
+export function getFeaturedImageAlt(post: WordPressPost): string
+
+// Get media URL with fallback
+export function getMediaUrl(mediaId: number): string
+```
+
+### Component Updates
+- **WordPressBlog Component**: Updated to use new image handling functions
+- **Individual Post Pages**: Proper featured image display with fallbacks
+- **Loading States**: Improved loading states for image-heavy content
+- **Error States**: Better error handling for missing or broken images
+- **Placeholder Images**: Custom SVG placeholder for posts without featured images
+
+### Image Optimization
+- **Next.js Image Component**: WordPress images now work with Next.js optimization
+- **Responsive Sizing**: Proper `sizes` attribute for responsive images
+- **Performance**: Optimized image loading with priority and lazy loading
+- **CDN Ready**: Images served from WordPress media library with proper caching
+
+### WordPress Media Structure
+- **Media Details**: Proper handling of WordPress media_details object
+- **Size Variants**: Support for multiple image sizes (thumbnail, medium, large, full)
+- **File Paths**: Correct construction of WordPress media file paths
+- **Alt Text**: Extraction of alt text from WordPress media objects
+- **Source URLs**: Proper extraction of source_url for direct image access
+
+## [2024-12-19] Blog Layout and Navigation Enhancements
+
+### New Blog Features
+- **Featured Posts Section**: Three highlighted posts displayed at the top of the blog page (only on page 1)
+- **Sidebar Navigation**: Right sidebar with recent posts and quick links
+- **Proper Pagination**: Real pagination with total post count from WordPress API
+- **Clean Layout**: Blue background design with white content cards
+- **Responsive Design**: Mobile-first design with sidebar that stacks on mobile
+- **Interactive States**: Loading states, hover effects, and smooth transitions
+
+### Blog Layout Structure
+- **Header Section**: Blog logo and description
+- **Featured Posts**: Three highlighted posts in a responsive grid (1 column mobile, 3 desktop)
+- **Main Content (2/3 width)**: Blog posts grid with pagination (12 posts per page, 3 columns on desktop)
+- **Sidebar (1/3 width)**: Recent posts and quick links
+- **Pagination**: Bottom pagination with proper total page count
+
+### Featured Posts Section
+- **Three Highlighted Posts**: Displays the first 3 posts from WordPress
+- **Responsive Grid**: 1 column on mobile, 3 columns on desktop
+- **Hover Effects**: Smooth transitions and scaling on hover
+- **Page 1 Only**: Only shows on the first page of the blog
+
+### Sidebar Features
+- **Recent Posts**: Shows the latest 4 posts with thumbnails
+- **Quick Links**: Easy navigation to All Posts, Shop, and About
+- **Clean Design**: White cards with proper spacing and hover effects
+- **Responsive**: Stacks below main content on mobile devices
+
+### Pagination Features
+- **Real Total Count**: Gets actual total posts from WordPress API headers
+- **Proper Page Count**: Calculates total pages based on posts per page
+- **Navigation Controls**: Previous/Next buttons and page numbers
+- **Smooth Scrolling**: Scrolls to top when changing pages
+- **Loading States**: Shows loading indicator during page transitions
+
+### User Experience Improvements
+- **Clean Blue Background**: Professional `bg-[#f0f8ff]` design
+- **Proper Post Count**: Shows accurate total posts and pages
+- **Responsive Design**: Works seamlessly on mobile and desktop
+- **Loading Indicators**: Visual feedback during data loading
+- **Error States**: User-friendly error messages and retry options
+
+### Technical Implementation
+- **WordPress API Integration**: Uses `fetchPostsWithCount()` for proper pagination
+- **Image Optimization**: Proper WordPress media URL extraction
+- **Performance**: Efficient API calls with embedded media data
+- **Accessibility**: Proper ARIA labels and keyboard navigation
+- **SEO Friendly**: Maintains SEO benefits with proper URL structure
+
+### Blog Component Architecture
+```typescript
+// Enhanced BlogClient component with featured posts and sidebar
+interface BlogClientProps {
+  // Component handles all state internally
+}
+
+// New state management for proper pagination
+const [totalPosts, setTotalPosts] = useState(0);
+const [totalPages, setTotalPages] = useState(1);
+const [featuredPosts, setFeaturedPosts] = useState<WordPressPost[]>([]);
+const [recentPosts, setRecentPosts] = useState<WordPressPost[]>([]);
+```
+
+### WordPress API Integration
+- **fetchPostsWithCount()**: New function that returns posts with total count
+- **Proper Headers**: Reads `X-WP-Total` and `X-WP-TotalPages` from WordPress API
+- **Embedded Media**: Includes `_embed: true` for proper image handling
+- **Error Handling**: Comprehensive error handling with user-friendly messages
+
+### Pagination and Navigation Features
+- **Real Total Count**: `totalPosts` from WordPress API headers
+- **Proper Page Count**: `totalPages` calculated from WordPress API
+- **Page Navigation**: `handlePageChange()` for smooth page transitions
+- **State Synchronization**: Proper state management between posts and pagination
+- **Loading States**: Comprehensive loading indicators for all operations
+
+## [2024-12-19] URL-Based Blog Navigation
+
+### URL Navigation Features
+- **URL Parameters**: Blog state is reflected in URL parameters for bookmarking and sharing
+- **Direct Navigation**: Users can navigate directly to specific pages, categories, and searches
+- **Browser History**: Full browser back/forward support with proper state management
+- **SEO Friendly**: URL parameters work with search engine indexing
+- **Shareable Links**: Users can share specific blog views with direct URLs
+
+### URL Structure
+```
+/blog                    # All posts, page 1
+/blog?page=2            # All posts, page 2
+/blog?category=1        # Posts from category 1
+/blog?category=2&page=3 # Posts from category 2, page 3
+/blog?search=velvet     # Search results for "velvet"
+/blog?search=denim&page=2 # Search results for "denim", page 2
+```
+
+### URL Parameter Handling
+- **Page Parameter**: `page` - Current page number (defaults to 1)
+- **Category Parameter**: `category` - WordPress category ID for filtering
+- **Search Parameter**: `search` - Search query for finding posts
+- **Parameter Combination**: Multiple parameters can be used together
+- **Parameter Validation**: Invalid parameters are handled gracefully
+
+### Navigation Implementation
+- **URL Updates**: All navigation actions update the URL automatically
+- **State Synchronization**: URL parameters sync with component state
+- **Initial Load**: URL parameters are read on page load for direct navigation
+- **Router Integration**: Uses Next.js router for clean URL updates
+- **History Management**: Proper browser history management
+
+### User Experience Benefits
+- **Bookmarkable Pages**: Users can bookmark specific blog views
+- **Shareable Links**: Easy sharing of filtered or searched blog views
+- **Browser Navigation**: Full back/forward button support
+- **Direct Access**: Users can navigate directly to specific content
+- **State Persistence**: Blog state persists across page refreshes
+
+### Technical Implementation
+```typescript
+// URL update function
+const updateURL = (page: number, category: number | null, search: string) => {
+  const params = new URLSearchParams();
+  if (page > 1) params.set('page', page.toString());
+  if (category) params.set('category', category.toString());
+  if (search.trim()) params.set('search', search.trim());
+  
+  const newURL = params.toString() ? `/blog?${params.toString()}` : '/blog';
+  router.push(newURL);
+};
+
+// Enhanced component props
+interface WordPressBlogProps {
+  initialPage?: number;
+  initialCategory?: number | null;
+  initialSearch?: string;
+  // ... existing props
+}
+```
+
+### Blog Page Integration
+- **Client Component**: Blog page is now a client component for URL handling
+- **Parameter Reading**: Reads URL parameters on initial load
+- **State Initialization**: Initializes component state from URL parameters
+- **Search Integration**: Handles initial search from URL parameters
+- **Category Integration**: Handles initial category from URL parameters
+
+## [2024-12-19] Comprehensive SEO and Google Search Console Optimization
+
+### Critical SEO Fixes Implemented
+- **Blog Post SEO**: Converted blog post pages from client components to server components for proper static metadata generation
+- **Shop Page SEO**: Converted shop page to server component with proper SEO metadata
+- **Downloads Page SEO**: Converted downloads page to server component with proper SEO metadata
+- **Sitemap Fix**: Corrected WordPress API URL in sitemap generation
+- **Meta Tags Enhancement**: Added comprehensive meta tags for better mobile and social media compatibility
+- **Structured Data**: Enhanced structured data implementation for better search engine understanding
+
+### SEO Architecture Improvements
+- **Server Components**: All main pages now use server components for optimal SEO performance
+- **Static Metadata**: Proper static metadata generation for all pages including dynamic blog posts
+- **Client Components**: Interactive functionality moved to separate client components
+- **Meta Tags**: Enhanced meta tags for mobile apps, social media, and search engines
+- **Structured Data**: Comprehensive structured data for organization, website, and blog content
+
+### Google Search Console Compatibility
+- **Proper Meta Tags**: All required meta tags for Google Search Console verification
+- **Structured Data**: Rich snippets support for better search result display
+- **Sitemap**: Corrected sitemap with proper WordPress integration
+- **Robots.txt**: Proper robots.txt configuration for search engine crawling
+- **Canonical URLs**: Proper canonical URL implementation for all pages
+
+### Technical SEO Implementation
+- **Metadata Generation**: Centralized SEO metadata generation in `app/lib/seo.ts`
+- **Dynamic Blog SEO**: Server-side metadata generation for individual blog posts
+- **Image Optimization**: Proper alt text and image optimization for SEO
+- **URL Structure**: Clean, SEO-friendly URL structure
+- **Performance**: Server components for faster initial page loads
+
+## [2024-12-19] WordPress Image Loading Improvements
+
+### Image Loading Issues Resolved
+- **Image Loading**: Fixed WordPress image loading issues on blog pages
+- **Error Handling**: Graceful fallback to placeholder images when WordPress images fail
+- **Loading States**: Visual feedback during image loading with skeleton states
+- **Performance Optimization**: Improved image loading performance with proper caching
+- **Size Fallback Logic**: Enhanced fallback mechanism to try different image sizes when requested size is unavailable
+- **Recent Posts Images**: Fixed recent posts sidebar images by using 'medium' size instead of 'thumbnail' for better availability
+- **Layout Fix**: Fixed WordPressImage component to properly handle `fill` prop without conflicting wrapper divs
+
+### New WordPressImage Component
+- **Centralized Image Handling**: New `WordPressImage` component for consistent image display
+- **Error Recovery**: Automatic fallback to placeholder when images fail to load
+- **Loading Indicators**: Skeleton loading states for better user experience
+- **Multiple Sizes**: Support for thumbnail, medium, large, and full image sizes
+- **TypeScript Support**: Full TypeScript integration with proper type safety
+
+
+### Component Features
+```typescript
+// WordPressImage component usage
+<WordPressImage
+  post={post}
+  size="medium"
+  className="w-full h-auto"
+  fill={false}
+  width={400}
+  height={300}
+  priority={false}
+  sizes="(max-width: 768px) 100vw, 50vw"
+/>
+```
+
+### Error Handling Improvements
+- **Network Failures**: Graceful handling of network errors and timeouts
+- **Invalid URLs**: Automatic detection and fallback for malformed image URLs
+- **Missing Images**: Placeholder display when WordPress images are not available
+- **Console Logging**: Detailed error logging for debugging image issues
+- **User Experience**: Seamless fallback without breaking the layout
+
+### Image Loading Strategy
+- **Progressive Loading**: Images load with opacity transitions for smooth UX
+- **Loading States**: Skeleton loading with spinner during image fetch
+- **Error States**: Clean placeholder with icon when images fail
+- **Performance**: Optimized loading with proper Next.js Image component usage
+- **Caching**: Browser caching for improved performance on subsequent loads
+
+### Technical Implementation
+- **WordPress API Integration**: Proper extraction of image URLs from WordPress `_embedded` data
+- **Next.js Image Optimization**: Full integration with Next.js Image component
+- **Responsive Design**: Proper `sizes` attribute for responsive image loading
+- **Error Boundaries**: Component-level error handling for individual images
+- **TypeScript Safety**: Full type safety with WordPressPost interface
+
+### Blog Integration
+- **Blog Listing**: All blog post cards now use WordPressImage component
+- **Individual Posts**: Featured images on individual post pages use improved handling
+- **Sidebar Images**: Recent posts sidebar uses consistent image handling
+- **Search Results**: Search results maintain consistent image display
+- **Category Pages**: Category-filtered posts use the same image handling
+
+### Benefits
+- **Reliability**: Eliminates occasional image loading failures
+- **User Experience**: Smooth loading states and graceful error handling
+- **Performance**: Optimized image loading with proper caching
+- **Maintainability**: Centralized image handling for easier maintenance
+- **Consistency**: Uniform image display across all blog components
+
+This improvement ensures that all WordPress blog images load reliably and provide a better user experience with proper loading states and error handling.
+
+## [2024-12-19] Project Cleanup and Long-term Deployment Preparation
+
+### Root Directory Cleanup
+The project has been cleaned up for long-term deployment by removing unnecessary development and setup files:
+
+#### Removed Files:
+- **WordPress Setup Files**: `check-database.php`, `generate-wp-config.html`, `setup-wordpress-config.sh`, `generate-wp-config.php`, `wp-config-template.php`, `wp-config.php`
+- **WordPress Troubleshooting**: `wordpress-fix.sh`, `wordpress-diagnostic.php`, `WORDPRESS_503_TROUBLESHOOTING.md`
+- **EC2 Setup Files**: `ec2-setup.sh`, `ec2-setup-al2023.sh`, `manual-mysql-install.sh`, `MANUAL_MYSQL_SETUP.md`, `EC2_SETUP_GUIDE.md`
+- **Deployment Scripts**: `deploy-prep.bat`, `deploy-prep.sh`
+- **Documentation**: `QUICK_SETUP.md`, `WORDPRESS_INTEGRATION.md`, `WORDPRESS_HEADLESS_SETUP.md`
+- **Alternative Configs**: `next.config.static.ts`, `amplify.static.yml`
+
+#### Current Clean File Structure:
+```
+ck-v2-nextjs/
+├── app/                          # Next.js App Router
+├── public/                       # Static assets
+├── .env.local                    # Environment variables
+├── .gitignore                    # Git ignore rules
+├── .cursorignore                 # Cursor ignore rules
+├── .cursorrules                  # Cursor rules
+├── amplify.yml                   # AWS Amplify deployment
+├── ck-v2-nextjs.md              # Project documentation
+├── eslint.config.mjs            # ESLint configuration
+├── next-env.d.ts               # Next.js types
+├── next.config.ts              # Next.js configuration
+├── package.json                # Dependencies
+├── package-lock.json           # Lock file
+├── postcss.config.mjs         # PostCSS configuration
+├── README.md                   # Project readme
+├── tsconfig.json              # TypeScript configuration
+└── node_modules/              # Dependencies (gitignored)
+```
+
+### Long-term Deployment Benefits
+- **Reduced Repository Size**: Removed ~50MB of unnecessary files
+- **Cleaner Development**: Focus on production-ready code only
+- **Easier Maintenance**: Less clutter, clearer project structure
+- **Faster Builds**: Reduced file scanning and processing
+- **Better Security**: Removed sensitive configuration templates
+
+### Production Readiness
+- **Essential Files Only**: Only production-necessary files remain
+- **Clean Documentation**: Updated documentation reflects current state
+- **Optimized Build**: Streamlined for AWS Amplify deployment
+- **Environment Management**: Proper `.env.local` configuration
+- **Deployment Ready**: Clean, maintainable codebase
+
+### Maintenance Guidelines
+- **Keep It Clean**: Only add files that are essential for production
+- **Document Changes**: Update documentation for any new additions
+- **Regular Reviews**: Periodically review and clean up unnecessary files
+- **Version Control**: Maintain clean git history with meaningful commits
+- **Environment Management**: Keep environment variables secure and organized
+
+This cleanup ensures the project is optimized for long-term deployment and maintenance while preserving all essential functionality and documentation.

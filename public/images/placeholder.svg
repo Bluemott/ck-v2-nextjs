@@ -1,6 +1,7 @@
-<svg width="400" height="300" xmlns="http://www.w3.org/2000/svg">
-  <rect width="100%" height="100%" fill="#f3f4f6"/>
-  <text x="50%" y="50%" font-family="Arial, sans-serif" font-size="16" fill="#6b7280" text-anchor="middle" dominant-baseline="middle">
-    Image not available
-  </text>
+<svg width="400" height="300" viewBox="0 0 400 300" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="400" height="300" fill="#f3f4f6"/>
+  <path d="M120 100h160v100H120z" fill="#e5e7eb"/>
+  <path d="M140 120l40 40 20-20 20 20 40-40" stroke="#9ca3af" stroke-width="2" fill="none"/>
+  <circle cx="160" cy="140" r="8" fill="#9ca3af"/>
+  <text x="200" y="180" text-anchor="middle" fill="#6b7280" font-family="Arial, sans-serif" font-size="14">No Image Available</text>
 </svg>

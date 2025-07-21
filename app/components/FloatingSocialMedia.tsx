@@ -73,7 +73,7 @@ const FloatingSocialMedia = () => {
             <span className="text-2xl text-gray-700">✕</span>
           ) : (
             <Image
-              src="\images\CK_Social_Link.png"
+                              src="/images/CK_Social_Link.png"
               alt="Social Media"
               width={36}
               height={36}

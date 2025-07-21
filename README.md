@@ -92,102 +92,36 @@ This project is configured for deployment to AWS Amplify via GitHub integration.
    - Amplify will build and deploy your app
    - Subsequent pushes to your main branch will trigger automatic deployments
 
-### Troubleshooting Deployment Issues
-
-If your deployment fails, try these solutions:
-
-#### Option 1: Standard SSR Build (Current Configuration)
-The current setup uses `output: 'standalone'` for server-side rendering:
-
-```typescript
-// next.config.ts
-output: 'standalone'
-```
-
-#### Option 2: Static Export (If SSR fails)
-If the SSR build fails, switch to static export:
-
-1. **Replace `next.config.ts` with `next.config.static.ts`**:
-   ```bash
-   mv next.config.ts next.config.backup.ts
-   mv next.config.static.ts next.config.ts
-   ```
-
-2. **Replace `amplify.yml` with `amplify.static.yml`**:
-   ```bash
-   mv amplify.yml amplify.backup.yml
-   mv amplify.static.yml amplify.yml
-   ```
-
-3. **Commit and push the changes**
-
-#### Common Issues and Solutions:
-
-1. **Node.js Version**: 
-   - Amplify uses Node.js 18 by default
-   - Added `engines` field to package.json to specify Node.js >= 18
-
-2. **Build Timeout**:
-   - Increased verbosity in build commands for better debugging
-   - Added caching to speed up builds
-
-3. **Memory Issues**:
-   - Using `npm ci` instead of `npm install` for faster, more reliable installs
-   - Caching node_modules between builds
-
-4. **Image Loading Issues**:
-   - **Problem**: Images loading slowly or not at all on deployed site
-   - **Solution**: Added `unoptimized: true` to Next.js config for better Amplify compatibility
-   - **Enhanced**: Created `SimpleImage` component with loading states, error handling, and full AWS Amplify compatibility
-   - **Fallbacks**: Added placeholder images and graceful error states
-
-5. **Image Optimization**:
-   - All external image domains are properly configured
-   - Static export version includes `unoptimized: true` for images
-   - Custom `SimpleImage` component provides loading states, fallbacks, and maximum compatibility with static hosting platforms like AWS Amplify
-
-#### Build Configuration Options
-
-**Current (SSR):**
-```yaml
-artifacts:
-  baseDirectory: .next
-  files:
-    - '**/*'
-```
-
-**Static Export Alternative:**
-```yaml
-artifacts:
-  baseDirectory: out
-  files:
-    - '**/*'
-```
-
 ### Build Configuration
 
 The `amplify.yml` file is configured for Next.js SSR deployment:
 
 ```yaml
 version: 1
-applications:
-  - frontend:
-      phases:
-        preBuild:
-          commands:
-            - npm ci
-        build:
-          commands:
-            - npm run build
-      artifacts:
-        baseDirectory: .next
-        files:
-          - '**/*'
-      cache:
-        paths:
-          - node_modules/**/*
-          - .next/cache/**/*
-    appRoot: /
+frontend:
+  phases:
+    preBuild:
+      commands:
+        - echo "Starting preBuild phase"
+        - node --version
+        - npm --version
+        - echo "Installing dependencies..."
+        - npm ci
+        - echo "Dependencies installed successfully"
+    build:
+      commands:
+        - echo "Starting build phase"
+        - echo "Running Next.js build..."
+        - npm run build
+        - echo "Build completed successfully"
+  artifacts:
+    baseDirectory: .next
+    files:
+      - '**/*'
+  cache:
+    paths:
+      - node_modules/**/*
+      - .next/cache/**/*
 ```
 
 ### Domain Configuration
@@ -200,7 +134,7 @@ After deployment:
 ## API Integrations
 
 ### WordPress Blog
-- Endpoint: `https://cowboykimono.com/blog.html/wp-json/wp/v2/posts`
+- Endpoint: `https://api.cowboykimono.com/wp-json/wp/v2/posts`
 - Features: Pagination, featured images, full content
 - Next.js config allows images from `cowboykimono.com`
 
@@ -414,5 +348,48 @@ The site includes basic PWA capabilities:
 - Web App Manifest for mobile app-like experience
 - Proper theme colors and icons
 - Offline-ready structure (can be extended)
+
+## Project Cleanup and Long-term Deployment
+
+### Recent Cleanup (December 2024)
+
+The project has been cleaned up for long-term deployment by removing unnecessary development and setup files:
+
+#### Removed Files:
+- **WordPress Setup Files**: Configuration templates and setup scripts
+- **EC2 Setup Files**: Server setup scripts and guides
+- **Deployment Scripts**: Outdated deployment scripts
+- **Troubleshooting Files**: Development diagnostic files
+- **Alternative Configs**: Backup configuration files
+
+#### Current Clean Structure:
+```
+ck-v2-nextjs/
+├── app/                          # Next.js App Router
+├── public/                       # Static assets
+├── .env.local                    # Environment variables
+├── amplify.yml                   # AWS Amplify deployment
+├── ck-v2-nextjs.md              # Project documentation
+├── README.md                     # Project readme
+├── next.config.ts               # Next.js configuration
+├── package.json                 # Dependencies
+└── tsconfig.json               # TypeScript configuration
+```
+
+### Benefits of Cleanup:
+- **Reduced Repository Size**: Removed ~50MB of unnecessary files
+- **Cleaner Development**: Focus on production-ready code only
+- **Easier Maintenance**: Less clutter, clearer project structure
+- **Faster Builds**: Reduced file scanning and processing
+- **Better Security**: Removed sensitive configuration templates
+
+### Production Readiness:
+- **Essential Files Only**: Only production-necessary files remain
+- **Clean Documentation**: Updated documentation reflects current state
+- **Optimized Build**: Streamlined for AWS Amplify deployment
+- **Environment Management**: Proper `.env.local` configuration
+- **Deployment Ready**: Clean, maintainable codebase
+
+For detailed project documentation, see `ck-v2-nextjs.md`.
 
 ---

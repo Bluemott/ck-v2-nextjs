@@ -13,6 +13,14 @@ interface EtsyProduct {
   price?: string;
 }
 
+// Utility to decode HTML entities
+function decodeHTMLEntities(text: string) {
+  if (typeof window === 'undefined') return text;
+  const txt = document.createElement('textarea');
+  txt.innerHTML = text;
+  return txt.value;
+}
+
 const ShopClient = () => {
   const [products, setProducts] = useState<EtsyProduct[]>([]);
   const [loading, setLoading] = useState(true);
@@ -108,7 +116,7 @@ const ShopClient = () => {
           <p className="text-red-600 mb-4">{error}</p>
           <button 
             onClick={() => window.location.reload()} 
-            className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition-colors"
+            className="bg-[#1e2939] text-white px-4 py-2 rounded hover:bg-[#2a3441] transition-colors"
           >
             Try Again
           </button>
@@ -122,7 +130,15 @@ const ShopClient = () => {
       <div className="max-w-6xl mx-auto px-8">
         {/* Header Section */}
         <div className="text-center mb-12">
-          <h1 className="text-4xl font-bold text-gray-800 mb-4">Shop</h1>
+          <div className="flex justify-center mb-6">
+            <Image
+              src="/images/CK_Logo_Titles_Shop.png" // Update with your actual shop header image
+              alt="Shop Header"
+              width={400}
+              height={100}
+              className="max-w-full h-auto"
+            />
+          </div>
           <p className="text-gray-600 text-lg">
             Discover our unique collection of handcrafted items
           </p>
@@ -155,17 +171,17 @@ const ShopClient = () => {
                 {/* Product Info */}
                 <div className="p-6">
                   <h2 className="text-xl font-semibold mb-3 text-gray-900 line-clamp-2 leading-tight">
-                    {product.title}
+                    {decodeHTMLEntities(product.title)}
                   </h2>
                   
                   {product.price && (
-                    <p className="text-2xl font-bold text-green-600 mb-3">
+                    <p className="text-2xl font-bold text-green-600 mb-3 text-center">
                       {product.price}
                     </p>
                   )}
                   
                   <p className="text-gray-600 mb-4 line-clamp-3 text-sm leading-relaxed">
-                    {product.description.substring(0, 150)}...
+                    {decodeHTMLEntities(product.description.substring(0, 150))}...
                   </p>
                   
                   <div className="flex justify-between items-center">
@@ -177,7 +193,7 @@ const ShopClient = () => {
                       href={product.link}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="inline-flex items-center bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors font-medium"
+                      className="inline-flex items-center bg-[#1e2939] text-white px-4 py-2 rounded-md hover:bg-[#2a3441] transition-colors font-medium"
                     >
                       View on Etsy
                       <span className="ml-1">→</span>
@@ -195,7 +211,7 @@ const ShopClient = () => {
             href={`https://www.etsy.com/shop/${ETSY_SHOP_NAME}`}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center bg-orange-500 text-white px-6 py-3 rounded-lg hover:bg-orange-600 transition-colors font-medium text-lg"
+            className="inline-flex items-center bg-[#1e2939] text-white px-6 py-3 rounded-lg hover:bg-[#2a3441] transition-colors font-medium text-lg"
           >
             Visit Our Etsy Shop
             <span className="ml-2">↗</span>

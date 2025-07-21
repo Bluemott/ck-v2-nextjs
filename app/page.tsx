@@ -5,8 +5,8 @@ import { generateSEOMetadata } from "./lib/seo";
 
 export const metadata: Metadata = generateSEOMetadata({
   title: "Home",
-  description: "Welcome to Cowboy Kimono - Discover unique handcrafted western-inspired robes and apparel that blend Eastern elegance with Western spirit. Shop our exclusive collection of artistic kimonos, robes, and accessories.",
-  keywords: ["handcrafted kimonos", "western robes", "artistic apparel", "unique fashion", "cowboy style"],
+  description: "Welcome to Cowboy Kimono - Discover unique handcrafted western-inspired robes and apparel that blend Eastern elegance with Western spirit. Shop our exclusive collection of artistic kimonos, robes, and accessories. Featured: T-Rex fashion crisis, Poodoodle journals, and 70s velvet skirts.",
+  keywords: ["handcrafted kimonos", "western robes", "artistic apparel", "unique fashion", "cowboy style", "dino jacket", "poodoodle journal", "velvet skirt", "70s fashion"],
   canonical: "/",
 });
 
@@ -58,62 +58,68 @@ export default function Home() {
             />
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {/* Blog Post 1 */}
-            <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
-              <div className="aspect-square relative">
-                <Image
-                  src="/images/Little_Dino_Work_Table.jpg"
-                  alt="Dino Jacket"
-                  fill
-                  style={{ objectFit: "cover" }}
-                  className="rounded-t-lg transition-transform duration-300 hover:scale-105"
-                />
+            {/* Blog Post 1 - T-Rex Fashion Crisis */}
+            <Link href="/blog/do-these-stripes-and-polka-dots-make-my-tail-look-big-t-rexs-fashion-crisis" className="block">
+              <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 cursor-pointer">
+                <div className="aspect-square relative">
+                  <Image
+                    src="/images/Little_Dino_Work_Table.jpg"
+                    alt="Dino Jacket - T-Rex Fashion Crisis"
+                    fill
+                    style={{ objectFit: "cover" }}
+                    className="rounded-t-lg transition-transform duration-300 hover:scale-105"
+                  />
+                </div>
+                <div className="p-6">
+                  <p className="text-gray-600 mb-4">Dino Jacket</p>
+                  <span className="text-[#1e2939] hover:text-[#2a3441] font-medium">
+                    Read More →
+                  </span>
+                </div>
               </div>
-              <div className="p-6">
-                <p className="text-gray-600 mb-4">Dino Jacket</p>
-                <Link href="/blog/post-1" className="text-[#1e2939] hover:text-[#2a3441] font-medium">
-                  Read More →
-                </Link>
-              </div>
-            </div>
+            </Link>
 
-            {/* Blog Post 2 */}
-            <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
-              <div className="aspect-square relative">
-                <Image
-                  src="/images/CK_Shop_Images_PoodoodleBrown.jpg"
-                  alt="Poodoodle Dot Grid Journal (Brown)"
-                  fill
-                  style={{ objectFit: "cover" }}
-                  className="rounded-t-lg transition-transform duration-300 hover:scale-105"
-                />
+            {/* Blog Post 2 - Poodoodle Journal */}
+            <Link href="/blog/introducing-the-poodoodle-journal" className="block">
+              <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 cursor-pointer">
+                <div className="aspect-square relative">
+                  <Image
+                    src="/images/CK_Shop_Images_PoodoodleBrown.jpg"
+                    alt="Poodoodle Dot Grid Journal - Introducing the Poodoodle Journal"
+                    fill
+                    style={{ objectFit: "cover" }}
+                    className="rounded-t-lg transition-transform duration-300 hover:scale-105"
+                  />
+                </div>
+                <div className="p-6">
+                  <p className="text-gray-600 mb-4">Poodoodle Dot Grid Journal (Brown)</p>
+                  <span className="text-[#1e2939] hover:text-[#2a3441] font-medium">
+                    Read More →
+                  </span>
+                </div>
               </div>
-              <div className="p-6">
-                <p className="text-gray-600 mb-4">Poodoodle Dot Grid Journal (Brown)</p>
-                <Link href="/blog/post-2" className="text-[#1e2939] hover:text-[#2a3441] font-medium">
-                  Read More →
-                </Link>
-              </div>
-            </div>
+            </Link>
 
-            {/* Blog Post 3 */}
-            <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
-              <div className="aspect-square relative">
-                <Image
-                  src="/images/Green_Velvet_Model_SQ.jpg"
-                  alt="Green Velvet Skirt"
-                  fill
-                  style={{ objectFit: "cover" }}
-                  className="rounded-t-lg transition-transform duration-300 hover:scale-105"
-                />
+            {/* Blog Post 3 - Velvet Skirt */}
+            <Link href="/blog/new-in-the-shop-a-velvet-skirt-with-some-serious-70s-mojo-2" className="block">
+              <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 cursor-pointer">
+                <div className="aspect-square relative">
+                  <Image
+                    src="/images/Green_Velvet_Model_SQ.jpg"
+                    alt="Green Velvet Skirt - New in the Shop with 70s Mojo"
+                    fill
+                    style={{ objectFit: "cover" }}
+                    className="rounded-t-lg transition-transform duration-300 hover:scale-105"
+                  />
+                </div>
+                <div className="p-6">
+                  <p className="text-gray-600 mb-4">Green Velvet Skirt</p>
+                  <span className="text-[#1e2939] hover:text-[#2a3441] font-medium">
+                    Read More →
+                  </span>
+                </div>
               </div>
-              <div className="p-6">
-                <p className="text-gray-600 mb-4">Green Velvet Skirt</p>
-                <Link href="/blog/post-3" className="text-[#1e2939] hover:text-[#2a3441] font-medium">
-                  Read More →
-                </Link>
-              </div>
-            </div>
+            </Link>
           </div>
         </div>
       </section>

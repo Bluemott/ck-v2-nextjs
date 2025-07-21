@@ -777,6 +777,28 @@ interface WordPressBlogProps {
 - **Search Integration**: Handles initial search from URL parameters
 - **Category Integration**: Handles initial category from URL parameters
 
+## [2024-12-19] Home Page Blog Integration and SEO Enhancement
+
+### Home Page Blog Card Updates
+- **Featured Blog Posts**: Updated home page cards to link to actual blog posts instead of placeholder URLs
+- **T-Rex Fashion Crisis**: Links to `/blog/do-these-stripes-and-polka-dots-make-my-tail-look-big-t-rexs-fashion-crisis`
+- **Poodoodle Journal**: Links to `/blog/introducing-the-poodoodle-journal`
+- **Velvet Skirt**: Links to `/blog/new-in-the-shop-a-velvet-skirt-with-some-serious-70s-mojo-2`
+- **Enhanced UX**: Entire cards are now clickable links for better user experience
+- **Improved Alt Text**: More descriptive alt text for better accessibility and SEO
+
+### SEO Improvements
+- **Enhanced Keywords**: Added specific keywords for featured blog posts (dino jacket, poodoodle journal, velvet skirt, 70s fashion)
+- **Updated Description**: Home page description now mentions featured blog posts
+- **Better Link Structure**: Proper internal linking for improved SEO and user navigation
+- **Accessibility**: Improved alt text descriptions for screen readers
+
+### Technical Implementation
+- **Link Wrapping**: Entire blog cards are wrapped in Next.js Link components
+- **Hover Effects**: Maintained existing hover animations and transitions
+- **Responsive Design**: Cards remain fully responsive across all devices
+- **Performance**: No impact on page load performance
+
 ## [2024-12-19] Comprehensive SEO and Google Search Console Optimization
 
 ### Critical SEO Fixes Implemented

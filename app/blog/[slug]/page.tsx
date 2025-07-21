@@ -8,11 +8,12 @@ import WordPressImage from '../../components/WordPressImage';
 import { generateSEOMetadata } from '../../lib/seo';
 
 interface BlogPostPageProps {
-  params: { slug: string };
+  params: Promise<{ slug: string }>;
 }
 
 export async function generateMetadata({ params }: BlogPostPageProps): Promise<Metadata> {
-  const post = await fetchPostBySlug(params.slug);
+  const { slug } = await params;
+  const post = await fetchPostBySlug(slug);
   
   if (!post) {
     return {
@@ -29,7 +30,7 @@ export async function generateMetadata({ params }: BlogPostPageProps): Promise<M
     title,
     description,
     keywords: ['cowboy kimono blog', 'western fashion', 'handcraft stories', 'design inspiration'],
-    canonical: `/blog/${params.slug}`,
+    canonical: `/blog/${slug}`,
     ogImage: image || undefined,
     ogType: 'article',
     publishedTime: post.date,
@@ -39,7 +40,8 @@ export async function generateMetadata({ params }: BlogPostPageProps): Promise<M
 }
 
 export default async function BlogPostPage({ params }: BlogPostPageProps) {
-  const post = await fetchPostBySlug(params.slug);
+  const { slug } = await params;
+  const post = await fetchPostBySlug(slug);
   
   if (!post) {
     notFound();

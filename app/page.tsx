@@ -21,6 +21,7 @@ export default function Home() {
           style={{ objectFit: "cover", objectPosition: "left" }}
           priority
           sizes="100vw"
+          quality={85}
         />
       </div>
 
@@ -28,20 +29,22 @@ export default function Home() {
         {/* Circular Image */}
         <div className="w-96 h-96 rounded-full overflow-hidden flex items-center justify-center bg-gray-100 flex-shrink-0">
           <Image
-            src="/images/Paint_application_CU.png"
+            src="/images/Paint_application_CU.webp"
             alt="Circular Image"
             width={384}
             height={384}
             className="object-cover w-full h-full"
+            sizes="(max-width: 768px) 100vw, 384px"
+            quality={85}
           />
         </div>
 
         {/* Paragraphs */}
         <div className="ml-0 mt-12 lg:mt-0 space-y-6 max-w-2xl text-xl text-gray-800">
           <h1 className="serif text-3xl md:text-4xl font-bold">Not My First Hand Painted Jacket</h1>
-          <p>I’m Marisa Mott, the artist behind Cowboy Kimonos—hand-painted, recycled denim jackets that blend art, sustainability, and cultural tradition. My journey began in 1997, making hand-painted jackets as gifts for friends and family. What started as a personal project grew into a passion for transforming everyday denim into vibrant works of art that help keep waste out of landfills.</p>
-          <p>As an illustrator, I’m inspired by global textile traditions and symbolic designs. This passion led me to create one-of-a-kind pieces that combine bold imagery, historic patterns, and creativity. Each Cowboy Kimono is more than just clothing—it’s a canvas for stories, a conversation starter, and a timeless piece of wearable art.</p>
-          <p>I believe clothing should express individuality, and with every jacket I design, I aim to offer something unique—an art piece you’ll wear and love for years.</p>
+          <p>I&apos;m Marisa Mott, the artist behind Cowboy Kimonos—hand-painted, recycled denim jackets that blend art, sustainability, and cultural tradition. My journey began in 1997, making hand-painted jackets as gifts for friends and family. What started as a personal project grew into a passion for transforming everyday denim into vibrant works of art that help keep waste out of landfills.</p>
+          <p>As an illustrator, I&apos;m inspired by global textile traditions and symbolic designs. This passion led me to create one-of-a-kind pieces that combine bold imagery, historic patterns, and creativity. Each Cowboy Kimono is more than just clothing—it&apos;s a canvas for stories, a conversation starter, and a timeless piece of wearable art.</p>
+          <p>I believe clothing should express individuality, and with every jacket I design, I aim to offer something unique—an art piece you&apos;ll wear and love for years.</p>
         </div>
       </section>
 
@@ -50,11 +53,13 @@ export default function Home() {
         <div className="max-w-6xl mx-auto">
           <div className="flex justify-center mb-8">
             <Image
-              src="/images/CK_Logo_Titles_NewCowboyKimono.png"
+              src="/images/CK_Logo_Titles_NewCowboyKimono.webp"
               alt="A New Kimono in Town."
               width={2551}
               height={567}
               className="max-w-full h-auto"
+              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 80vw, 1200px"
+              quality={85}
             />
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -63,11 +68,13 @@ export default function Home() {
               <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 cursor-pointer">
                 <div className="aspect-square relative">
                   <Image
-                    src="/images/Little_Dino_Work_Table.jpg"
+                    src="/images/Little_Dino_Work_Table.webp"
                     alt="Dino Jacket - T-Rex Fashion Crisis"
                     fill
                     style={{ objectFit: "cover" }}
                     className="rounded-t-lg transition-transform duration-300 hover:scale-105"
+                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 33vw, 400px"
+                    quality={85}
                   />
                 </div>
                 <div className="p-6">
@@ -84,11 +91,13 @@ export default function Home() {
               <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 cursor-pointer">
                 <div className="aspect-square relative">
                   <Image
-                    src="/images/CK_Shop_Images_PoodoodleBrown.jpg"
+                    src="/images/CK_Shop_Images_PoodoodleBrown.webp"
                     alt="Poodoodle Dot Grid Journal - Introducing the Poodoodle Journal"
                     fill
                     style={{ objectFit: "cover" }}
                     className="rounded-t-lg transition-transform duration-300 hover:scale-105"
+                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 33vw, 400px"
+                    quality={85}
                   />
                 </div>
                 <div className="p-6">
@@ -105,11 +114,13 @@ export default function Home() {
               <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 cursor-pointer">
                 <div className="aspect-square relative">
                   <Image
-                    src="/images/Green_Velvet_Model_SQ.jpg"
+                    src="/images/Green_Velvet_Model_SQ.webp"
                     alt="Green Velvet Skirt - New in the Shop with 70s Mojo"
                     fill
                     style={{ objectFit: "cover" }}
                     className="rounded-t-lg transition-transform duration-300 hover:scale-105"
+                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 33vw, 400px"
+                    quality={85}
                   />
                 </div>
                 <div className="p-6">

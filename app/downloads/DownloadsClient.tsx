@@ -21,18 +21,18 @@ const downloadSections: DownloadItem[] = [
     id: 'patterns',
     title: 'Coloring Pages',
     description: 'Free downloadable coloring pages for creating your own western-inspired garments. Includes detailed instructions and sizing guides.',
-    image: '/images/Neon_Coloring_Mock.jpg',
+    image: '/images/Neon_Coloring_Mock.webp',
     thumbnails: [
       {
         id: 'pattern-1',
         title: 'ABQ Neon',
-        thumbnail: '/images/Neon_Coloring_Mock.jpg',
+        thumbnail: '/images/Neon_Coloring_Mock.webp',
         downloadUrl: '/downloads/coloring-pages/ABQ_Neon_W+Color.pdf'
       },
       {
         id: 'pattern-2',
         title: 'Cover My Back',
-        thumbnail: '/images/CK_Coloring_Button.jpg',
+        thumbnail: '/images/CK_Coloring_Button.webp',
         downloadUrl: '/downloads/coloring-pages/CK_Creativity_Exercise.pdf'
       }
     ]
@@ -41,48 +41,48 @@ const downloadSections: DownloadItem[] = [
     id: 'templates',
     title: 'Craft Templates',
     description: 'Artistic templates and stencils for painting and decorating your own cowboy kimonos. Perfect for customization projects.',
-    image: '/images/CKCraft_Template2.jpg',
+    image: '/images/CKCraft_Template2.webp',
     thumbnails: [
       {
         id: 'template-1',
         title: '3 June Bugs Youll Love Immediately',
-        thumbnail: '/images/Craft_June_Bug.jpg',
+        thumbnail: '/images/Craft_June_Bug.webp',
         downloadUrl: '/downloads/craft-templates/June_Bugs.pdf'
       },
       {
         id: 'template-2',
         title: 'Year of the OX Irresistible Paper Craft',
-        thumbnail: '/images/Ox_book_corner.jpg',
+        thumbnail: '/images/Ox_book_corner.webp',
         downloadUrl: '/downloads/craft-templates/Ox_Book_Corner.pdf'
       },
       {
         id: 'template-3',
         title: 'Create a Kickass Thank You for Your Mail Carrier',
-        thumbnail: '/images/Kickass_Thanks_Envelope.jpg',
+        thumbnail: '/images/Kickass_Thanks_Envelope.webp',
         downloadUrl: '/downloads/craft-templates/Kickass_Thank_You.pdf'
       },
       {
         id: 'template-4',
         title: 'Your Labor is Loved (Labor Day Craft)',
-        thumbnail: '/images/Labor_is_Loved.jpg',
+        thumbnail: '/images/Labor_is_Loved.webp',
         downloadUrl: '/downloads/craft-templates/Labor_Day_Love.pdf'
       },
       {
         id: 'template-5',
         title: 'Yum. Fathers Day Craft',
-        thumbnail: '/images/Father_Day_Muffins.jpg',
+        thumbnail: '/images/Father_Day_Muffins.webp',
         downloadUrl: '/downloads/craft-templates/Fathers_Day_Craft.pdf'
       },
       {
         id: 'template-6',
         title: 'Jumbo Milagros for Mothers Day',
-        thumbnail: '/images/Jumbo_Milagro.jpg', // Replace with actual image path
+        thumbnail: '/images/Jumbo_Milagro.webp', // Replace with actual image path
         downloadUrl: '/downloads/craft-templates/Milagro_Ornaments_w_instructions.pdf'
       },
       {
         id: 'template-7',
         title: 'Grocery Bag Bird Ornaments',
-        thumbnail: '/images/Grocery_Bag_Birds_Green.jpg',
+        thumbnail: '/images/Grocery_Bag_Birds_Green.webp',
         downloadUrl: '/downloads/craft-templates/Grocery_Bag_Birds_with_instructions.pdf'
       }
     ]
@@ -91,54 +91,54 @@ const downloadSections: DownloadItem[] = [
     id: 'guides',
     title:'DIY Tutorials',
     description: 'Comprehensive guides on caring for your handcrafted pieces and styling tips for different occasions.',
-    image: '/images/Jumbo_Milagro.jpg',
+    image: '/images/Jumbo_Milagro.webp',
     thumbnails: [
       {
         id: 'guide-1',
         title: 'How to Create a Hip Jackalope Display',
-        thumbnail: '/images/Jackalope_Glasses.jpg',
+        thumbnail: '/images/Jackalope_Glasses.webp',
         downloadUrl: '/blog/hip-jackalope-display' // Blog post link
       },
       {
         id: 'guide-2',
         title: 'Paint a One-of-a-kind Sofa Table',
-        thumbnail: '/images/Sofa_Table.jpg',
+        thumbnail: '/images/Sofa_Table.webp',
         downloadUrl: '/blog/paint-sofa-table' // Blog post link
       },
       {
         id: 'guide-3',
         title: 'Animated Chalk Art',
-        thumbnail: '/images/Animated_Chalk_Art.jpg',
+        thumbnail: '/images/Animated_Chalk_Art.webp',
         downloadUrl: '/blog/animated-chalk-art' // Blog post link
       },
       {
         id: 'guide-4',
         title: 'Create Scary Silhouettes',
-        thumbnail: '/images/Scary_Silhouette.jpg',
+        thumbnail: '/images/Scary_Silhouette.webp',
         downloadUrl: '/blog/scary-silhouettes' // Blog post link
       },
       {
         id: 'guide-5',
         title: 'How to Wash Painted Denim',
-        thumbnail: '/images/CK_Wash_Painted_Denim.jpg',
+        thumbnail: '/images/CK_Wash_Painted_Denim.webp',
         downloadUrl: '/downloads/DIY-tutorials/CK_Wash_Painted_Denim.pdf' // Actual download
       },
       {
         id: 'guide-6',
         title: 'Fabric Paint Saves Stained Pants',
-        thumbnail: '/images/CK_Indigo_Pants.jpg',
+        thumbnail: '/images/CK_Indigo_Pants.webp',
         downloadUrl: '/blog/fabric-paint-stained-pants' // Blog post link
       },
       {
         id: 'guide-7',
         title: 'Hello, Christmas Star (How Long Has it Been?)',
-        thumbnail: '/images/Christmas_Star_SM.jpg',
+        thumbnail: '/images/Christmas_Star_SM.webp',
         downloadUrl: '/blog/christmas-star' // Blog post link
       },
       {
         id: 'guide-8',
         title: 'Cactus Patch Mail Art',
-        thumbnail: '/images/Cactus_Doodles118.jpg',
+        thumbnail: '/images/Cactus_Doodles118.webp',
         downloadUrl: '/blog/cactus-patch-mail-art' // Blog post link
       },
     ]
@@ -175,7 +175,7 @@ const DownloadsClient = () => {
         <div className="text-center mb-12">
           <div className="flex justify-center mb-6">
             <Image
-              src="/images/CK_Logo_Titles_Take-And-Make.png"
+              src="/images/CK_Logo_Titles_Take-And-Make.webp"
               alt="Take & Make"
               width={400}
               height={100}

@@ -7,7 +7,15 @@ const Navbar = () => {
       {/* Logo */}
       <div className="text-lg font-bold">
         <Link href="/">
-          <Image src="/images/CK_Logo_Title-01.webp" alt="Logo" width={200} height={80} />
+          <Image 
+            src="/images/CK_Logo_Title-01.webp" 
+            alt="Cowboy Kimono Logo" 
+            width={200} 
+            height={80} 
+            priority
+            sizes="200px"
+            quality={85}
+          />
         </Link>
       </div>
 

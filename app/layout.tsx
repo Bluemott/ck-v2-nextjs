@@ -9,21 +9,26 @@ import StructuredData, {
   websiteStructuredData,
 } from "./components/StructuredData";
 import { defaultMetadata } from "./lib/seo";
+import GoogleAnalytics from "./components/GoogleAnalytics";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
+  display: "swap",
+  preload: true,
 });
 
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
+  display: "swap",
 });
 
 const playfair = Playfair_Display({
   variable: "--font-playfair",
   subsets: ["latin"],
   display: "swap",
+  preload: true,
 });
 
 export const metadata: Metadata = {
@@ -31,7 +36,7 @@ export const metadata: Metadata = {
   icons: {
     icon: '/favicon.ico',
     shortcut: '/favicon.ico',
-    apple: '/images/CK_Logo_Title-01.png',
+    apple: '/images/CK_Logo_Title-01.webp',
   },
 };
 
@@ -50,26 +55,6 @@ export default function RootLayout({
             process.env.NEXT_PUBLIC_GOOGLE_VERIFICATION ||
             "your-google-verification-code"
           }
-        />
-
-        {/* Google Analytics - Direct Script Tags */}
-        <script
-          async
-          src={`https://www.googletagmanager.com/gtag/js?id=${
-            process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID || "G-DL317B831Y"
-          }`}
-        ></script>
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `
-              window.dataLayer = window.dataLayer || [];
-              function gtag(){dataLayer.push(arguments);}
-              gtag('js', new Date());
-              gtag('config', '${
-                process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID || "G-DL317B831Y"
-              }');
-            `,
-          }}
         />
 
         {/* Structured Data */}
@@ -98,6 +83,7 @@ export default function RootLayout({
         {children}
         <FloatingSocialMedia />
         <Footer />
+        <GoogleAnalytics />
       </body>
     </html>
   );

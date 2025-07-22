@@ -132,7 +132,7 @@ const ShopClient = () => {
         <div className="text-center mb-12">
           <div className="flex justify-center mb-6">
             <Image
-              src="/images/CK_Logo_Titles_Shop.png" // Update with your actual shop header image
+              src="/images/CK_Logo_Titles_Shop.webp" // Update with your actual shop header image
               alt="Shop Header"
               width={400}
               height={100}

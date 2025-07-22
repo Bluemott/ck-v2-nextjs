@@ -13,7 +13,7 @@ const AboutPage = () => {
   return (
     <div className="min-h-screen w-full relative">
       <Image
-        src="/images/CK_Web_Head_Under_Construction.jpg"
+        src="/images/CK_Web_Head_Under_Construction.webp"
         alt="Cowboy Kimono Under Construction"
         fill
         className="object-cover"

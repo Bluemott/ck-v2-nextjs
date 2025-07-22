@@ -56,7 +56,7 @@ export default function RootLayout({
         <script
           async
           src={`https://www.googletagmanager.com/gtag/js?id=${
-            process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID || "G-VYVT6J7XLS"
+            process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID || "G-DL317B831Y"
           }`}
         ></script>
         <script
@@ -66,7 +66,7 @@ export default function RootLayout({
               function gtag(){dataLayer.push(arguments);}
               gtag('js', new Date());
               gtag('config', '${
-                process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID || "G-VYVT6J7XLS"
+                process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID || "G-DL317B831Y"
               }');
             `,
           }}

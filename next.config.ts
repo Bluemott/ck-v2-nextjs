@@ -64,9 +64,8 @@ const nextConfig: NextConfig = {
   poweredByHeader: false,
   reactStrictMode: true,
   
-  // Performance optimizations
+  // Performance optimizations (removed experimental CSS optimization)
   experimental: {
-    optimizeCss: true,
     optimizePackageImports: ['@next/font'],
   },
   

@@ -968,7 +968,8 @@ This improvement ensures that all WordPress blog images load reliably and provid
 - **Image Caching**: Added 30-day cache TTL for images
 - **Compression**: Enabled gzip compression
 - **Security Headers**: Added security headers for better performance and security
-- **Experimental Features**: Enabled CSS optimization and package import optimization
+- **Experimental Features**: Enabled package import optimization (removed CSS optimization due to Amplify compatibility)
+- **Build Fix**: Resolved critters module error by removing experimental CSS optimization
 
 ### Performance Monitoring Tools
 - **Image Analysis Script**: Created `optimize-images.js` for automated image size analysis

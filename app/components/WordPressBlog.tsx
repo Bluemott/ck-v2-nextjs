@@ -69,13 +69,6 @@ export default function WordPressBlog({
     loadData();
   }, [currentPage, postsPerPage]);
 
-  // Handle initial search if provided
-  useEffect(() => {
-    if (initialSearch.trim()) {
-      handleSearch(initialSearch);
-    }
-  }, [initialSearch]);
-
   // Update URL with current state
   const updateURL = (page: number, search: string) => {
     const params = new URLSearchParams();
@@ -114,6 +107,13 @@ export default function WordPressBlog({
       setIsSearching(false);
     }
   };
+
+  // Handle initial search if provided
+  useEffect(() => {
+    if (initialSearch.trim()) {
+      handleSearch(initialSearch);
+    }
+  }, [initialSearch, handleSearch]);
 
   // Handle page change
   const handlePageChange = async (page: number) => {

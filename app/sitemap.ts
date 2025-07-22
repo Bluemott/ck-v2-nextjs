@@ -1,7 +1,7 @@
 import { MetadataRoute } from 'next'
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://cowboykimonos.com';
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://cowboykimono.com';
 
   // Fetch blog post slugs from WordPress
   let blogUrls: MetadataRoute.Sitemap = [];
@@ -11,7 +11,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       const posts: { slug: string; modified?: string; date: string }[] = await res.json();
       blogUrls = posts.map((post) => ({
         url: `${baseUrl}/blog/${post.slug}`,
-        lastModified: post.modified || post.date,
+        lastModified: new Date(post.modified || post.date).toISOString(),
         changeFrequency: 'monthly',
         priority: 0.7,
       }));
@@ -24,7 +24,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const downloadUrls: MetadataRoute.Sitemap = [
     {
       url: `${baseUrl}/downloads`,
-      lastModified: new Date(),
+      lastModified: new Date().toISOString(),
       changeFrequency: 'monthly',
       priority: 0.7,
     },
@@ -34,25 +34,25 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   return [
     {
       url: baseUrl,
-      lastModified: new Date(),
+      lastModified: new Date().toISOString(),
       changeFrequency: 'daily',
       priority: 1,
     },
     {
       url: `${baseUrl}/about`,
-      lastModified: new Date(),
+      lastModified: new Date().toISOString(),
       changeFrequency: 'monthly',
       priority: 0.8,
     },
     {
       url: `${baseUrl}/blog`,
-      lastModified: new Date(),
+      lastModified: new Date().toISOString(),
       changeFrequency: 'daily',
       priority: 0.9,
     },
     {
       url: `${baseUrl}/shop`,
-      lastModified: new Date(),
+      lastModified: new Date().toISOString(),
       changeFrequency: 'daily',
       priority: 0.9,
     },

@@ -2,7 +2,6 @@ import Image from "next/image";
 import { Metadata } from "next";
 import { generateSEOMetadata } from "./lib/seo";
 import HomeBlogCards from "./components/HomeBlogCards";
-import GTMTest from "./components/GTMTest";
 
 export const metadata: Metadata = generateSEOMetadata({
   title: "",
@@ -13,58 +12,59 @@ export const metadata: Metadata = generateSEOMetadata({
 
 export default function Home() {
   return (
-    <main>
-      <GTMTest />
-      {/* Hero Section */}
-      <section className="relative h-screen flex items-center justify-center">
+    <>
+      <div className="relative w-full h-[300px] sm:h-[400px] md:h-[500px] lg:h-[600px]">
         <Image
           src="/images/CK_New_Hero_Red_Head-1.webp"
-          alt="Cowboy Kimono Hero"
+          alt="Hero Image"
           fill
-          className="object-cover"
+          style={{ objectFit: "cover", objectPosition: "left" }}
           priority
           sizes="100vw"
           quality={85}
         />
-        <div className="absolute inset-0 bg-black bg-opacity-40 flex items-center justify-center">
-          <div className="text-center text-white">
-            <h1 className="text-4xl md:text-6xl font-bold mb-4 serif">
-              Cowboy Kimono
-            </h1>
-            <p className="text-xl md:text-2xl mb-8">
-              Handcrafted Western Robes
-            </p>
-            <button className="bg-[#1e2939] hover:bg-[#2a3441] text-white px-8 py-3 rounded-lg text-lg transition-colors">
-              Shop Now
-            </button>
-          </div>
+      </div>
+
+      <section className="flex flex-col lg:flex-row items-center justify-evenly py-16 px-8 bg-white gap-x-8">
+        {/* Circular Image */}
+        <div className="w-96 h-96 rounded-full overflow-hidden flex items-center justify-center bg-gray-100 flex-shrink-0">
+          <Image
+            src="/images/Paint_application_CU.webp"
+            alt="Circular Image"
+            width={384}
+            height={384}
+            className="object-cover w-full h-full"
+            sizes="(max-width: 768px) 100vw, 384px"
+            quality={85}
+          />
+        </div>
+
+        {/* Paragraphs */}
+        <div className="ml-0 mt-12 lg:mt-0 space-y-6 max-w-2xl text-xl text-gray-800">
+          <h1 className="serif text-3xl md:text-4xl font-bold">Not My First Hand Painted Jacket</h1>
+          <p>I&apos;m Marisa Mott, the artist behind Cowboy Kimonos—hand-painted, recycled denim jackets that blend art, sustainability, and cultural tradition. My journey began in 1997, making hand-painted jackets as gifts for friends and family. What started as a personal project grew into a passion for transforming everyday denim into vibrant works of art that help keep waste out of landfills.</p>
+          <p>As an illustrator, I&apos;m inspired by global textile traditions and symbolic designs. This passion led me to create one-of-a-kind pieces that combine bold imagery, historic patterns, and creativity. Each Cowboy Kimono is more than just clothing—it&apos;s a canvas for stories, a conversation starter, and a timeless piece of wearable art.</p>
+          <p>I believe clothing should express individuality, and with every jacket I design, I aim to offer something unique—an art piece you&apos;ll wear and love for years.</p>
         </div>
       </section>
 
-      {/* About Section */}
-      <section className="py-16 bg-[#FFEBCD]">
-        <div className="container mx-auto px-4">
-          <h2 className="text-3xl font-bold text-center mb-8 serif">About Us</h2>
-          <div className="max-w-3xl mx-auto text-center">
-            <p className="text-lg mb-6">
-              Discover unique handcrafted cowboy kimonos that blend Western and Eastern aesthetics. 
-              Each piece is carefully crafted with attention to detail and artistic flair.
-            </p>
-            <p className="text-lg">
-              From our signature robes to custom designs, we bring you premium quality apparel 
-              that celebrates the spirit of the West with timeless elegance.
-            </p>
+      {/* Blog Posts Section */}
+      <section className="py-12 px-8 bg-[#f0f8ff]">
+        <div className="max-w-6xl mx-auto">
+          <div className="flex justify-center mb-8">
+            <Image
+              src="/images/CK_Logo_Titles_NewCowboyKimono.webp"
+              alt="A New Kimono in Town."
+              width={2551}
+              height={567}
+              className="max-w-full h-auto"
+              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 80vw, 1200px"
+              quality={85}
+            />
           </div>
-        </div>
-      </section>
-
-      {/* Blog Section */}
-      <section className="py-16 bg-[#f0f8ff]">
-        <div className="container mx-auto px-4">
-          <h2 className="text-3xl font-bold text-center mb-8 serif">Latest from Our Blog</h2>
           <HomeBlogCards />
         </div>
       </section>
-    </main>
+    </>
   );
 }

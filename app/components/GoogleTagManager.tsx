@@ -7,7 +7,8 @@ interface GoogleTagManagerProps {
 }
 
 const GoogleTagManager = ({ gtmId }: GoogleTagManagerProps) => {
-  if (!gtmId || gtmId === 'GTM-XXXXXXX') {
+  // Don't render if no GTM ID or if it's the placeholder
+  if (!gtmId || gtmId === 'GTM-XXXXXXX' || gtmId === '') {
     return null;
   }
 

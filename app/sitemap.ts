@@ -5,16 +5,48 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   // Fetch blog post slugs from WordPress
   let blogUrls: MetadataRoute.Sitemap = [];
+  let categoryUrls: MetadataRoute.Sitemap = [];
+  let tagUrls: MetadataRoute.Sitemap = [];
+  
   try {
-    const res = await fetch('https://api.cowboykimono.com/wp-json/wp/v2/posts?per_page=100');
-    if (res.ok) {
-      const posts: { slug: string; modified?: string; date: string }[] = await res.json();
+    // Fetch posts
+    const postsRes = await fetch('https://api.cowboykimono.com/wp-json/wp/v2/posts?per_page=100');
+    if (postsRes.ok) {
+      const posts: { slug: string; modified?: string; date: string }[] = await postsRes.json();
       blogUrls = posts.map((post) => ({
         url: `${baseUrl}/blog/${post.slug}`,
         lastModified: new Date(post.modified || post.date).toISOString(),
         changeFrequency: 'monthly',
         priority: 0.7,
       }));
+    }
+
+    // Fetch categories
+    const categoriesRes = await fetch('https://api.cowboykimono.com/wp-json/wp/v2/categories?per_page=100');
+    if (categoriesRes.ok) {
+      const categories: { slug: string; count: number }[] = await categoriesRes.json();
+      categoryUrls = categories
+        .filter(cat => cat.count > 0) // Only include categories with posts
+        .map((category) => ({
+          url: `${baseUrl}/blog/category/${category.slug}`,
+          lastModified: new Date().toISOString(),
+          changeFrequency: 'weekly',
+          priority: 0.6,
+        }));
+    }
+
+    // Fetch tags
+    const tagsRes = await fetch('https://api.cowboykimono.com/wp-json/wp/v2/tags?per_page=100');
+    if (tagsRes.ok) {
+      const tags: { slug: string; count: number }[] = await tagsRes.json();
+      tagUrls = tags
+        .filter(tag => tag.count > 0) // Only include tags with posts
+        .map((tag) => ({
+          url: `${baseUrl}/blog/tag/${tag.slug}`,
+          lastModified: new Date().toISOString(),
+          changeFrequency: 'weekly',
+          priority: 0.5,
+        }));
     }
   } catch {
     // Fallback: do nothing
@@ -57,6 +89,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 0.9,
     },
     ...blogUrls,
+    ...categoryUrls,
+    ...tagUrls,
     ...downloadUrls,
   ];
 }

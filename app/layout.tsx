@@ -10,6 +10,7 @@ import StructuredData, {
 } from "./components/StructuredData";
 import { defaultMetadata } from "./lib/seo";
 import GoogleAnalytics from "./components/GoogleAnalytics";
+import GoogleTagManager from "./components/GoogleTagManager";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -74,6 +75,19 @@ export default function RootLayout({
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="apple-touch-fullscreen" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+        
+        {/* Additional Social Media Meta Tags */}
+        <meta name="twitter:site" content="@cowboykimono" />
+        <meta name="twitter:creator" content="@cowboykimono" />
+        <meta property="og:site_name" content="Cowboy Kimono" />
+        <meta property="og:locale" content="en_US" />
+        <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
+        <meta name="googlebot" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
+        
+        {/* Security Headers */}
+        <meta httpEquiv="X-Content-Type-Options" content="nosniff" />
+        <meta httpEquiv="X-Frame-Options" content="DENY" />
+        <meta httpEquiv="X-XSS-Protection" content="1; mode=block" />
       </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} ${playfair.variable} antialiased`}
@@ -84,6 +98,7 @@ export default function RootLayout({
         <FloatingSocialMedia />
         <Footer />
         <GoogleAnalytics />
+        <GoogleTagManager gtmId={process.env.NEXT_PUBLIC_GTM_ID || 'GTM-XXXXXXX'} />
       </body>
     </html>
   );

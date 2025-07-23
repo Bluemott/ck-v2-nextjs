@@ -15,7 +15,7 @@ interface SEOProps {
 }
 
 const defaultSEO = {
-  title: 'Cowboy Kimono - Handcrafted Western-Inspired Robes & Apparel',
+  title: 'Cowboy Kimono - Handcrafted Western Robes',
   description: 'Discover unique handcrafted cowboy kimonos blending Western and Eastern aesthetics. Premium quality robes, jackets, and apparel with artistic flair.',
   keywords: [
     'cowboy kimono',
@@ -35,6 +35,25 @@ const defaultSEO = {
   siteUrl: process.env.NEXT_PUBLIC_SITE_URL || 'https://www.cowboykimono.com'
 };
 
+// Helper function to truncate titles to reasonable length
+function truncateTitle(title: string, maxLength: number = 50): string {
+  if (title.length <= maxLength) return title;
+  return title.substring(0, maxLength).trim() + '...';
+}
+
+// Helper function to ensure HTML entities are decoded
+function ensureDecodedText(text: string): string {
+  // Simple HTML entity decoding for common entities
+  return text
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/&#038;/g, '&')
+    .replace(/&nbsp;/g, ' ');
+}
+
 export function generateSEOMetadata({
   title,
   description,
@@ -48,7 +67,9 @@ export function generateSEOMetadata({
   section,
   tags = []
 }: SEOProps = {}): Metadata {
-  const seoTitle = title ? `${title} | ${defaultSEO.title}` : defaultSEO.title;
+  const decodedTitle = title ? ensureDecodedText(title) : '';
+  const truncatedTitle = decodedTitle ? truncateTitle(decodedTitle) : '';
+  const seoTitle = truncatedTitle ? `${truncatedTitle} | ${defaultSEO.title}` : defaultSEO.title;
   const seoDescription = description || defaultSEO.description;
   const seoKeywords = [...defaultSEO.keywords, ...keywords, ...tags];
   const seoImage = ogImage || defaultSEO.ogImage;
@@ -80,7 +101,7 @@ export function generateSEOMetadata({
           url: seoImage,
           width: 1200,
           height: 630,
-          alt: title || defaultSEO.title,
+          alt: decodedTitle || defaultSEO.title,
         },
       ],
       locale: 'en_US',

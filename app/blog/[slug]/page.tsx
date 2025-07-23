@@ -3,9 +3,10 @@ import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import BlogSidebar from '../../components/BlogSidebar';
 import StructuredData, { generateArticleStructuredData } from '../../components/StructuredData';
-import { fetchPostBySlug, decodeHtmlEntities, getFeaturedImageUrl } from '../../lib/wordpress';
+import { fetchPostBySlug, decodeHtmlEntities, getFeaturedImageUrl, fetchCategoriesByIds, fetchTagsByIds } from '../../lib/wordpress';
 import WordPressImage from '../../components/WordPressImage';
 import { generateSEOMetadata } from '../../lib/seo';
+import Breadcrumbs from '../../components/Breadcrumbs';
 
 interface BlogPostPageProps {
   params: Promise<{ slug: string }>;
@@ -47,6 +48,16 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
     notFound();
   }
 
+  // Fetch category and tag details
+  const [categories, tags] = await Promise.all([
+    post.categories && post.categories.length > 0 
+      ? fetchCategoriesByIds(post.categories)
+      : Promise.resolve([]),
+    post.tags && post.tags.length > 0 
+      ? fetchTagsByIds(post.tags)
+      : Promise.resolve([])
+  ]);
+
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', {
       year: 'numeric',
@@ -73,16 +84,14 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
       {/* Main Article Content */}
       <article className="min-h-screen bg-gray-50 py-8">
         <div className="max-w-7xl mx-auto px-4">
-          {/* Back to Blog Link */}
-          <Link 
-            href="/blog"
-            className="text-[#1e2939] hover:text-[#2a3441] mb-6 inline-flex items-center transition-colors"
-          >
-            <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-            </svg>
-            Back to Blog
-          </Link>
+          {/* Breadcrumbs */}
+          <Breadcrumbs
+            items={[
+              { label: 'Home', href: '/' },
+              { label: 'Blog', href: '/blog' },
+              { label: decodeHtmlEntities(post.title.rendered) }
+            ]}
+          />
 
           {/* Main Content with Sidebar */}
           <div className="flex flex-col lg:flex-row gap-8">
@@ -119,6 +128,47 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
                 }}
                 dangerouslySetInnerHTML={{ __html: decodeHtmlEntities(post.content.rendered) }}
               />
+
+              {/* Categories and Tags */}
+              {(categories.length > 0) || (tags.length > 0) ? (
+                <div className="border-t pt-8 mb-8">
+                  <div className="flex flex-wrap gap-4">
+                    {categories.length > 0 && (
+                      <div>
+                        <span className="text-sm font-medium text-gray-700 mr-2">Categories:</span>
+                        <div className="inline-flex flex-wrap gap-2">
+                          {categories.map((category) => (
+                            <Link
+                              key={category.id}
+                              href={`/blog/category/${category.slug}`}
+                              className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-xs hover:bg-blue-200 transition-colors"
+                            >
+                              {decodeHtmlEntities(category.name)}
+                            </Link>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                    
+                    {tags.length > 0 && (
+                      <div>
+                        <span className="text-sm font-medium text-gray-700 mr-2">Tags:</span>
+                        <div className="inline-flex flex-wrap gap-2">
+                          {tags.map((tag) => (
+                            <Link
+                              key={tag.id}
+                              href={`/blog/tag/${tag.slug}`}
+                              className="px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-xs hover:bg-gray-200 transition-colors"
+                            >
+                              {decodeHtmlEntities(tag.name)}
+                            </Link>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ) : null}
 
               {/* Back to Blog Link */}
               <div className="border-t pt-8">

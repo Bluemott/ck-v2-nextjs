@@ -3,14 +3,22 @@
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { fetchPosts, fetchPostsWithCount, type WordPressPost } from '../lib/wordpress';
+import { fetchPosts, fetchPostsWithCount, fetchCategories, fetchTags, type WordPressPost, type WordPressCategory, type WordPressTag, decodeHtmlEntities } from '../lib/wordpress';
 import WordPressImage from '../components/WordPressImage';
 
 const POSTS_PER_PAGE = 12;
 
-const BlogClient = () => {
+interface BlogClientProps {
+  initialCategory?: number;
+  initialTag?: number;
+  showHeader?: boolean;
+}
+
+const BlogClient = ({ initialCategory, initialTag, showHeader = true }: BlogClientProps = {}) => {
   const [posts, setPosts] = useState<WordPressPost[]>([]);
   const [recentPosts, setRecentPosts] = useState<WordPressPost[]>([]);
+  const [categories, setCategories] = useState<WordPressCategory[]>([]);
+  const [tags, setTags] = useState<WordPressTag[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
@@ -24,6 +32,8 @@ const BlogClient = () => {
         const result = await fetchPostsWithCount({
           per_page: POSTS_PER_PAGE,
           page: currentPage,
+          categories: initialCategory ? [initialCategory] : undefined,
+          tags: initialTag ? [initialTag] : undefined,
           _embed: true,
         });
 
@@ -40,12 +50,18 @@ const BlogClient = () => {
 
     const loadSidebarData = async () => {
       try {
-        // Fetch recent posts for sidebar
-        const recentData = await fetchPosts({ 
-          per_page: 5,
-          _embed: true,
-        });
+        // Fetch recent posts, categories, and tags for sidebar
+        const [recentData, categoriesData, tagsData] = await Promise.all([
+          fetchPosts({ 
+            per_page: 5,
+            _embed: true,
+          }),
+          fetchCategories(),
+          fetchTags()
+        ]);
         setRecentPosts(recentData);
+        setCategories(categoriesData);
+        setTags(tagsData);
       } catch (err) {
         console.error('Error fetching sidebar data:', err);
       }
@@ -163,26 +179,28 @@ const BlogClient = () => {
   return (
     <div className="min-h-screen bg-[#f0f8ff] py-12">
       <div className="max-w-7xl mx-auto px-8">
-        {/* Header Section */}
-        <div className="text-center mb-12">
-          <div className="flex justify-center mb-6">
-            <Image
-              src="/images/CK_Logo_Blog.webp"
-              alt="Blog Header"
-              width={400}
-              height={100}
-              className="max-w-full h-auto"
-            />
-          </div>
-          <p className="text-gray-600 text-lg">
-            Discover stories, inspiration, and insights from the world of Cowboy Kimono
-          </p>
-          {totalPosts > 0 && (
-            <p className="text-sm text-gray-500 mt-2">
-              Showing page {currentPage} of {totalPages} ({totalPosts} total posts)
+        {/* Header Section - Only show on main blog page */}
+        {showHeader && (
+          <div className="text-center mb-12">
+            <div className="flex justify-center mb-6">
+              <Image
+                src="/images/CK_Logo_Blog.webp"
+                alt="Blog Header"
+                width={400}
+                height={100}
+                className="max-w-full h-auto"
+              />
+            </div>
+            <p className="text-gray-600 text-lg">
+              Discover stories, inspiration, and insights from the world of Cowboy Kimono
             </p>
-          )}
-        </div>
+            {totalPosts > 0 && (
+              <p className="text-sm text-gray-500 mt-2">
+                Showing page {currentPage} of {totalPages} ({totalPosts} total posts)
+              </p>
+            )}
+          </div>
+        )}
 
         {/* Main Content with Sidebar */}
         <div className="flex flex-col lg:flex-row gap-8">
@@ -214,7 +232,7 @@ const BlogClient = () => {
                         {/* Content - Compact Layout */}
                         <div className="p-4 flex-1 flex flex-col">
                           <h2 className="text-lg font-semibold mb-2 text-gray-900 line-clamp-2 leading-tight serif"
-                              dangerouslySetInnerHTML={{ __html: post.title.rendered }}
+                              dangerouslySetInnerHTML={{ __html: decodeHtmlEntities(post.title.rendered) }}
                           />
 
                           <p className="text-gray-600 text-xs mb-2 font-medium">
@@ -266,7 +284,7 @@ const BlogClient = () => {
                         )}
                         <div className="flex-1 min-w-0">
                           <h4 className="text-sm font-medium text-gray-900 line-clamp-2 group-hover:text-[#1e2939] transition-colors">
-                            <span dangerouslySetInnerHTML={{ __html: post.title.rendered }} />
+                            <span dangerouslySetInnerHTML={{ __html: decodeHtmlEntities(post.title.rendered) }} />
                           </h4>
                           <p className="text-xs text-gray-500 mt-1">
                             {formatDate(post.date)}
@@ -279,21 +297,42 @@ const BlogClient = () => {
               </div>
             )}
 
-            {/* Quick Links */}
-            <div className="bg-white rounded-lg shadow-md p-6">
-              <h3 className="text-lg font-semibold mb-4 text-gray-800">Quick Links</h3>
-              <div className="space-y-3">
-                <Link href="/blog" className="block text-gray-600 hover:text-[#1e2939] transition-colors">
-                  All Posts
-                </Link>
-                <Link href="/shop" className="block text-gray-600 hover:text-[#1e2939] transition-colors">
-                  Shop
-                </Link>
-                <Link href="/about" className="block text-gray-600 hover:text-[#1e2939] transition-colors">
-                  About
-                </Link>
+            {/* Categories */}
+            {categories.length > 0 && (
+              <div className="bg-white rounded-lg shadow-md p-6">
+                <h3 className="text-lg font-semibold mb-4 text-gray-800">Categories</h3>
+                <div className="space-y-2">
+                  {categories.map((category) => (
+                    <Link
+                      key={category.id}
+                      href={`/blog/category/${category.slug}`}
+                      className="block text-gray-600 hover:text-[#1e2939] transition-colors text-sm"
+                    >
+                      {decodeHtmlEntities(category.name)}
+                      <span className="text-gray-400 ml-1">({category.count})</span>
+                    </Link>
+                  ))}
+                </div>
               </div>
-            </div>
+            )}
+
+            {/* Tags */}
+            {tags.length > 0 && (
+              <div className="bg-white rounded-lg shadow-md p-6">
+                <h3 className="text-lg font-semibold mb-4 text-gray-800">Tags</h3>
+                <div className="flex flex-wrap gap-2">
+                  {tags.map((tag) => (
+                    <Link
+                      key={tag.id}
+                      href={`/blog/tag/${tag.slug}`}
+                      className="px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-xs hover:bg-gray-200 transition-colors"
+                    >
+                      {decodeHtmlEntities(tag.name)}
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>

@@ -571,3 +571,67 @@ export async function fetchPostsWithCount(params?: {
     throw error;
   }
 } 
+
+/**
+ * Fetch a single category by ID
+ */
+export async function fetchCategoryById(id: number): Promise<WordPressCategory | null> {
+  try {
+    const response = await fetch(`${WORDPRESS_API_URL}/categories/${id}`);
+    if (!response.ok) {
+      return null;
+    }
+    return await response.json();
+  } catch (error) {
+    console.error('Error fetching category by ID:', error);
+    return null;
+  }
+}
+
+/**
+ * Fetch a single tag by ID
+ */
+export async function fetchTagById(id: number): Promise<WordPressTag | null> {
+  try {
+    const response = await fetch(`${WORDPRESS_API_URL}/tags/${id}`);
+    if (!response.ok) {
+      return null;
+    }
+    return await response.json();
+  } catch (error) {
+    console.error('Error fetching tag by ID:', error);
+    return null;
+  }
+}
+
+/**
+ * Fetch multiple categories by IDs
+ */
+export async function fetchCategoriesByIds(ids: number[]): Promise<WordPressCategory[]> {
+  if (!ids.length) return [];
+  
+  try {
+    const promises = ids.map(id => fetchCategoryById(id));
+    const results = await Promise.all(promises);
+    return results.filter((category): category is WordPressCategory => category !== null);
+  } catch (error) {
+    console.error('Error fetching categories by IDs:', error);
+    return [];
+  }
+}
+
+/**
+ * Fetch multiple tags by IDs
+ */
+export async function fetchTagsByIds(ids: number[]): Promise<WordPressTag[]> {
+  if (!ids.length) return [];
+  
+  try {
+    const promises = ids.map(id => fetchTagById(id));
+    const results = await Promise.all(promises);
+    return results.filter((tag): tag is WordPressTag => tag !== null);
+  } catch (error) {
+    console.error('Error fetching tags by IDs:', error);
+    return [];
+  }
+} 

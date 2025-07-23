@@ -167,8 +167,9 @@ export default function WordPressBlog({
 - **Static Generation**: Pre-rendered pages where possible
 
 ### Analytics Integration
-- **Google Analytics**: GA4 implementation
-- **Google Tag Manager**: GTM setup for advanced tracking
+- **Google Analytics**: GA4 implementation with measurement ID `G-CLVLQ2YNPF`
+- **Google Tag Manager**: GTM setup for advanced tracking and third-party tags with container ID `GTM-PNZTN4S4`
+- **Social Media Pixels**: Ready for Facebook, Pinterest, and Instagram pixel integration via GTM
 - **Site Verification**: Google and Bing verification codes
 
 ## Development Workflow
@@ -276,6 +277,7 @@ NEXT_PUBLIC_WORDPRESS_MEDIA_URL=https://api.cowboykimono.com/wp-content/uploads
 
 # Analytics and SEO
 NEXT_PUBLIC_GA_MEASUREMENT_ID=G-VYVT6J7XLS
+NEXT_PUBLIC_GTM_ID=GTM-XXXXXXX
 NEXT_PUBLIC_GOOGLE_VERIFICATION=your-google-verification-code
 NEXT_PUBLIC_SITE_URL=https://cowboykimono.com
 ```
@@ -516,8 +518,10 @@ This documentation serves as the single source of truth for the Cowboy Kimono v2
 
 ### WordPress Component Architecture
 - **WordPressBlog**: Main blog component with posts, categories, and pagination
+- **BlogClient**: Enhanced blog component with conditional header display
 - **BlogSidebar**: Sidebar with search, recent posts, and suggestions
 - **Individual Posts**: Dynamic routes with `[slug]` for individual blog posts
+- **Category/Tag Pages**: Archive pages with custom headers and no blog logo
 - **Error States**: User-friendly error messages with retry options
 - **Loading States**: Skeleton loading for better perceived performance
 - **Image Handling**: Proper featured image display with fallback placeholders
@@ -644,10 +648,10 @@ export function getMediaUrl(mediaId: number): string
 - **Interactive States**: Loading states, hover effects, and smooth transitions
 
 ### Blog Layout Structure
-- **Header Section**: Blog logo and description
+- **Header Section**: Blog logo and description (only on main blog page)
 - **Featured Posts**: Three highlighted posts in a responsive grid (1 column mobile, 3 desktop)
 - **Main Content (2/3 width)**: Blog posts grid with pagination (12 posts per page, 3 columns on desktop)
-- **Sidebar (1/3 width)**: Recent posts and quick links
+- **Sidebar (1/3 width)**: Recent posts, categories, and tags
 - **Pagination**: Bottom pagination with proper total page count
 
 ### Featured Posts Section
@@ -658,7 +662,8 @@ export function getMediaUrl(mediaId: number): string
 
 ### Sidebar Features
 - **Recent Posts**: Shows the latest 4 posts with thumbnails
-- **Quick Links**: Easy navigation to All Posts, Shop, and About
+- **Categories**: Lists all blog categories with post counts and links to category pages
+- **Tags**: Displays all blog tags as clickable badges linking to tag pages
 - **Clean Design**: White cards with proper spacing and hover effects
 - **Responsive**: Stacks below main content on mobile devices
 
@@ -835,6 +840,10 @@ interface WordPressBlogProps {
 - **Social Media Links**: Updated structured data social media links to correct Instagram and Facebook URLs
 - **Canonical URL Fix**: Fixed canonical URL generation to use full URLs with correct www domain to prevent duplicate content issues
 - **Ahrefs Compatibility**: Resolved non-200 status and canonicalization issues that were causing Ahrefs to flag pages as non-indexable
+- **Page Title Optimization**: Shortened default title from 67 to 42 characters and added automatic title truncation to prevent overly long page titles that hurt SEO
+- **Internal Linking System**: Comprehensive internal linking solution to fix orphaned blog pages including category/tag archive pages, breadcrumb navigation, and enhanced sidebar with category/tag links
+- **Category/Tag Display Fix**: Fixed individual blog posts to show actual category and tag names instead of placeholder numbers, with proper links to category/tag archive pages
+- **HTML Entity Decoding**: Fixed breadcrumbs, blog titles, and browser tab titles to properly decode HTML entities like `&#038;` to display as `&` instead of showing raw entity codes
 
 ## [2024-12-19] Google Search Console Sitemap Fixes
 
@@ -1017,6 +1026,87 @@ This improvement ensures that all WordPress blog images load reliably and provid
 - **Fast Loading**: Optimized image loading with proper fallbacks
 - **Mobile Responsive**: Works perfectly on all device sizes
 - **Accessibility**: Proper alt text and keyboard navigation
+
+## [2024-12-19] Google Tag Manager Implementation
+
+### Google Tag Manager Setup
+- **GTM Integration**: Added Google Tag Manager alongside existing GA4 setup
+- **Third-Party Tags**: Ready to implement tags from other sites that require GTM
+- **Dual Analytics**: Both GA4 and GTM work together for comprehensive tracking
+- **Environment Configuration**: GTM ID can be set via `NEXT_PUBLIC_GTM_ID` environment variable
+- **Fallback Handling**: GTM component gracefully handles missing or placeholder IDs
+
+### Technical Implementation
+- **GTM Component**: Enhanced `GoogleTagManager` component with robust error handling
+- **Layout Integration**: GTM script loads in root layout alongside GA4
+- **Script Strategy**: Uses `afterInteractive` strategy for optimal performance
+- **NoScript Fallback**: Includes noscript iframe for users with JavaScript disabled
+- **Environment Variables**: Configurable via `NEXT_PUBLIC_GTM_ID` environment variable
+
+### Benefits for Third-Party Tags
+- **Marketing Tags**: Ready for Facebook Pixel, LinkedIn Insight Tag, etc.
+- **Conversion Tracking**: Can implement conversion tracking from various platforms
+- **Custom Events**: GTM allows custom event tracking and data layer management
+- **Tag Management**: Centralized tag management without code changes
+- **A/B Testing**: Ready for A/B testing tools that require GTM
+
+### Setup Instructions
+1. **Get GTM Container ID**: Create a GTM container at https://tagmanager.google.com/
+2. **Environment Variable**: Add `NEXT_PUBLIC_GTM_ID=GTM-XXXXXXX` to `.env.local`
+3. **Replace Placeholder**: Replace `GTM-XXXXXXX` with your actual GTM container ID
+4. **Deploy**: The GTM script will automatically load on all pages
+5. **Configure Tags**: Use GTM interface to add third-party tags and tracking
+
+## [2024-12-19] Blog Header Image Control
+
+### Blog Header Image Management
+- **Conditional Display**: Blog header image (logo and description) now only shows on the main blog page
+- **Category Pages**: Category archive pages show custom category headers without the blog logo
+- **Tag Pages**: Tag archive pages show custom tag headers without the blog logo
+- **Clean Design**: Archive pages have cleaner, more focused layouts
+- **Consistent Branding**: Main blog page maintains brand presence while archive pages focus on content
+- **Navigation Links**: Category and tag pages include breadcrumbs and "Back to Blog" links for easy navigation
+
+### Technical Implementation
+- **BlogClient Component**: Added `showHeader` prop to control header visibility
+- **Default Behavior**: Header shows by default (`showHeader={true}`) for main blog page
+- **Archive Pages**: Category and tag pages pass `showHeader={false}` to hide header
+- **Custom Headers**: Archive pages have their own custom headers with category/tag names
+- **Breadcrumb Navigation**: Category and tag pages include breadcrumb navigation (Home → Blog → Category/Tag)
+- **Back Links**: Archive pages include "Back to all posts" links for easy navigation
+- **Responsive Design**: All layouts remain fully responsive across devices
+
+### User Experience Benefits
+- **Focused Content**: Archive pages focus on category/tag content without brand distraction
+- **Clear Navigation**: Users can easily distinguish between main blog and filtered views
+- **Better Organization**: Each page type has appropriate header styling
+- **Easy Navigation**: Breadcrumbs and back links help users navigate between pages
+- **Consistent Layout**: Sidebar and content areas remain consistent across all blog pages
+- **Improved SEO**: Archive pages have more focused, relevant headers for search engines
+- **User-Friendly**: Multiple navigation options prevent users from getting lost
+
+## [2024-12-19] Main Blog Page Sidebar Enhancement
+
+### Main Blog Page Sidebar Update
+- **Categories Section**: Replaced quick links with a comprehensive categories list showing all blog categories
+- **Category Counts**: Each category displays the number of posts it contains
+- **Tag Cloud**: Added a tags section showing all blog tags as clickable badges
+- **Better Navigation**: Users can now browse content by categories and tags directly from the main blog page
+- **Consistent Design**: Categories and tags use the same styling as individual blog posts
+
+### Technical Implementation
+- **WordPress API Integration**: Fetches all categories and tags using `fetchCategories()` and `fetchTags()`
+- **Dynamic Loading**: Categories and tags are loaded alongside recent posts in the sidebar
+- **HTML Entity Decoding**: Category and tag names are properly decoded for display
+- **Link Structure**: Categories link to `/blog/category/[slug]` and tags link to `/blog/tag/[slug]`
+- **Performance**: Efficient API calls with proper error handling and loading states
+
+### User Experience Benefits
+- **Content Discovery**: Users can easily browse content by categories and tags
+- **Better Organization**: Clear categorization helps users find relevant content
+- **Post Counts**: Category post counts help users understand content volume
+- **Visual Tags**: Tag badges provide quick visual scanning of available topics
+- **Improved Navigation**: More intuitive content browsing experience
 
 ## [2024-12-19] Blog Post Related Posts Feature
 

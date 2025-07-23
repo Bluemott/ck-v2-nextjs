@@ -4,7 +4,7 @@ import { generateSEOMetadata } from "./lib/seo";
 import HomeBlogCards from "./components/HomeBlogCards";
 
 export const metadata: Metadata = generateSEOMetadata({
-  title: "Home",
+  title: "",
   description: "Welcome to Cowboy Kimono - Discover unique handcrafted western-inspired robes and apparel that blend Eastern elegance with Western spirit. Shop our exclusive collection of artistic kimonos, robes, and accessories. Featured: Latest blog posts and updates.",
   keywords: ["handcrafted kimonos", "western robes", "artistic apparel", "unique fashion", "cowboy style", "latest posts", "blog updates"],
   canonical: "/",

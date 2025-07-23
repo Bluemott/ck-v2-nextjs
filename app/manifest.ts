@@ -11,9 +11,9 @@ export default function manifest(): MetadataRoute.Manifest {
     theme_color: '#8B4513',
     icons: [
       {
-        src: '/favicon.png',
+        src: '/favicon.ico',
         sizes: '32x32',
-        type: 'image/png',
+        type: 'image/x-icon',
       },
       {
         src: '/images/CK_Logo_Title-01.webp',

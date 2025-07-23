@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { fetchPosts, type WordPressPost, decodeHtmlEntities } from '../lib/wordpress';
+import { fetchPosts, fetchCategories, fetchTags, type WordPressPost, type WordPressCategory, type WordPressTag, decodeHtmlEntities } from '../lib/wordpress';
 import WordPressImage from './WordPressImage';
 import RelatedPosts from './RelatedPosts';
 
@@ -16,6 +16,8 @@ const BlogSidebar = ({ currentPostId, currentPostCategories = [], currentPostTag
   const [searchTerm, setSearchTerm] = useState('');
   const [searchResults, setSearchResults] = useState<WordPressPost[]>([]);
   const [recentPosts, setRecentPosts] = useState<WordPressPost[]>([]);
+  const [categories, setCategories] = useState<WordPressCategory[]>([]);
+  const [tags, setTags] = useState<WordPressTag[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -33,6 +35,14 @@ const BlogSidebar = ({ currentPostId, currentPostCategories = [], currentPostTag
           _embed: true
         });
         setRecentPosts(recentData);
+
+        // Fetch categories and tags
+        const [categoriesData, tagsData] = await Promise.all([
+          fetchCategories(),
+          fetchTags()
+        ]);
+        setCategories(categoriesData);
+        setTags(tagsData);
       } catch (err) {
         console.error('Error fetching sidebar data:', err);
         setError('Failed to load sidebar data');
@@ -149,6 +159,43 @@ const BlogSidebar = ({ currentPostId, currentPostCategories = [], currentPostTag
           tags={currentPostTags}
           limit={6}
         />
+      )}
+
+      {/* Categories Section */}
+      {categories.length > 0 && (
+        <div className="bg-white rounded-lg shadow-md p-6">
+          <h3 className="text-lg font-semibold mb-4 text-gray-800 serif">Categories</h3>
+          <div className="space-y-2">
+            {categories.slice(0, 8).map((category) => (
+              <Link
+                key={category.id}
+                href={`/blog/category/${category.slug}`}
+                className="block text-gray-600 hover:text-[#1e2939] transition-colors text-sm"
+              >
+                {decodeHtmlEntities(category.name)}
+                <span className="text-gray-400 ml-1">({category.count})</span>
+              </Link>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Tags Section */}
+      {tags.length > 0 && (
+        <div className="bg-white rounded-lg shadow-md p-6">
+          <h3 className="text-lg font-semibold mb-4 text-gray-800 serif">Popular Tags</h3>
+          <div className="flex flex-wrap gap-2">
+            {tags.slice(0, 12).map((tag) => (
+              <Link
+                key={tag.id}
+                href={`/blog/tag/${tag.slug}`}
+                className="px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-xs hover:bg-[#1e2939] hover:text-white transition-colors"
+              >
+                {decodeHtmlEntities(tag.name)}
+              </Link>
+            ))}
+          </div>
+        </div>
       )}
 
       {/* Recent Posts Section */}

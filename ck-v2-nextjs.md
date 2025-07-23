@@ -265,6 +265,7 @@ export function getMediaUrl(mediaId: number, size?: string): string
 - **Image Optimization**: Disabled for Amplify compatibility
 - **TypeScript Strict**: Strict type checking enabled
 - **ESLint Integration**: Code quality enforcement
+- **Redirect Rules**: Handle old WordPress media URLs with permanent redirects to API subdomain
 
 ### Environment Variables
 ```env
@@ -285,6 +286,7 @@ NEXT_PUBLIC_SITE_URL=https://cowboykimono.com
 - **Build Commands**: Automated build and deployment
 - **Environment Setup**: Production-ready configuration with WordPress API
 - **WordPress Integration**: API endpoints for dynamic content
+- **URL Redirects**: Permanent redirects for old WordPress media URLs to prevent 404 errors
 
 ## File Organization Standards
 
@@ -829,6 +831,10 @@ interface WordPressBlogProps {
 - **Sitemap Fix**: Corrected WordPress API URL in sitemap generation
 - **Meta Tags Enhancement**: Added comprehensive meta tags for better mobile and social media compatibility
 - **Structured Data**: Enhanced structured data implementation for better search engine understanding
+- **Domain Consistency**: Fixed structured data URLs to use correct `cowboykimono.com` domain instead of old `cowboykimonos.com`
+- **Social Media Links**: Updated structured data social media links to correct Instagram and Facebook URLs
+- **Canonical URL Fix**: Fixed canonical URL generation to use full URLs with correct www domain to prevent duplicate content issues
+- **Ahrefs Compatibility**: Resolved non-200 status and canonicalization issues that were causing Ahrefs to flag pages as non-indexable
 
 ## [2024-12-19] Google Search Console Sitemap Fixes
 
@@ -978,7 +984,7 @@ This improvement ensures that all WordPress blog images load reliably and provid
 - **Results Achieved**: 80-96% file size reduction, significant Lighthouse score improvement expected
 
 ### Code Updates Completed ✅
-- **app/page.tsx**: Updated all hero and blog post images to .webp
+- **app/page.tsx**: Updated all hero and blog post images to .webp, converted to dynamic WordPress posts
 - **app/layout.tsx**: Updated Apple touch icon to .webp
 - **app/downloads/DownloadsClient.tsx**: Updated all download section images to .webp
 - **app/shop/ShopClient.tsx**: Updated shop header image to .webp
@@ -986,6 +992,67 @@ This improvement ensures that all WordPress blog images load reliably and provid
 - **app/blog/BlogClient.tsx**: Updated blog header image to .webp
 - **app/about/page.tsx**: Updated about page image to .webp
 - **app/components/Navbar.tsx**: Already using .webp format
+- **app/components/HomeBlogCards.tsx**: New component for dynamic WordPress posts on home page
+
+## [2024-12-19] Home Page Dynamic Blog Integration
+
+### Home Page Blog Cards Update
+- **Dynamic WordPress Integration**: Home page now fetches and displays the three most recent WordPress blog posts
+- **Same Card Styling**: Maintains the exact same visual design and hover effects as the original static cards
+- **Automatic Updates**: Blog cards automatically update when new posts are published in WordPress
+- **Fallback Handling**: Graceful fallback for posts without featured images
+- **Loading States**: Skeleton loading animation while fetching posts
+- **Error Handling**: User-friendly error messages if WordPress API is unavailable
+
+### Technical Implementation
+- **HomeBlogCards Component**: New client component that fetches recent posts from WordPress API
+- **WordPress Integration**: Uses existing `fetchPosts` function from `app/lib/wordpress.ts`
+- **Responsive Design**: Maintains responsive grid layout (1 column mobile, 3 columns desktop)
+- **Image Optimization**: Uses WordPress featured images with Next.js Image optimization
+- **SEO Friendly**: Server-side metadata generation maintained for SEO benefits
+
+### User Experience Benefits
+- **Always Fresh Content**: Home page always shows the latest blog posts
+- **Consistent Design**: Same beautiful card design with hover animations
+- **Fast Loading**: Optimized image loading with proper fallbacks
+- **Mobile Responsive**: Works perfectly on all device sizes
+- **Accessibility**: Proper alt text and keyboard navigation
+
+## [2024-12-19] Blog Post Related Posts Feature
+
+### Related Posts Implementation
+- **Smart Recommendations**: Individual blog posts now show related posts based on WordPress categories and tags
+- **Intelligent Matching**: Uses both categories and tags to find the most relevant related content
+- **Fallback System**: If no related posts are found, falls back to recent posts
+- **Exclusion Logic**: Automatically excludes the current post from related suggestions
+- **Performance Optimized**: Efficient API calls with proper caching and error handling
+
+### Technical Implementation
+- **fetchRelatedPosts Function**: New WordPress API function that finds posts with matching categories/tags
+- **RelatedPosts Component**: New client component for displaying related posts with loading states
+- **BlogSidebar Enhancement**: Updated to use related posts instead of generic "You Might Like" suggestions
+- **WordPressPost Interface**: Updated to include categories and tags arrays
+- **Smart Fallback**: If insufficient related posts, supplements with recent posts
+
+### Related Posts Algorithm
+1. **Primary Match**: Finds posts that share categories with the current post
+2. **Secondary Match**: Finds posts that share tags with the current post
+3. **Fallback**: If not enough related posts, adds recent posts to reach the limit
+4. **Exclusion**: Automatically excludes the current post from suggestions
+5. **Limit Control**: Configurable limit (default: 6 posts for related, 3 posts for recent)
+
+### Sidebar Layout and Post Counts
+- **Related Posts**: Shows 6 related posts based on categories and tags (appears first)
+- **Recent Posts**: Shows 3 most recent posts (appears second)
+- **Search Section**: Always appears at the top for easy access
+- **Smart Positioning**: Related posts appear before recent posts for better relevance
+
+### User Experience Benefits
+- **Relevant Suggestions**: Users see posts that are actually related to what they're reading
+- **Better Engagement**: More likely to click on related content that matches their interests
+- **Improved Navigation**: Helps users discover more content in their areas of interest
+- **Consistent Design**: Same beautiful sidebar design with hover effects
+- **Loading States**: Smooth loading animations while fetching related posts
 
 ## [2024-12-19] Project Cleanup and Long-term Deployment Preparation
 

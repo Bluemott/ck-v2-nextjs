@@ -4,16 +4,18 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { fetchPosts, type WordPressPost, decodeHtmlEntities } from '../lib/wordpress';
 import WordPressImage from './WordPressImage';
+import RelatedPosts from './RelatedPosts';
 
 interface BlogSidebarProps {
   currentPostId?: number;
+  currentPostCategories?: number[];
+  currentPostTags?: number[];
 }
 
-const BlogSidebar = ({ currentPostId }: BlogSidebarProps) => {
+const BlogSidebar = ({ currentPostId, currentPostCategories = [], currentPostTags = [] }: BlogSidebarProps) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [searchResults, setSearchResults] = useState<WordPressPost[]>([]);
   const [recentPosts, setRecentPosts] = useState<WordPressPost[]>([]);
-  const [suggestedPost, setSuggestedPost] = useState<WordPressPost | null>(null);
   const [isSearching, setIsSearching] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -27,25 +29,10 @@ const BlogSidebar = ({ currentPostId }: BlogSidebarProps) => {
         
         // Fetch recent posts
         const recentData = await fetchPosts({ 
-          per_page: 5,
+          per_page: 3,
           _embed: true
         });
         setRecentPosts(recentData);
-
-        // Set suggested post (next post after current, or random if no current)
-        if (currentPostId) {
-          const currentIndex = recentData.findIndex((post: WordPressPost) => post.id === currentPostId);
-          if (currentIndex !== -1 && currentIndex < recentData.length - 1) {
-            setSuggestedPost(recentData[currentIndex + 1]);
-          } else {
-            // If current is last or not found, suggest the first different post
-            const differentPost = recentData.find((post: WordPressPost) => post.id !== currentPostId);
-            setSuggestedPost(differentPost || null);
-          }
-        } else {
-          // On blog listing page, suggest the most recent post
-          setSuggestedPost(recentData[0] || null);
-        }
       } catch (err) {
         console.error('Error fetching sidebar data:', err);
         setError('Failed to load sidebar data');
@@ -154,11 +141,21 @@ const BlogSidebar = ({ currentPostId }: BlogSidebarProps) => {
         )}
       </div>
 
+      {/* Related Posts Section */}
+      {currentPostId && (currentPostCategories.length > 0 || currentPostTags.length > 0) && (
+        <RelatedPosts
+          currentPostId={currentPostId}
+          categories={currentPostCategories}
+          tags={currentPostTags}
+          limit={6}
+        />
+      )}
+
       {/* Recent Posts Section */}
       <div className="bg-white rounded-lg shadow-md p-6">
         <h3 className="text-lg font-semibold mb-4 text-gray-800 serif">Recent Posts</h3>
         <div className="space-y-4">
-          {recentPosts.map((post) => (
+          {recentPosts.slice(0, 3).map((post) => (
             <Link
               key={post.id}
               href={`/blog/${post.slug}`}
@@ -188,31 +185,6 @@ const BlogSidebar = ({ currentPostId }: BlogSidebarProps) => {
           ))}
         </div>
       </div>
-
-      {/* Suggested Post Section */}
-      {suggestedPost && (
-        <div className="bg-white rounded-lg shadow-md p-6">
-          <h3 className="text-lg font-semibold mb-4 text-gray-800 serif">You Might Like</h3>
-          <Link href={`/blog/${suggestedPost.slug}`} className="block group">
-            {suggestedPost.featured_media && (
-              <div className="relative w-full h-32 mb-3 rounded overflow-hidden">
-                <WordPressImage
-                  post={suggestedPost}
-                  size="medium"
-                  fill
-                  className="object-cover group-hover:scale-105 transition-transform duration-300"
-                />
-              </div>
-            )}
-            <h4 className="text-sm font-medium text-gray-900 group-hover:text-[#1e2939] line-clamp-2 transition-colors">
-              {decodeHtmlEntities(suggestedPost.title.rendered)}
-            </h4>
-            <p className="text-xs text-gray-500 mt-1">
-              {formatDate(suggestedPost.date)}
-            </p>
-          </Link>
-        </div>
-      )}
 
       {/* Error State */}
       {error && (

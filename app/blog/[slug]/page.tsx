@@ -132,7 +132,11 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
             </div>
 
             {/* Sidebar */}
-            <BlogSidebar currentPostId={post.id} />
+            <BlogSidebar 
+              currentPostId={post.id} 
+              currentPostCategories={post.categories || []}
+              currentPostTags={post.tags || []}
+            />
           </div>
         </div>
       </article>

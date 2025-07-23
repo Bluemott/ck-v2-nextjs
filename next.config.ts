@@ -82,6 +82,22 @@ const nextConfig: NextConfig = {
     ignoreBuildErrors: false,
   },
   
+  // Redirects for old WordPress media URLs
+  async redirects() {
+    return [
+      {
+        source: '/wp-content/uploads/:path*',
+        destination: 'https://api.cowboykimono.com/wp-content/uploads/:path*',
+        permanent: true,
+      },
+      {
+        source: '/wp-content/:path*',
+        destination: 'https://api.cowboykimono.com/wp-content/:path*',
+        permanent: true,
+      },
+    ];
+  },
+
   // Headers for better caching
   async headers() {
     return [

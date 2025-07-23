@@ -16,14 +16,14 @@ export default function manifest(): MetadataRoute.Manifest {
         type: 'image/png',
       },
       {
-        src: '/images/CK_Logo_Title-01.png',
+        src: '/images/CK_Logo_Title-01.webp',
         sizes: '192x192',
-        type: 'image/png',
+        type: 'image/webp',
       },
       {
-        src: '/images/CK_Logo_Title-01.png',
+        src: '/images/CK_Logo_Title-01.webp',
         sizes: '512x512',
-        type: 'image/png',
+        type: 'image/webp',
       }
     ],
     orientation: 'portrait',

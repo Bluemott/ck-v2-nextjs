@@ -34,6 +34,8 @@ export interface WordPressPost {
   template: string;
   format: string;
   meta: Record<string, unknown>[];
+  categories: number[];
+  tags: number[];
   _embedded?: {
     'wp:featuredmedia'?: WordPressMedia[];
     author?: WordPressAuthor[];
@@ -449,6 +451,72 @@ export async function fetchAuthor(authorId: number): Promise<WordPressAuthor | n
     throw error;
   }
 } 
+
+/**
+ * Fetch related posts based on categories and tags
+ */
+export async function fetchRelatedPosts(
+  currentPostId: number,
+  categories: number[],
+  tags: number[],
+  limit: number = 3
+): Promise<WordPressPost[]> {
+  try {
+    // Create a set of all related IDs (categories + tags)
+    const relatedIds = [...categories, ...tags];
+    
+    if (relatedIds.length === 0) {
+      return [];
+    }
+
+    // Fetch posts that share categories or tags with the current post
+    const searchParams = new URLSearchParams({
+      per_page: limit.toString(),
+      _embed: '1',
+      exclude: currentPostId.toString(),
+    });
+
+    // Add categories
+    categories.forEach(catId => {
+      searchParams.append('categories', catId.toString());
+    });
+
+    // Add tags
+    tags.forEach(tagId => {
+      searchParams.append('tags', tagId.toString());
+    });
+
+    const response = await fetch(`${WORDPRESS_API_URL}/posts?${searchParams.toString()}`);
+    
+    if (!response.ok) {
+      throw new Error(`WordPress API error: ${response.status} ${response.statusText}`);
+    }
+
+    const posts: WordPressPost[] = await response.json();
+    
+    // If we don't have enough related posts, fetch some recent posts as fallback
+    if (posts.length < limit) {
+      const remainingCount = limit - posts.length;
+      const fallbackParams = new URLSearchParams({
+        per_page: remainingCount.toString(),
+        _embed: '1',
+        exclude: [currentPostId, ...posts.map(p => p.id)].join(','),
+      });
+
+      const fallbackResponse = await fetch(`${WORDPRESS_API_URL}/posts?${fallbackParams.toString()}`);
+      
+      if (fallbackResponse.ok) {
+        const fallbackPosts: WordPressPost[] = await fallbackResponse.json();
+        posts.push(...fallbackPosts);
+      }
+    }
+
+    return posts.slice(0, limit);
+  } catch (error) {
+    console.error('Error fetching related posts:', error);
+    return [];
+  }
+}
 
 /**
  * Fetch posts with total count for pagination

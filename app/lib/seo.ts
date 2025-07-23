@@ -32,7 +32,7 @@ const defaultSEO = {
   ogImage: '/images/CK_New_Hero_Red_Head-1.webp',
   ogType: 'website' as const,
   author: 'Cowboy Kimono',
-  siteUrl: process.env.NEXT_PUBLIC_SITE_URL || 'https://cowboykimono.com'
+  siteUrl: process.env.NEXT_PUBLIC_SITE_URL || 'https://www.cowboykimono.com'
 };
 
 export function generateSEOMetadata({
@@ -68,12 +68,12 @@ export function generateSEOMetadata({
     },
     metadataBase: new URL(defaultSEO.siteUrl),
     alternates: {
-      canonical: canonical || '/',
+      canonical: `${defaultSEO.siteUrl}${canonical || '/'}`,
     },
     openGraph: {
       title: seoTitle,
       description: seoDescription,
-      url: canonical || '/',
+      url: `${defaultSEO.siteUrl}${canonical || '/'}`,
       siteName: 'Cowboy Kimono',
       images: [
         {

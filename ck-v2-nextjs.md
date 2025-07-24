@@ -159,6 +159,7 @@ export default function WordPressBlog({
 - **Open Graph**: Social media optimization
 - **Twitter Cards**: Twitter-specific meta tags
 - **Canonical URLs**: Proper canonical URL implementation
+- **IndexNow Integration**: Automatic URL submission to search engines for faster indexing
 
 ### Performance Optimizations
 - **Image Optimization**: Next.js Image component with WebP support
@@ -247,6 +248,22 @@ export function getWordPressAdminUrl(): string
 export function getMediaUrl(mediaId: number, size?: string): string
 ```
 
+### IndexNow Integration
+```typescript
+// Core IndexNow functions
+export async function submitToIndexNow(urls: string[], searchEngines?: string[]): Promise<IndexNowResponse>
+export async function submitUrlToIndexNow(url: string, searchEngines?: string[]): Promise<IndexNowResponse>
+
+// WordPress-specific IndexNow functions
+export async function submitWordPressPostToIndexNow(slug: string, searchEngines?: string[]): Promise<IndexNowResponse>
+export async function submitWordPressCategoryToIndexNow(slug: string, searchEngines?: string[]): Promise<IndexNowResponse>
+export async function submitWordPressTagToIndexNow(slug: string, searchEngines?: string[]): Promise<IndexNowResponse>
+
+// Configuration and utilities
+export function getIndexNowConfig(): IndexNowConfig
+export function validateIndexNowKey(key: string): boolean
+```
+
 ### Download Resources
 - **Craft Templates**: PDF templates for DIY projects
 - **Coloring Pages**: Printable coloring activities
@@ -280,6 +297,10 @@ NEXT_PUBLIC_GA_MEASUREMENT_ID=G-VYVT6J7XLS
 NEXT_PUBLIC_GTM_ID=GTM-XXXXXXX
 NEXT_PUBLIC_GOOGLE_VERIFICATION=your-google-verification-code
 NEXT_PUBLIC_SITE_URL=https://cowboykimono.com
+
+# IndexNow Configuration
+NEXT_PUBLIC_INDEXNOW_KEY=your-indexnow-key-here
+WORDPRESS_WEBHOOK_SECRET=your-webhook-secret-here
 ```
 
 ### Amplify Configuration
@@ -1012,10 +1033,12 @@ This improvement ensures that all WordPress blog images load reliably and provid
 - **Fallback Handling**: Graceful fallback for posts without featured images
 - **Loading States**: Skeleton loading animation while fetching posts
 - **Error Handling**: User-friendly error messages if WordPress API is unavailable
+- **HTML Entity Decoding**: Blog post titles now properly decode HTML entities (like &amp;, &quot;, &#39;) to display correctly instead of showing raw entity codes
 
 ### Technical Implementation
 - **HomeBlogCards Component**: New client component that fetches recent posts from WordPress API
 - **WordPress Integration**: Uses existing `fetchPosts` function from `app/lib/wordpress.ts`
+- **HTML Entity Handling**: Uses `decodeHtmlEntities()` function and `dangerouslySetInnerHTML` for proper title display
 - **Responsive Design**: Maintains responsive grid layout (1 column mobile, 3 columns desktop)
 - **Image Optimization**: Uses WordPress featured images with Next.js Image optimization
 - **SEO Friendly**: Server-side metadata generation maintained for SEO benefits
@@ -1201,3 +1224,177 @@ ck-v2-nextjs/
 - **Environment Management**: Keep environment variables secure and organized
 
 This cleanup ensures the project is optimized for long-term deployment and maintenance while preserving all essential functionality and documentation.
+
+## [2024-12-19] Tag Page 404 Error Fix
+
+### Issue Resolution
+- **Problem**: Some individual tag pages were returning 404 errors when tags had no associated posts (`count: 0`)
+- **Root Cause**: Tag pages were trying to render `BlogClient` component for tags with no posts, causing rendering errors
+- **Solution**: Added graceful handling for tags and categories with no posts by checking the `count` property
+
+### Implementation Details
+- **Tag Page Enhancement**: Updated `app/blog/tag/[slug]/page.tsx` to check `tag.count === 0`
+- **Category Page Enhancement**: Updated `app/blog/category/[slug]/page.tsx` to check `category.count === 0`
+- **Empty State Design**: Added user-friendly empty state with icons, descriptive text, and navigation back to blog
+- **Consistent UX**: Maintains breadcrumb navigation and proper page structure even when no posts exist
+
+### Empty State Features
+- **Visual Feedback**: Custom SVG icons for tags (document icon) and categories (folder icon)
+- **Clear Messaging**: Descriptive text explaining that no posts are currently available
+- **Navigation**: "Back to all posts" button for easy navigation
+- **SEO Friendly**: Proper page structure and metadata even for empty states
+- **Responsive Design**: Works seamlessly on all device sizes
+
+### Technical Implementation
+```typescript
+// Check if the tag has any posts
+if (tag.count === 0) {
+  return (
+    <div className="min-h-screen bg-[#f0f8ff] py-12">
+      {/* Empty state with proper navigation and messaging */}
+    </div>
+  );
+}
+```
+
+### User Experience Benefits
+- **No More 404s**: Tag pages with no posts now display gracefully instead of errors
+- **Clear Communication**: Users understand why no content is shown
+- **Easy Navigation**: Simple way to return to the main blog
+- **Professional Appearance**: Consistent design with the rest of the site
+- **Future-Proof**: Automatically works when new posts are added to empty tags
+
+### Affected Tags
+The following tags were causing 404 errors and are now handled gracefully:
+- `1970s` (count: 0)
+- `animated` (count: 0) 
+- `canvas` (count: 0)
+- `embroidery` (count: 0)
+
+This fix ensures that all tag and category pages work properly regardless of whether they have associated posts, providing a better user experience and preventing 404 errors.
+
+## [2024-12-19] IndexNow Integration for Faster Search Engine Indexing
+
+### IndexNow Implementation Overview
+- **Protocol Integration**: Full IndexNow protocol implementation for instant search engine notification
+- **WordPress Integration**: Automatic submission of new WordPress content (posts, categories, tags)
+- **API Endpoints**: RESTful API endpoints for manual and automated submissions
+- **Debug Interface**: Comprehensive testing and debugging interface
+- **Multi-Engine Support**: Support for Google, Bing, Yandex, and other search engines
+- **Security Features**: Webhook authentication and URL validation
+
+### Core Features
+- **Automatic WordPress Submissions**: New posts, categories, and tags are automatically submitted
+- **Manual URL Submission**: Submit any URL for immediate indexing
+- **Batch Submissions**: Submit multiple URLs simultaneously
+- **Search Engine Selection**: Choose which search engines to submit to
+- **Real-time Feedback**: Immediate response on submission success/failure
+- **Configuration Management**: Centralized configuration and status monitoring
+
+### Technical Implementation
+- **IndexNow Utility**: `app/lib/indexnow.ts` - Core IndexNow functionality
+- **API Routes**: 
+  - `app/api/indexnow/route.ts` - Main IndexNow API endpoint
+  - `app/api/wordpress-webhook/route.ts` - WordPress webhook endpoint
+- **Debug Interface**: `app/debug/indexnow/page.tsx` - Testing and debugging interface
+- **WordPress Plugin**: `wordpress-indexnow-plugin.php` - WordPress integration plugin
+
+### API Endpoints
+```typescript
+// Submit URLs to IndexNow
+POST /api/indexnow
+{
+  "urls": ["https://www.cowboykimono.com/blog/example-post"],
+  "searchEngines": ["google", "bing"]
+}
+
+// WordPress webhook for automatic submissions
+POST /api/wordpress-webhook
+{
+  "action": "publish",
+  "post_type": "post",
+  "post_slug": "example-post",
+  "post_status": "publish"
+}
+
+// Get configuration status
+GET /api/indexnow
+```
+
+### WordPress Integration
+- **Automatic Triggers**: Posts, categories, and tags are submitted when published
+- **Webhook System**: WordPress calls webhook endpoint for real-time submissions
+- **Plugin Support**: WordPress plugin for easy integration and management
+- **Manual Functions**: PHP functions for manual submission from themes/plugins
+- **Error Logging**: Comprehensive error logging for debugging
+
+### Configuration Requirements
+- **IndexNow Key**: Generate key from IndexNow.org or create custom key
+- **Key File**: Create `{key}.txt` file at domain root with key content
+- **Environment Variables**: 
+  - `NEXT_PUBLIC_INDEXNOW_KEY` - Your IndexNow key
+  - `WORDPRESS_WEBHOOK_SECRET` - Optional webhook authentication secret
+
+### Debug and Testing
+- **Debug Interface**: Visit `/debug/indexnow` for comprehensive testing
+- **Configuration Status**: Real-time configuration validation
+- **URL Testing**: Test individual URL submissions
+- **WordPress Testing**: Test WordPress content submissions
+- **Search Engine Selection**: Choose which engines to test with
+- **Response Monitoring**: Real-time submission response monitoring
+
+### Benefits for SEO
+- **Faster Indexing**: Content indexed within hours instead of days/weeks
+- **Better Discovery**: Search engines discover new content immediately
+- **Improved Rankings**: Faster indexing can lead to better search rankings
+- **Content Freshness**: Search engines see content updates quickly
+- **Competitive Advantage**: Stay ahead of competitors in search results
+
+### Security and Performance
+- **URL Validation**: All URLs are validated to ensure they're from your domain
+- **Webhook Authentication**: Optional secret-based authentication for webhooks
+- **Error Handling**: Comprehensive error handling and logging
+- **Rate Limiting**: Built-in protection against excessive submissions
+- **Minimal Overhead**: Lightweight implementation with no user impact
+
+### Setup Instructions
+1. **Generate IndexNow Key**: Visit IndexNow.org or create custom key
+2. **Create Key File**: Place `{key}.txt` at domain root
+3. **Configure Environment**: Set `NEXT_PUBLIC_INDEXNOW_KEY` environment variable
+4. **Test Integration**: Use debug interface at `/debug/indexnow`
+5. **Install WordPress Plugin**: Copy plugin file to WordPress site (optional)
+6. **Monitor Results**: Check submission success rates and indexing speed
+
+### WordPress Plugin Features
+- **Automatic Submission**: Submits new content automatically when published
+- **Admin Interface**: Settings page in WordPress admin (Settings > IndexNow and main IndexNow menu)
+- **Test Functionality**: Test submissions with recent posts
+- **Manual Submission**: Functions for manual URL submission
+- **Error Logging**: Comprehensive error logging for debugging
+- **Configuration Management**: Easy webhook URL and secret configuration
+- **Plugin Activation**: Automatic setup of default options on activation
+- **Status Monitoring**: Real-time status display in admin interface
+
+### Monitoring and Analytics
+- **Success Tracking**: Monitor submission success rates
+- **Error Logging**: Comprehensive error logging for debugging
+- **Response Times**: Track search engine response times
+- **Indexing Speed**: Monitor how quickly content appears in search results
+- **Configuration Status**: Real-time configuration validation
+
+### Best Practices
+- **Submit Only New Content**: Don't submit unchanged URLs
+- **Batch Submissions**: Submit multiple URLs together when possible
+- **Monitor Success Rates**: Track submission success and failures
+- **Regular Testing**: Test the integration regularly
+- **Keep Keys Secure**: Rotate keys periodically and keep them secure
+- **Use Webhook Secrets**: Enable webhook authentication for production
+
+### Troubleshooting
+- **Configuration Issues**: Check environment variables and key file accessibility
+- **Submission Failures**: Verify URLs are from your domain and properly formatted
+- **WordPress Integration**: Ensure webhook URL is correct and accessible
+- **Search Engine Issues**: Check individual search engine endpoints and responses
+- **Performance Issues**: Monitor submission frequency and response times
+
+This IndexNow integration provides immediate search engine notification for all new content, significantly improving indexing speed and SEO performance for the Cowboy Kimono website.

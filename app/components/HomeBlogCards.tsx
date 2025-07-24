@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { fetchPosts, type WordPressPost } from '../lib/wordpress';
+import { fetchPosts, type WordPressPost, decodeHtmlEntities } from '../lib/wordpress';
 
 interface HomeBlogCardsProps {
   postsPerPage?: number;
@@ -100,9 +100,9 @@ export default function HomeBlogCards({ postsPerPage = 3 }: HomeBlogCardsProps) 
               )}
             </div>
             <div className="p-6">
-              <p className="text-gray-600 mb-4 line-clamp-2">
-                {post.title.rendered}
-              </p>
+              <p className="text-gray-600 mb-4 line-clamp-2"
+                 dangerouslySetInnerHTML={{ __html: decodeHtmlEntities(post.title.rendered) }}
+              />
               <span className="text-[#1e2939] hover:text-[#2a3441] font-medium">
                 Read More →
               </span>

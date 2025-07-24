@@ -50,6 +50,62 @@ export default async function TagPage({ params }: TagPageProps) {
       notFound();
     }
 
+    // Check if the tag has any posts
+    if (tag.count === 0) {
+      return (
+        <div className="min-h-screen bg-[#f0f8ff] py-12">
+          <div className="max-w-7xl mx-auto px-8">
+            {/* Breadcrumbs */}
+            <Breadcrumbs
+              items={[
+                { label: 'Home', href: '/' },
+                { label: 'Blog', href: '/blog' },
+                { label: decodeHtmlEntities(tag.name) }
+              ]}
+            />
+
+            {/* Tag Header */}
+            <div className="text-center mb-12">
+              <h1 className="text-4xl font-bold mb-4 text-gray-900 serif">
+                Posts tagged: {decodeHtmlEntities(tag.name)}
+              </h1>
+              {tag.description && (
+                <p className="text-gray-600 text-lg max-w-2xl mx-auto">
+                  {decodeHtmlEntities(tag.description)}
+                </p>
+              )}
+              <p className="text-sm text-gray-500 mt-4">
+                No posts found with this tag
+              </p>
+            </div>
+
+            {/* Empty State */}
+            <div className="text-center py-16">
+              <div className="max-w-md mx-auto">
+                <div className="text-gray-400 mb-4">
+                  <svg className="w-16 h-16 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                </div>
+                <h3 className="text-lg font-medium text-gray-900 mb-2">
+                  No posts found
+                </h3>
+                <p className="text-gray-500 mb-6">
+                  There are currently no posts tagged with "{decodeHtmlEntities(tag.name)}". Check back later for new content!
+                </p>
+                <Link 
+                  href="/blog"
+                  className="inline-flex items-center px-4 py-2 bg-[#1e2939] text-white rounded-md hover:bg-[#2a3441] transition-colors"
+                >
+                  ← Back to all posts
+                </Link>
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
     return (
       <div className="min-h-screen bg-[#f0f8ff] py-12">
         <div className="max-w-7xl mx-auto px-8">

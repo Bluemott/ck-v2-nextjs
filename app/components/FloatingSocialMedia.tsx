@@ -15,26 +15,22 @@ const FloatingSocialMedia = () => {
     {
       name: 'Instagram',
       url: 'https://www.instagram.com/cowboykimono/',
-      icon: '📷',
-      bgColor: 'bg-pink-500 hover:bg-pink-600'
+      icon: '/images/instagram.webp'
     },
     {
       name: 'Facebook',
       url: 'https://www.facebook.com/me.marisa.mott/',
-      icon: '📘',
-      bgColor: 'bg-blue-600 hover:bg-blue-700'
-    },
-    {
-      name: 'LinkedIn',
-      url: 'https://www.linkedin.com/in/marisa-mott-2149335/',
-      icon: '🐦',
-      bgColor: 'bg-sky-500 hover:bg-sky-600'
+      icon: '/images/facebook.webp'
     },
     {
       name: 'Pinterest',
       url: 'https://www.pinterest.com/mottmarisa6quincy1fl/',
-      icon: '📌',
-      bgColor: 'bg-red-600 hover:bg-red-700'
+      icon: '/images/pinterest.webp'
+    },
+    {
+      name: 'Etsy',
+      url: 'https://www.etsy.com/shop/CowboyKimono?ref=shop_sugg_market&dd_referrer=https%3A%2F%2Fwww.etsy.com%2Fmarket%2Fcowboy_kimono%3Fref%3Dlp_queries_internal_bottom-2',
+      icon: '/images/etsy.webp'
     }
   ];
 
@@ -50,12 +46,22 @@ const FloatingSocialMedia = () => {
             href={social.url}
             target="_blank"
             rel="noopener noreferrer"
-            className={`w-12 h-12 rounded-full ${social.bgColor} text-white flex items-center justify-center text-xl shadow-lg transition-all duration-200 transform hover:scale-110`}
+            className="w-12 h-12 rounded-full bg-white/80 backdrop-blur-sm flex items-center justify-center shadow-lg transition-all duration-200 transform hover:scale-110 hover:shadow-xl"
             style={{
               transitionDelay: isExpanded ? `${index * 50}ms` : '0ms'
             }}
           >
-            <span className="text-lg">{social.icon}</span>
+            {social.icon.startsWith('/images/') ? (
+              <Image
+                src={social.icon}
+                alt={`${social.name} icon`}
+                width={24}
+                height={24}
+                className="w-6 h-6 drop-shadow-md"
+              />
+            ) : (
+              <span className="text-lg drop-shadow-md">{social.icon}</span>
+            )}
           </Link>
         ))}
       </div>
@@ -73,7 +79,7 @@ const FloatingSocialMedia = () => {
             <span className="text-2xl text-gray-700">✕</span>
           ) : (
             <Image
-                              src="/images/CK_Social_Link.webp"
+              src="/images/CK_Social_Link.webp"
               alt="Social Media"
               width={36}
               height={36}

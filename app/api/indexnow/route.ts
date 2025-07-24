@@ -4,8 +4,7 @@ import {
   submitWordPressPostToIndexNow,
   submitWordPressCategoryToIndexNow,
   submitWordPressTagToIndexNow,
-  getIndexNowConfig,
-  validateIndexNowKey
+  getIndexNowConfig
 } from '../../lib/indexnow';
 
 /**

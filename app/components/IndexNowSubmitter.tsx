@@ -6,8 +6,7 @@ import {
   submitWordPressPostToIndexNow,
   submitWordPressCategoryToIndexNow,
   submitWordPressTagToIndexNow,
-  getIndexNowConfig,
-  validateIndexNowKey
+  getIndexNowConfig
 } from '../lib/indexnow';
 
 interface IndexNowResponse {
@@ -16,14 +15,16 @@ interface IndexNowResponse {
   statusCode?: number;
 }
 
+type SearchEngine = 'google' | 'bing' | 'yandex';
+
 export default function IndexNowSubmitter() {
   const [urls, setUrls] = useState<string>('');
   const [wordPressType, setWordPressType] = useState<'post' | 'category' | 'tag'>('post');
   const [wordPressSlug, setWordPressSlug] = useState<string>('');
-  const [searchEngines, setSearchEngines] = useState<string[]>(['google', 'bing']);
+  const [searchEngines, setSearchEngines] = useState<SearchEngine[]>(['google', 'bing']);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [result, setResult] = useState<IndexNowResponse | null>(null);
-  const [config, setConfig] = useState(getIndexNowConfig());
+  const [config] = useState(getIndexNowConfig());
 
   const handleUrlSubmission = async () => {
     if (!urls.trim()) {
@@ -36,7 +37,7 @@ export default function IndexNowSubmitter() {
 
     try {
       const urlList = urls.split('\n').map(url => url.trim()).filter(url => url);
-      const response = await submitToIndexNow(urlList, searchEngines as any);
+      const response = await submitToIndexNow(urlList, searchEngines);
       setResult(response);
     } catch (error) {
       setResult({
@@ -62,13 +63,13 @@ export default function IndexNowSubmitter() {
 
       switch (wordPressType) {
         case 'post':
-          response = await submitWordPressPostToIndexNow(wordPressSlug, searchEngines as any);
+          response = await submitWordPressPostToIndexNow(wordPressSlug, searchEngines);
           break;
         case 'category':
-          response = await submitWordPressCategoryToIndexNow(wordPressSlug, searchEngines as any);
+          response = await submitWordPressCategoryToIndexNow(wordPressSlug, searchEngines);
           break;
         case 'tag':
-          response = await submitWordPressTagToIndexNow(wordPressSlug, searchEngines as any);
+          response = await submitWordPressTagToIndexNow(wordPressSlug, searchEngines);
           break;
         default:
           response = { success: false, message: 'Invalid WordPress type' };
@@ -85,7 +86,7 @@ export default function IndexNowSubmitter() {
     }
   };
 
-  const handleSearchEngineToggle = (engine: string) => {
+  const handleSearchEngineToggle = (engine: SearchEngine) => {
     setSearchEngines(prev => 
       prev.includes(engine) 
         ? prev.filter(e => e !== engine)
@@ -130,8 +131,8 @@ export default function IndexNowSubmitter() {
             <label key={engine} className="flex items-center space-x-2">
               <input
                 type="checkbox"
-                checked={searchEngines.includes(engine)}
-                onChange={() => handleSearchEngineToggle(engine)}
+                checked={searchEngines.includes(engine as SearchEngine)}
+                onChange={() => handleSearchEngineToggle(engine as SearchEngine)}
                 className="rounded border-gray-300"
               />
               <span className="capitalize">{engine}</span>
@@ -174,7 +175,7 @@ export default function IndexNowSubmitter() {
               <label className="block text-sm font-medium mb-2">Content Type</label>
               <select
                 value={wordPressType}
-                onChange={(e) => setWordPressType(e.target.value as any)}
+                onChange={(e) => setWordPressType(e.target.value as 'post' | 'category' | 'tag')}
                 className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               >
                 <option value="post">Blog Post</option>

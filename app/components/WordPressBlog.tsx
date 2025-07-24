@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -67,7 +67,7 @@ export default function WordPressBlog({
     };
 
     loadData();
-  }, [currentPage, postsPerPage]);
+  }, [currentPage, postsPerPage, initialPosts.length]);
 
   // Update URL with current state
   const updateURL = (page: number, search: string) => {
@@ -80,7 +80,7 @@ export default function WordPressBlog({
   };
 
   // Handle search
-  const handleSearch = async (query: string) => {
+  const handleSearch = useCallback(async (query: string) => {
     setSearchQuery(query);
     
     if (!query.trim()) {
@@ -106,7 +106,7 @@ export default function WordPressBlog({
     } finally {
       setIsSearching(false);
     }
-  };
+  }, [currentPage, updateURL]);
 
   // Handle initial search if provided
   useEffect(() => {

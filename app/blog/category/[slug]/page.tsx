@@ -91,7 +91,7 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
                   No posts found
                 </h3>
                 <p className="text-gray-500 mb-6">
-                  There are currently no posts in the "{decodeHtmlEntities(category.name)}" category. Check back later for new content!
+                  There are currently no posts in the &ldquo;{decodeHtmlEntities(category.name)}&rdquo; category. Check back later for new content!
                 </p>
                 <Link 
                   href="/blog"

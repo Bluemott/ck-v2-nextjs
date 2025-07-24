@@ -69,7 +69,7 @@ const BlogClient = ({ initialCategory, initialTag, showHeader = true }: BlogClie
 
     loadPosts();
     loadSidebarData();
-  }, [currentPage]);
+  }, [currentPage, initialCategory, initialTag]);
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', {

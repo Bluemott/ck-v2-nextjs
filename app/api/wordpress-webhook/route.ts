@@ -19,7 +19,6 @@ export async function POST(request: NextRequest) {
     const { 
       action,           // 'publish', 'update', 'delete'
       post_type,        // 'post', 'category', 'tag'
-      post_id,          // WordPress post ID
       post_slug,        // WordPress post slug
       post_status,      // 'publish', 'draft', etc.
       categories,       // Array of category slugs

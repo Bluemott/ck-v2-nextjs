@@ -91,7 +91,7 @@ export default async function TagPage({ params }: TagPageProps) {
                   No posts found
                 </h3>
                 <p className="text-gray-500 mb-6">
-                  There are currently no posts tagged with "{decodeHtmlEntities(tag.name)}". Check back later for new content!
+                  There are currently no posts tagged with &ldquo;{decodeHtmlEntities(tag.name)}&rdquo;. Check back later for new content!
                 </p>
                 <Link 
                   href="/blog"

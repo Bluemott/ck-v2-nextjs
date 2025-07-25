@@ -70,14 +70,14 @@ export default function WordPressBlog({
   }, [currentPage, postsPerPage, initialPosts.length]);
 
   // Update URL with current state
-  const updateURL = (page: number, search: string) => {
+  const updateURL = useCallback((page: number, search: string) => {
     const params = new URLSearchParams();
     if (page > 1) params.set('page', page.toString());
     if (search.trim()) params.set('search', search.trim());
     
     const newURL = params.toString() ? `/blog?${params.toString()}` : '/blog';
     router.push(newURL);
-  };
+  }, [router]);
 
   // Handle search
   const handleSearch = useCallback(async (query: string) => {

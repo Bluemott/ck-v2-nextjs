@@ -21,6 +21,15 @@ interface IndexNowResponse {
   statusCode?: number;
 }
 
+interface IndexNowConfig {
+  isConfigured: boolean;
+  key: string;
+  host: string;
+  keyLocation: string | null;
+  endpoints: string[];
+  keyFileAccessible?: boolean;
+}
+
 // IndexNow endpoints for different search engines
 // Note: Google's IndexNow endpoint may be temporarily unavailable
 // We'll use alternative endpoints or focus on Bing and Yandex
@@ -32,6 +41,26 @@ const INDEXNOW_ENDPOINTS = {
 };
 
 /**
+ * Validate IndexNow key file accessibility
+ * @param key - IndexNow key
+ * @param host - Domain host
+ * @returns Promise<boolean>
+ */
+async function validateKeyFileAccessibility(key: string, host: string): Promise<boolean> {
+  try {
+    const keyFileUrl = `${host}/${key}.txt`;
+    const response = await fetch(keyFileUrl, {
+      method: 'HEAD',
+      signal: AbortSignal.timeout(5000), // 5 second timeout
+    });
+    return response.ok;
+  } catch (error) {
+    console.warn('Key file validation failed:', error);
+    return false;
+  }
+}
+
+/**
  * Submit URLs to IndexNow for faster indexing
  * @param urls - Array of URLs to submit
  * @param searchEngines - Array of search engines to submit to (default: all)
@@ -41,8 +70,8 @@ export async function submitToIndexNow(
   urls: string[],
   searchEngines: (keyof typeof INDEXNOW_ENDPOINTS)[] = ['bing']
 ): Promise<IndexNowResponse> {
-  const key = process.env.NEXT_PUBLIC_INDEXNOW_KEY;
-  const host = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.cowboykimono.com';
+  const key = process.env.NEXT_PUBLIC_INDEXNOW_KEY || process.env.INDEXNOW_KEY;
+  const host = process.env.NEXT_PUBLIC_SITE_URL || process.env.SITE_URL || 'https://www.cowboykimono.com';
   
   if (!key) {
     return {
@@ -180,7 +209,7 @@ export async function submitWordPressPostToIndexNow(
   slug: string,
   searchEngines: (keyof typeof INDEXNOW_ENDPOINTS)[] = ['bing']
 ): Promise<IndexNowResponse> {
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.cowboykimono.com';
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || process.env.SITE_URL || 'https://www.cowboykimono.com';
   const url = `${baseUrl}/blog/${slug}`;
   return submitUrlToIndexNow(url, searchEngines);
 }
@@ -195,7 +224,7 @@ export async function submitWordPressCategoryToIndexNow(
   slug: string,
   searchEngines: (keyof typeof INDEXNOW_ENDPOINTS)[] = ['bing']
 ): Promise<IndexNowResponse> {
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.cowboykimono.com';
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || process.env.SITE_URL || 'https://www.cowboykimono.com';
   const url = `${baseUrl}/blog/category/${slug}`;
   return submitUrlToIndexNow(url, searchEngines);
 }
@@ -210,7 +239,7 @@ export async function submitWordPressTagToIndexNow(
   slug: string,
   searchEngines: (keyof typeof INDEXNOW_ENDPOINTS)[] = ['bing']
 ): Promise<IndexNowResponse> {
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.cowboykimono.com';
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || process.env.SITE_URL || 'https://www.cowboykimono.com';
   const url = `${baseUrl}/blog/tag/${slug}`;
   return submitUrlToIndexNow(url, searchEngines);
 }
@@ -225,7 +254,7 @@ export async function submitWordPressUrlsToIndexNow(
   urls: string[],
   searchEngines: (keyof typeof INDEXNOW_ENDPOINTS)[] = ['bing']
 ): Promise<IndexNowResponse> {
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.cowboykimono.com';
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || process.env.SITE_URL || 'https://www.cowboykimono.com';
   
   // Ensure URLs are absolute
   const absoluteUrls = urls.map(url => {
@@ -242,17 +271,29 @@ export async function submitWordPressUrlsToIndexNow(
  * Get IndexNow configuration status
  * @returns Object with configuration status
  */
-export function getIndexNowConfig() {
-  const key = process.env.NEXT_PUBLIC_INDEXNOW_KEY;
-  const host = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.cowboykimono.com';
+export async function getIndexNowConfig(): Promise<IndexNowConfig> {
+  const key = process.env.NEXT_PUBLIC_INDEXNOW_KEY || process.env.INDEXNOW_KEY;
+  const host = process.env.NEXT_PUBLIC_SITE_URL || process.env.SITE_URL || 'https://www.cowboykimono.com';
   
-  return {
+  const config: IndexNowConfig = {
     isConfigured: !!key,
     key: key ? `${key.substring(0, 8)}...` : 'Not set',
     host,
     keyLocation: key ? `${host}/${key}.txt` : null,
     endpoints: Object.keys(INDEXNOW_ENDPOINTS)
   };
+
+  // Validate key file accessibility if key is configured
+  if (key) {
+    try {
+      config.keyFileAccessible = await validateKeyFileAccessibility(key, host);
+    } catch (error) {
+      console.warn('Key file validation failed:', error);
+      config.keyFileAccessible = false;
+    }
+  }
+
+  return config;
 }
 
 /**

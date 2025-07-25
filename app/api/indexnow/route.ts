@@ -79,7 +79,7 @@ export async function POST(request: NextRequest) {
  */
 export async function GET() {
   try {
-    const config = getIndexNowConfig();
+    const config = await getIndexNowConfig();
     return NextResponse.json(config, { status: 200 });
   } catch (error) {
     console.error('IndexNow config error:', error);

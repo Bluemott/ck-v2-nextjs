@@ -113,6 +113,11 @@ export async function submitToIndexNow(
 
   // Submit to each search engine
   console.log('IndexNow submission:', { submission, searchEngines });
+  console.log('Valid URLs being submitted:', validUrls);
+  console.log('Host validation:', { 
+    submissionHost: new URL(host).hostname,
+    urlHosts: validUrls.map(url => new URL(url).hostname)
+  });
   
   const results = await Promise.allSettled(
     searchEngines.map(async (engine) => {
@@ -147,7 +152,14 @@ export async function submitToIndexNow(
           }
           
           if (engine === 'bing' && response.status === 422) {
-            throw new Error(`${engine} rejected the submission. This may be due to key format issues or rate limiting.`);
+            // Provide more detailed error information for Bing 422 errors
+            const errorDetails = errorText || 'No error details provided';
+            throw new Error(`${engine} rejected the submission (422). This may be due to:
+- Invalid URL format or domain mismatch
+- Rate limiting (too many submissions)
+- Invalid key format or key file not accessible
+- URLs not from the configured domain
+Error details: ${errorDetails}`);
           }
           
           throw new Error(`${engine} returned status ${response.status}: ${errorText}`);

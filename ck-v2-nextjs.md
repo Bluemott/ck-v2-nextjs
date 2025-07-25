@@ -296,7 +296,7 @@ NEXT_PUBLIC_WORDPRESS_MEDIA_URL=https://api.cowboykimono.com/wp-content/uploads
 NEXT_PUBLIC_GA_MEASUREMENT_ID=G-VYVT6J7XLS
 NEXT_PUBLIC_GTM_ID=GTM-XXXXXXX
 NEXT_PUBLIC_GOOGLE_VERIFICATION=your-google-verification-code
-NEXT_PUBLIC_SITE_URL=https://cowboykimono.com
+NEXT_PUBLIC_SITE_URL=https://www.cowboykimono.com
 
 # IndexNow Configuration
 NEXT_PUBLIC_INDEXNOW_KEY=your-indexnow-key-here
@@ -593,7 +593,7 @@ NEXT_PUBLIC_WORDPRESS_MEDIA_URL=https://api.cowboykimono.com/wp-content/uploads
 # Analytics and SEO
 NEXT_PUBLIC_GA_MEASUREMENT_ID=G-VYVT6J7XLS
 NEXT_PUBLIC_GOOGLE_VERIFICATION=your-google-verification-code
-NEXT_PUBLIC_SITE_URL=https://cowboykimono.com
+NEXT_PUBLIC_SITE_URL=https://www.cowboykimono.com
 ```
 
 ### SSL Certificate Management

@@ -19,11 +19,11 @@ export default function ShopPage() {
           '@context': 'https://schema.org',
           '@type': 'WebSite',
           name: 'Cowboy Kimono Shop',
-          url: 'https://cowboykimono.com/shop',
+          url: 'https://www.cowboykimono.com/shop',
           description: 'Shop our unique collection of handcrafted cowboy kimonos and western-inspired apparel',
           potentialAction: {
             '@type': 'SearchAction',
-            target: 'https://cowboykimono.com/shop?q={search_term_string}',
+            target: 'https://www.cowboykimono.com/shop?q={search_term_string}',
             'query-input': 'required name=search_term_string'
           }
         }}

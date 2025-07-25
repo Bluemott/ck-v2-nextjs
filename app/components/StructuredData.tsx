@@ -11,9 +11,9 @@ export const organizationStructuredData = {
   '@type': 'Organization',
   name: 'Cowboy Kimono',
   description: 'Handcrafted Western-inspired robes and apparel blending Western and Eastern aesthetics.',
-  url: 'https://cowboykimono.com',
-  logo: 'https://cowboykimono.com/images/CK_Logo_Title-01.webp',
-  image: 'https://cowboykimono.com/images/CK_New_Hero_Red_Head-1.webp',
+      url: 'https://www.cowboykimono.com',
+    logo: 'https://www.cowboykimono.com/images/CK_Logo_Title-01.webp',
+    image: 'https://www.cowboykimono.com/images/CK_New_Hero_Red_Head-1.webp',
   sameAs: [
     'https://www.instagram.com/cowboykimono',
     'https://www.facebook.com/me.marisa.mott',
@@ -35,7 +35,7 @@ export const websiteStructuredData = {
   '@context': 'https://schema.org',
   '@type': 'WebSite',
   name: 'Cowboy Kimono',
-  url: 'https://cowboykimono.com',
+      url: 'https://www.cowboykimono.com',
   description: 'Handcrafted Western-inspired robes and apparel',
   publisher: {
     '@type': 'Organization',
@@ -43,7 +43,7 @@ export const websiteStructuredData = {
   },
   potentialAction: {
     '@type': 'SearchAction',
-    target: 'https://cowboykimono.com/search?q={search_term_string}',
+    target: 'https://www.cowboykimono.com/search?q={search_term_string}',
     'query-input': 'required name=search_term_string'
   }
 };
@@ -54,13 +54,13 @@ export const blogStructuredData = {
   '@type': 'Blog',
   name: 'Cowboy Kimono Blog',
   description: 'Stories, inspiration, and insights from the world of Cowboy Kimono',
-  url: 'https://cowboykimono.com/blog',
+      url: 'https://www.cowboykimono.com/blog',
   publisher: {
     '@type': 'Organization',
     name: 'Cowboy Kimono',
     logo: {
       '@type': 'ImageObject',
-      url: 'https://cowboykimono.com/images/CK_Logo_Title-01.webp'
+      url: 'https://www.cowboykimono.com/images/CK_Logo_Title-01.webp'
     }
   }
 };
@@ -90,20 +90,20 @@ export function generateArticleStructuredData({
     headline: title,
     description: description,
     url: url,
-    image: image || 'https://cowboykimono.com/images/CK_New_Hero_Red_Head-1.webp',
+    image: image || 'https://www.cowboykimono.com/images/CK_New_Hero_Red_Head-1.webp',
     datePublished: datePublished,
     dateModified: dateModified || datePublished,
     author: {
       '@type': 'Organization',
       name: author,
-      url: 'https://cowboykimono.com'
+      url: 'https://www.cowboykimono.com'
     },
     publisher: {
       '@type': 'Organization',
       name: 'Cowboy Kimono',
       logo: {
         '@type': 'ImageObject',
-        url: 'https://cowboykimono.com/images/CK_Logo_Title-01.webp'
+        url: 'https://www.cowboykimono.com/images/CK_Logo_Title-01.webp'
       }
     },
     mainEntityOfPage: {

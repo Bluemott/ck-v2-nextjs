@@ -74,7 +74,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
         data={generateArticleStructuredData({
           title: decodeHtmlEntities(post.title.rendered),
           description: post.content.rendered.replace(/<[^>]+>/g, '').slice(0, 160),
-          url: `${process.env.NEXT_PUBLIC_SITE_URL || 'https://cowboykimono.com'}/blog/${post.slug}`,
+          url: `${process.env.NEXT_PUBLIC_SITE_URL || 'https://www.cowboykimono.com'}/blog/${post.slug}`,
           image: getFeaturedImageUrl(post) || undefined,
           datePublished: post.date,
           author: 'Cowboy Kimono',

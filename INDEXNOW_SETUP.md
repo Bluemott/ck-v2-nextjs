@@ -37,6 +37,11 @@ Create a text file at your domain root with the filename `{your-key}.txt` contai
 
 **File Location:** `https://www.cowboykimono.com/abc123def456ghi789.txt`
 
+**For Next.js projects:**
+- Place the file in the `/public/` directory
+- The file will be automatically served at the domain root
+- Example: `/public/a73ecd310fdd460095648fc4ac364a53.txt`
+
 ## Step 3: Configure Environment Variables
 
 Add the following environment variable to your deployment:
@@ -126,6 +131,11 @@ curl https://www.cowboykimono.com/your-key-here.txt
 ```
 
 Should return your IndexNow key.
+
+**Troubleshooting:**
+- If you get a 404 error, ensure the key file is in the `/public/` directory
+- The file must be accessible at the domain root (not in a subdirectory)
+- Check that the filename matches your IndexNow key exactly
 
 ## API Endpoints
 

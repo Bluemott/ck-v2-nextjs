@@ -1,13 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { 
-  submitToIndexNow, 
-  submitWordPressPostToIndexNow,
-  submitWordPressCategoryToIndexNow,
-  submitWordPressTagToIndexNow,
-  getIndexNowConfig
-} from '../lib/indexnow';
+import { getIndexNowConfig } from '../lib/indexnow';
 
 interface IndexNowResponse {
   success: boolean;
@@ -37,8 +31,20 @@ export default function IndexNowSubmitter() {
 
     try {
       const urlList = urls.split('\n').map(url => url.trim()).filter(url => url);
-      const response = await submitToIndexNow(urlList, searchEngines);
-      setResult(response);
+      
+      const response = await fetch('/api/indexnow', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          urls: urlList,
+          searchEngines
+        }),
+      });
+
+      const result = await response.json();
+      setResult(result);
     } catch (error) {
       setResult({
         success: false,
@@ -59,23 +65,20 @@ export default function IndexNowSubmitter() {
     setResult(null);
 
     try {
-      let response: IndexNowResponse;
+      const response = await fetch('/api/indexnow', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          type: wordPressType,
+          slug: wordPressSlug,
+          searchEngines
+        }),
+      });
 
-      switch (wordPressType) {
-        case 'post':
-          response = await submitWordPressPostToIndexNow(wordPressSlug, searchEngines);
-          break;
-        case 'category':
-          response = await submitWordPressCategoryToIndexNow(wordPressSlug, searchEngines);
-          break;
-        case 'tag':
-          response = await submitWordPressTagToIndexNow(wordPressSlug, searchEngines);
-          break;
-        default:
-          response = { success: false, message: 'Invalid WordPress type' };
-      }
-
-      setResult(response);
+      const result = await response.json();
+      setResult(result);
     } catch (error) {
       setResult({
         success: false,

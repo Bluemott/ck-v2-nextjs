@@ -1330,7 +1330,7 @@ GET /api/indexnow
 
 ### Configuration Requirements
 - **IndexNow Key**: Generate key from IndexNow.org or create custom key
-- **Key File**: Create `{key}.txt` file at domain root with key content
+- **Key File**: Create `{key}.txt` file in `/public/` directory with key content (will be served at domain root)
 - **Environment Variables**: 
   - `NEXT_PUBLIC_INDEXNOW_KEY` - Your IndexNow key
   - `WORDPRESS_WEBHOOK_SECRET` - Optional webhook authentication secret
@@ -1359,7 +1359,7 @@ GET /api/indexnow
 
 ### Setup Instructions
 1. **Generate IndexNow Key**: Visit IndexNow.org or create custom key
-2. **Create Key File**: Place `{key}.txt` at domain root
+2. **Create Key File**: Place `{key}.txt` in `/public/` directory (will be served at domain root)
 3. **Configure Environment**: Set `NEXT_PUBLIC_INDEXNOW_KEY` environment variable
 4. **Test Integration**: Use debug interface at `/debug/indexnow`
 5. **Install WordPress Plugin**: Copy plugin file to WordPress site (optional)

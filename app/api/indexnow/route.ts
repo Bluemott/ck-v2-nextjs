@@ -63,7 +63,11 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error('IndexNow API error:', error);
     return NextResponse.json(
-      { error: 'Internal server error', message: error instanceof Error ? error.message : 'Unknown error' },
+      { 
+        error: 'Internal server error', 
+        message: error instanceof Error ? error.message : 'Unknown error',
+        details: error instanceof Error ? error.stack : undefined
+      },
       { status: 500 }
     );
   }

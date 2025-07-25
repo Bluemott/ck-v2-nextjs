@@ -81,6 +81,8 @@ export async function submitToIndexNow(
   };
 
   // Submit to each search engine
+  console.log('IndexNow submission:', { submission, searchEngines });
+  
   const results = await Promise.allSettled(
     searchEngines.map(async (engine) => {
       const endpoint = INDEXNOW_ENDPOINTS[engine];
@@ -88,21 +90,35 @@ export async function submitToIndexNow(
         throw new Error(`Unsupported search engine: ${engine}`);
       }
 
+      console.log(`Submitting to ${engine} at ${endpoint}`);
+      
       try {
         const response = await fetch(endpoint, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
+            'User-Agent': 'CowboyKimono-IndexNow/1.0',
           },
           body: JSON.stringify(submission),
+          // Add timeout to prevent hanging requests
+          signal: AbortSignal.timeout(10000), // 10 second timeout
         });
 
+        console.log(`${engine} response:`, { status: response.status, statusText: response.statusText });
+        
         if (!response.ok) {
-          throw new Error(`${engine} returned status ${response.status}`);
+          const errorText = await response.text().catch(() => 'Unknown error');
+          console.error(`${engine} error response:`, errorText);
+          throw new Error(`${engine} returned status ${response.status}: ${errorText}`);
         }
 
+        console.log(`${engine} submission successful`);
         return { engine, success: true };
       } catch (error) {
+        console.error(`${engine} submission error:`, error);
+        if (error instanceof Error && error.name === 'AbortError') {
+          throw new Error(`${engine} submission timed out after 10 seconds`);
+        }
         throw new Error(`${engine} submission failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
       }
     })

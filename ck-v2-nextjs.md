@@ -1280,8 +1280,9 @@ This fix ensures that all tag and category pages work properly regardless of whe
 - **WordPress Integration**: Automatic submission of new WordPress content (posts, categories, tags)
 - **API Endpoints**: RESTful API endpoints for manual and automated submissions
 - **Debug Interface**: Comprehensive testing and debugging interface
-- **Multi-Engine Support**: Support for Google, Bing, Yandex, and other search engines
+- **Multi-Engine Support**: Support for Bing, Yandex, and other search engines (Google temporarily unavailable)
 - **Security Features**: Webhook authentication and URL validation
+- **Error Handling**: Enhanced error handling with specific error messages for different search engines
 
 ### Core Features
 - **Automatic WordPress Submissions**: New posts, categories, and tags are automatically submitted
@@ -1398,6 +1399,40 @@ GET /api/indexnow
 - **Performance Issues**: Monitor submission frequency and response times
 
 This IndexNow integration provides immediate search engine notification for all new content, significantly improving indexing speed and SEO performance for the Cowboy Kimono website.
+
+## [2024-12-19] IndexNow Error Resolution and Google Endpoint Issues
+
+### Issues Resolved
+- **Google IndexNow Endpoint**: Google's IndexNow endpoint is currently returning 404 errors, indicating their service may be temporarily unavailable
+- **Bing Key Validation**: Enhanced error handling for Bing's key validation requirements
+- **URL Validation**: Fixed URL validation to properly match domain configuration (cowboykimono.com vs www.cowboykimono.com)
+- **Default Search Engine**: Changed default from Google to Bing since Google's endpoint is unavailable
+
+### Technical Fixes Implemented
+- **Enhanced Error Handling**: Added specific error messages for different search engines and error types
+- **Timeout Increase**: Increased timeout from 10 to 15 seconds for better reliability
+- **Google Warning**: Added user-friendly warning about Google's IndexNow endpoint being unavailable
+- **Debug Interface**: Updated debug interface to show Google's status and default to Bing
+- **URL Validation**: Fixed hostname comparison to use correct domain configuration
+
+### Current Status
+- **Bing IndexNow**: ✅ Working - Successfully submitting URLs
+- **Google IndexNow**: ❌ Temporarily unavailable (404 errors)
+- **Yandex IndexNow**: ✅ Available but not tested
+- **Debug Interface**: ✅ Fully functional with proper error messages
+- **API Endpoints**: ✅ Working correctly with enhanced error handling
+
+### User Experience Improvements
+- **Clear Error Messages**: Users now see specific error messages for different issues
+- **Google Status Warning**: Clear indication that Google's service is temporarily unavailable
+- **Bing Default**: Interface defaults to Bing since it's currently working
+- **Better Debugging**: Enhanced debug interface with status indicators
+
+### Production Readiness
+- **Bing Integration**: Fully functional for immediate search engine indexing
+- **Error Recovery**: Graceful handling of search engine endpoint issues
+- **Monitoring**: Comprehensive error logging for production monitoring
+- **Fallback Strategy**: System continues working even when some search engines are unavailable
 
 ## [2024-12-19] Build Error Fixes and ESLint Compliance
 

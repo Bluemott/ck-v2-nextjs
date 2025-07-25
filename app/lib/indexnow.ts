@@ -22,6 +22,8 @@ interface IndexNowResponse {
 }
 
 // IndexNow endpoints for different search engines
+// Note: Google's IndexNow endpoint may be temporarily unavailable
+// We'll use alternative endpoints or focus on Bing and Yandex
 const INDEXNOW_ENDPOINTS = {
   google: 'https://www.google.com/indexnow',
   bing: 'https://www.bing.com/indexnow',
@@ -37,7 +39,7 @@ const INDEXNOW_ENDPOINTS = {
  */
 export async function submitToIndexNow(
   urls: string[],
-  searchEngines: (keyof typeof INDEXNOW_ENDPOINTS)[] = ['google', 'bing']
+  searchEngines: (keyof typeof INDEXNOW_ENDPOINTS)[] = ['bing']
 ): Promise<IndexNowResponse> {
   const key = process.env.NEXT_PUBLIC_INDEXNOW_KEY;
   const host = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.cowboykimono.com';
@@ -101,7 +103,7 @@ export async function submitToIndexNow(
           },
           body: JSON.stringify(submission),
           // Add timeout to prevent hanging requests
-          signal: AbortSignal.timeout(10000), // 10 second timeout
+          signal: AbortSignal.timeout(15000), // 15 second timeout
         });
 
         console.log(`${engine} response:`, { status: response.status, statusText: response.statusText });
@@ -109,6 +111,16 @@ export async function submitToIndexNow(
         if (!response.ok) {
           const errorText = await response.text().catch(() => 'Unknown error');
           console.error(`${engine} error response:`, errorText);
+          
+          // Handle specific error cases
+          if (engine === 'google' && response.status === 404) {
+            throw new Error(`${engine} IndexNow endpoint is currently unavailable (404). Google may have temporarily disabled their IndexNow service.`);
+          }
+          
+          if (engine === 'bing' && response.status === 422) {
+            throw new Error(`${engine} rejected the submission. This may be due to key format issues or rate limiting.`);
+          }
+          
           throw new Error(`${engine} returned status ${response.status}: ${errorText}`);
         }
 
@@ -117,7 +129,7 @@ export async function submitToIndexNow(
       } catch (error) {
         console.error(`${engine} submission error:`, error);
         if (error instanceof Error && error.name === 'AbortError') {
-          throw new Error(`${engine} submission timed out after 10 seconds`);
+          throw new Error(`${engine} submission timed out after 15 seconds`);
         }
         throw new Error(`${engine} submission failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
       }
@@ -153,7 +165,7 @@ export async function submitToIndexNow(
  */
 export async function submitUrlToIndexNow(
   url: string,
-  searchEngines: (keyof typeof INDEXNOW_ENDPOINTS)[] = ['google', 'bing']
+  searchEngines: (keyof typeof INDEXNOW_ENDPOINTS)[] = ['bing']
 ): Promise<IndexNowResponse> {
   return submitToIndexNow([url], searchEngines);
 }
@@ -166,7 +178,7 @@ export async function submitUrlToIndexNow(
  */
 export async function submitWordPressPostToIndexNow(
   slug: string,
-  searchEngines: (keyof typeof INDEXNOW_ENDPOINTS)[] = ['google', 'bing']
+  searchEngines: (keyof typeof INDEXNOW_ENDPOINTS)[] = ['bing']
 ): Promise<IndexNowResponse> {
   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.cowboykimono.com';
   const url = `${baseUrl}/blog/${slug}`;
@@ -181,7 +193,7 @@ export async function submitWordPressPostToIndexNow(
  */
 export async function submitWordPressCategoryToIndexNow(
   slug: string,
-  searchEngines: (keyof typeof INDEXNOW_ENDPOINTS)[] = ['google', 'bing']
+  searchEngines: (keyof typeof INDEXNOW_ENDPOINTS)[] = ['bing']
 ): Promise<IndexNowResponse> {
   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.cowboykimono.com';
   const url = `${baseUrl}/blog/category/${slug}`;
@@ -196,7 +208,7 @@ export async function submitWordPressCategoryToIndexNow(
  */
 export async function submitWordPressTagToIndexNow(
   slug: string,
-  searchEngines: (keyof typeof INDEXNOW_ENDPOINTS)[] = ['google', 'bing']
+  searchEngines: (keyof typeof INDEXNOW_ENDPOINTS)[] = ['bing']
 ): Promise<IndexNowResponse> {
   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.cowboykimono.com';
   const url = `${baseUrl}/blog/tag/${slug}`;
@@ -211,7 +223,7 @@ export async function submitWordPressTagToIndexNow(
  */
 export async function submitWordPressUrlsToIndexNow(
   urls: string[],
-  searchEngines: (keyof typeof INDEXNOW_ENDPOINTS)[] = ['google', 'bing']
+  searchEngines: (keyof typeof INDEXNOW_ENDPOINTS)[] = ['bing']
 ): Promise<IndexNowResponse> {
   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.cowboykimono.com';
   

@@ -190,9 +190,9 @@ Get IndexNow configuration status
 
 ## Supported Search Engines
 
-- **Google**: https://www.google.com/indexnow
-- **Bing**: https://www.bing.com/indexnow
-- **Yandex**: https://yandex.com/indexnow
+- **Bing**: https://www.bing.com/indexnow (Primary - working)
+- **Yandex**: https://yandex.com/indexnow (Available)
+- **Google**: https://www.google.com/indexnow (Temporarily unavailable - 404 errors)
 
 ## WordPress Plugin Features
 

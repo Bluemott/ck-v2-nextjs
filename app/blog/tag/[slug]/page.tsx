@@ -1,9 +1,9 @@
 import { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
-import { fetchTags } from '../../../lib/wordpress';
+import { fetchTagBySlug } from '../../../lib/wpgraphql';
 import { generateSEOMetadata } from '../../../lib/seo';
-import { decodeHtmlEntities } from '../../../lib/wordpress';
+import { decodeHtmlEntities } from '../../../lib/wpgraphql';
 import BlogClient from '../../BlogClient';
 import Breadcrumbs from '../../../components/Breadcrumbs';
 
@@ -15,8 +15,7 @@ export async function generateMetadata({ params }: TagPageProps): Promise<Metada
   const { slug } = await params;
   
   try {
-    const tags = await fetchTags();
-    const tag = tags.find(t => t.slug === slug);
+    const tag = await fetchTagBySlug(slug);
     
     if (!tag) {
       return generateSEOMetadata({
@@ -43,8 +42,7 @@ export default async function TagPage({ params }: TagPageProps) {
   const { slug } = await params;
   
   try {
-    const tags = await fetchTags();
-    const tag = tags.find(t => t.slug === slug);
+    const tag = await fetchTagBySlug(slug);
     
     if (!tag) {
       notFound();
@@ -134,7 +132,7 @@ export default async function TagPage({ params }: TagPageProps) {
           </div>
 
           {/* Blog Posts Grid */}
-          <BlogClient initialTag={tag.id} showHeader={false} />
+          <BlogClient initialTag={tag.slug} showHeader={false} />
 
           {/* Back to Blog Link */}
           <div className="text-center mt-12 pt-8 border-t border-gray-200">

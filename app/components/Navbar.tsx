@@ -21,13 +21,13 @@ const Navbar = () => {
 
       {/* Navigation Links */}
       <div className="flex space-x-4">
-        <Link href="/shop" className="hover:underline">
+        <Link href="/shop" className="hover:underline serif font-bold text-lg">
           Shop
         </Link>
-        <Link href="/blog" className="hover:underline">
+        <Link href="/blog" className="hover:underline serif font-bold text-lg">
           Blog
         </Link>
-        <Link href="/downloads" className="hover:underline">
+        <Link href="/downloads" className="hover:underline serif font-bold text-lg">
           Downloads
         </Link>
       </div>

@@ -1,115 +1,148 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import Image from 'next/image';
 import Link from 'next/link';
-import { fetchPosts, type WordPressPost, decodeHtmlEntities } from '../lib/wordpress';
+import { fetchPosts, type WPGraphQLPost, decodeHtmlEntities } from '../lib/wpgraphql';
+import WordPressImage from './WordPressImage';
 
-interface HomeBlogCardsProps {
-  postsPerPage?: number;
-}
-
-export default function HomeBlogCards({ postsPerPage = 3 }: HomeBlogCardsProps) {
-  const [posts, setPosts] = useState<WordPressPost[]>([]);
+const HomeBlogCards = () => {
+  const [posts, setPosts] = useState<WPGraphQLPost[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const loadRecentPosts = async () => {
+    const loadPosts = async () => {
       try {
         setLoading(true);
         setError(null);
         
-        const recentPosts = await fetchPosts({
-          per_page: postsPerPage,
-          page: 1,
-          _embed: true,
+        const data = await fetchPosts({ 
+          first: 3,
         });
-        
-        setPosts(recentPosts);
+        setPosts(data);
       } catch (err) {
-        console.error('Error loading recent posts:', err);
-        setError('Failed to load recent posts');
+        console.error('Error fetching blog posts:', err);
+        setError('Failed to load blog posts');
       } finally {
         setLoading(false);
       }
     };
 
-    loadRecentPosts();
-  }, [postsPerPage]);
+    loadPosts();
+  }, []);
 
-  // Loading state
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+  };
+
   if (loading) {
     return (
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-        {[...Array(3)].map((_, index) => (
-          <div key={index} className="bg-white rounded-lg shadow-md overflow-hidden animate-pulse">
-            <div className="aspect-square relative bg-gray-200"></div>
-            <div className="p-6">
-              <div className="h-4 bg-gray-200 rounded mb-4"></div>
-              <div className="h-4 bg-gray-200 rounded w-1/2"></div>
-            </div>
+      <div className="bg-white py-12">
+        <div className="max-w-7xl mx-auto px-4">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl font-bold text-gray-900 mb-4">Latest from the Blog</h2>
+            <p className="text-gray-600">Loading recent posts...</p>
           </div>
-        ))}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 animate-pulse">
+            {[...Array(3)].map((_, i) => (
+              <div key={i} className="bg-gray-200 rounded-lg h-64"></div>
+            ))}
+          </div>
+        </div>
       </div>
     );
   }
 
-  // Error state
   if (error) {
     return (
-      <div className="text-center py-8">
-        <p className="text-gray-600">Unable to load recent posts. Please try again later.</p>
+      <div className="bg-white py-12">
+        <div className="max-w-7xl mx-auto px-4">
+          <div className="text-center">
+            <p className="text-red-600 mb-4">{error}</p>
+            <button
+              onClick={() => window.location.reload()}
+              className="bg-[#1e2939] text-white px-4 py-2 rounded hover:bg-[#2a3441] transition-colors"
+            >
+              Try Again
+            </button>
+          </div>
+        </div>
       </div>
     );
   }
 
-  // No posts state
   if (posts.length === 0) {
-    return (
-      <div className="text-center py-8">
-        <p className="text-gray-600">No recent posts available.</p>
-      </div>
-    );
+    return null;
   }
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-      {posts.map((post) => (
-        <Link key={post.id} href={`/blog/${post.slug}`} className="block">
-          <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 cursor-pointer">
-            <div className="aspect-square relative">
-              {/* Use WordPress featured image if available, otherwise fallback */}
-              {post._embedded?.['wp:featuredmedia']?.[0]?.source_url ? (
-                <Image
-                  src={post._embedded['wp:featuredmedia'][0].source_url}
-                  alt={post._embedded['wp:featuredmedia'][0].alt_text || post.title.rendered}
-                  fill
-                  style={{ objectFit: "cover" }}
-                  className="rounded-t-lg transition-transform duration-300 hover:scale-105"
-                  sizes="(max-width: 768px) 100vw, (max-width: 1200px) 33vw, 400px"
-                  quality={85}
-                />
-              ) : (
-                <div className="w-full h-full bg-gray-200 flex items-center justify-center rounded-t-lg">
-                  <div className="text-gray-400 text-center p-4">
-                    <div className="text-4xl mb-2">📝</div>
-                    <div className="text-sm">No Image</div>
+    <div className="bg-white py-12">
+      <div className="max-w-7xl mx-auto px-4">
+        <div className="text-center mb-12">
+          <h2 className="text-3xl font-bold text-gray-900 mb-4">Latest from the Blog</h2>
+          <p className="text-gray-600">Discover stories, inspiration, and insights from the world of Cowboy Kimono</p>
+        </div>
+        
+        <div className="columns-1 md:columns-3 gap-8 space-y-8">
+          {posts.map((post) => (
+            <Link key={post.id} href={`/blog/${post.slug}`} className="block group break-inside-avoid mb-8">
+              <article className="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 border border-gray-100">
+                {/* Featured Image - Natural aspect ratio */}
+                {post.featuredImage?.node && (
+                  <div className="relative overflow-hidden">
+                    <WordPressImage
+                      post={post}
+                      size="medium"
+                      className="w-full h-auto object-cover transition-transform duration-300 group-hover:scale-105"
+                      sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                    />
+                  </div>
+                )}
+
+                {/* Content */}
+                <div className="p-6 lg:p-8">
+                  <h3 className="text-xl font-semibold mb-3 text-gray-900 line-clamp-2 group-hover:text-[#1e2939] transition-colors serif">
+                    <span dangerouslySetInnerHTML={{ __html: decodeHtmlEntities(post.title) }} />
+                  </h3>
+                  
+                  <p className="text-gray-600 text-sm mb-4 font-medium">
+                    {formatDate(post.date)}
+                  </p>
+                  
+                  <div
+                    className="text-gray-700 line-clamp-3 text-base leading-relaxed"
+                    dangerouslySetInnerHTML={{
+                      __html: post.excerpt.substring(0, 150) + '...'
+                    }}
+                  />
+                  
+                  <div className="mt-6 inline-flex items-center text-[#1e2939] hover:text-[#2a3441] font-medium transition-colors group/link">
+                    Read More
+                    <span className="ml-1 group-hover/link:translate-x-1 transition-transform">→</span>
                   </div>
                 </div>
-              )}
-            </div>
-            <div className="p-6">
-              <p className="text-gray-600 mb-4 line-clamp-2"
-                 dangerouslySetInnerHTML={{ __html: decodeHtmlEntities(post.title.rendered) }}
-              />
-              <span className="text-[#1e2939] hover:text-[#2a3441] font-medium">
-                Read More →
-              </span>
-            </div>
-          </div>
-        </Link>
-      ))}
+              </article>
+            </Link>
+          ))}
+        </div>
+
+        {/* View All Posts Link */}
+        <div className="text-center mt-12">
+          <Link 
+            href="/blog"
+            className="inline-flex items-center px-6 py-3 bg-[#1e2939] text-white rounded-lg hover:bg-[#2a3441] transition-colors font-medium"
+          >
+            View All Posts
+            <span className="ml-2">→</span>
+          </Link>
+        </div>
+      </div>
     </div>
   );
-} 
+};
+
+export default HomeBlogCards; 

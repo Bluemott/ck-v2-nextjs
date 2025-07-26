@@ -1,9 +1,9 @@
 import { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
-import { fetchCategories } from '../../../lib/wordpress';
+import { fetchCategoryBySlug } from '../../../lib/wpgraphql';
 import { generateSEOMetadata } from '../../../lib/seo';
-import { decodeHtmlEntities } from '../../../lib/wordpress';
+import { decodeHtmlEntities } from '../../../lib/wpgraphql';
 import BlogClient from '../../BlogClient';
 import Breadcrumbs from '../../../components/Breadcrumbs';
 
@@ -15,8 +15,7 @@ export async function generateMetadata({ params }: CategoryPageProps): Promise<M
   const { slug } = await params;
   
   try {
-    const categories = await fetchCategories();
-    const category = categories.find(cat => cat.slug === slug);
+    const category = await fetchCategoryBySlug(slug);
     
     if (!category) {
       return generateSEOMetadata({
@@ -43,8 +42,7 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
   const { slug } = await params;
   
   try {
-    const categories = await fetchCategories();
-    const category = categories.find(cat => cat.slug === slug);
+    const category = await fetchCategoryBySlug(slug);
     
     if (!category) {
       notFound();
@@ -134,7 +132,7 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
           </div>
 
           {/* Blog Posts Grid */}
-          <BlogClient initialCategory={category.id} showHeader={false} />
+          <BlogClient initialCategory={category.slug} showHeader={false} />
 
           {/* Back to Blog Link */}
           <div className="text-center mt-12 pt-8 border-t border-gray-200">

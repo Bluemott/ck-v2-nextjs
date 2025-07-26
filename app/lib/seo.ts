@@ -1,4 +1,5 @@
 import { Metadata } from 'next';
+import { WPGraphQLPost } from './wpgraphql';
 
 interface SEOProps {
   title?: string;
@@ -12,6 +13,29 @@ interface SEOProps {
   author?: string;
   section?: string;
   tags?: string[];
+  // Yoast SEO specific fields
+  yoastSEO?: {
+    title?: string;
+    metaDesc?: string;
+    canonical?: string;
+    opengraphTitle?: string;
+    opengraphDescription?: string;
+    opengraphImage?: string;
+    twitterTitle?: string;
+    twitterDescription?: string;
+    twitterImage?: string;
+    focuskw?: string;
+    metaKeywords?: string;
+    metaRobotsNoindex?: string;
+    metaRobotsNofollow?: string;
+    opengraphType?: string;
+    opengraphUrl?: string;
+    opengraphSiteName?: string;
+    opengraphAuthor?: string;
+    opengraphPublishedTime?: string;
+    opengraphModifiedTime?: string;
+    schema?: string;
+  };
 }
 
 const defaultSEO = {
@@ -65,15 +89,32 @@ export function generateSEOMetadata({
   modifiedTime,
   author,
   section,
-  tags = []
+  tags = [],
+  yoastSEO
 }: SEOProps = {}): Metadata {
+  // Use Yoast SEO data if available, otherwise fall back to provided data
+  const yoastTitle = yoastSEO?.title ? ensureDecodedText(yoastSEO.title) : '';
+  const yoastDescription = yoastSEO?.metaDesc || '';
+  const yoastCanonical = yoastSEO?.canonical || '';
+  const yoastOgTitle = yoastSEO?.opengraphTitle ? ensureDecodedText(yoastSEO.opengraphTitle) : '';
+  const yoastOgDescription = yoastSEO?.opengraphDescription || '';
+  const yoastOgImage = yoastSEO?.opengraphImage || '';
+  const yoastTwitterTitle = yoastSEO?.twitterTitle ? ensureDecodedText(yoastSEO.twitterTitle) : '';
+  const yoastTwitterDescription = yoastSEO?.twitterDescription || '';
+  const yoastTwitterImage = yoastSEO?.twitterImage || '';
+  const yoastKeywords = yoastSEO?.metaKeywords ? yoastSEO.metaKeywords.split(',').map(k => k.trim()) : [];
+  const yoastFocusKw = yoastSEO?.focuskw ? [yoastSEO.focuskw] : [];
+  
   const decodedTitle = title ? ensureDecodedText(title) : '';
   const truncatedTitle = decodedTitle ? truncateTitle(decodedTitle) : '';
-  const seoTitle = truncatedTitle ? `${truncatedTitle} | ${defaultSEO.title}` : defaultSEO.title;
-  const seoDescription = description || defaultSEO.description;
-  const seoKeywords = [...defaultSEO.keywords, ...keywords, ...tags];
-  const seoImage = ogImage || defaultSEO.ogImage;
+  
+  // Priority: Yoast SEO > Provided data > Default
+  const seoTitle = yoastTitle || (truncatedTitle ? `${truncatedTitle} | ${defaultSEO.title}` : defaultSEO.title);
+  const seoDescription = yoastDescription || description || defaultSEO.description;
+  const seoKeywords = [...defaultSEO.keywords, ...keywords, ...tags, ...yoastKeywords, ...yoastFocusKw];
+  const seoImage = yoastOgImage || ogImage || defaultSEO.ogImage;
   const seoAuthor = author || defaultSEO.author;
+  const seoCanonical = yoastCanonical || canonical || '/';
   
   const metadata: Metadata = {
     title: seoTitle,
@@ -89,13 +130,13 @@ export function generateSEOMetadata({
     },
     metadataBase: new URL(defaultSEO.siteUrl),
     alternates: {
-      canonical: `${defaultSEO.siteUrl}${canonical || '/'}`,
+      canonical: `${defaultSEO.siteUrl}${seoCanonical}`,
     },
     openGraph: {
-      title: seoTitle,
-      description: seoDescription,
-      url: `${defaultSEO.siteUrl}${canonical || '/'}`,
-      siteName: 'Cowboy Kimono',
+      title: yoastOgTitle || seoTitle,
+      description: yoastOgDescription || seoDescription,
+      url: `${defaultSEO.siteUrl}${seoCanonical}`,
+      siteName: yoastSEO?.opengraphSiteName || 'Cowboy Kimono',
       images: [
         {
           url: seoImage,
@@ -105,26 +146,28 @@ export function generateSEOMetadata({
         },
       ],
       locale: 'en_US',
-      type: ogType,
-      ...(publishedTime && { publishedTime }),
-      ...(modifiedTime && { modifiedTime }),
+      type: (yoastSEO?.opengraphType as 'website' | 'article') || ogType,
+      ...(yoastSEO?.opengraphPublishedTime && { publishedTime: yoastSEO.opengraphPublishedTime }),
+      ...(yoastSEO?.opengraphModifiedTime && { modifiedTime: yoastSEO.opengraphModifiedTime }),
+      ...(publishedTime && !yoastSEO?.opengraphPublishedTime && { publishedTime }),
+      ...(modifiedTime && !yoastSEO?.opengraphModifiedTime && { modifiedTime }),
       ...(section && { section }),
       ...(tags.length > 0 && { tags }),
     },
     twitter: {
       card: 'summary_large_image',
-      title: seoTitle,
-      description: seoDescription,
-      images: [seoImage],
+      title: yoastTwitterTitle || seoTitle,
+      description: yoastTwitterDescription || seoDescription,
+      images: yoastTwitterImage ? [yoastTwitterImage] : [seoImage],
       creator: '@cowboykimono',
       site: '@cowboykimono',
     },
     robots: {
-      index: true,
-      follow: true,
+      index: yoastSEO?.metaRobotsNoindex !== '1',
+      follow: yoastSEO?.metaRobotsNofollow !== '1',
       googleBot: {
-        index: true,
-        follow: true,
+        index: yoastSEO?.metaRobotsNoindex !== '1',
+        follow: yoastSEO?.metaRobotsNofollow !== '1',
         'max-video-preview': -1,
         'max-image-preview': 'large',
         'max-snippet': -1,
@@ -139,6 +182,34 @@ export function generateSEOMetadata({
   };
 
   return metadata;
+}
+
+// Helper function to extract Yoast SEO data from WordPress posts
+export function extractYoastSEOData(post: WPGraphQLPost): SEOProps['yoastSEO'] {
+  if (!post?.seo) return undefined;
+  
+  return {
+    title: post.seo.title,
+    metaDesc: post.seo.metaDesc,
+    canonical: post.seo.canonical,
+    opengraphTitle: post.seo.opengraphTitle,
+    opengraphDescription: post.seo.opengraphDescription,
+    opengraphImage: post.seo.opengraphImage?.sourceUrl,
+    twitterTitle: post.seo.twitterTitle,
+    twitterDescription: post.seo.twitterDescription,
+    twitterImage: post.seo.twitterImage?.sourceUrl,
+    focuskw: post.seo.focuskw,
+    metaKeywords: post.seo.metaKeywords,
+    metaRobotsNoindex: post.seo.metaRobotsNoindex,
+    metaRobotsNofollow: post.seo.metaRobotsNofollow,
+    opengraphType: post.seo.opengraphType,
+    opengraphUrl: post.seo.opengraphUrl,
+    opengraphSiteName: post.seo.opengraphSiteName,
+    opengraphAuthor: post.seo.opengraphAuthor,
+    opengraphPublishedTime: post.seo.opengraphPublishedTime,
+    opengraphModifiedTime: post.seo.opengraphModifiedTime,
+    schema: post.seo.schema?.raw,
+  };
 }
 
 export const defaultMetadata = generateSEOMetadata();

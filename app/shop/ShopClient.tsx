@@ -77,7 +77,10 @@ const ShopClient = () => {
         setProducts(parsedProducts);
       } catch (err) {
         setError('Failed to load products. Please try again later.');
-        console.error('Error fetching products:', err);
+        // Only log in development
+        if (process.env.NODE_ENV === 'development') {
+          console.error('Error fetching products:', err);
+        }
       } finally {
         setLoading(false);
       }

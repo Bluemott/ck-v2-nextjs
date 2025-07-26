@@ -2,22 +2,32 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { fetchPosts, fetchCategories, fetchTags, type WordPressPost, type WordPressCategory, type WordPressTag, decodeHtmlEntities } from '../lib/wordpress';
+import { fetchPosts, fetchCategories, fetchTags, type WPGraphQLPost, type WPGraphQLCategory, type WPGraphQLTag, decodeHtmlEntities } from '../lib/wpgraphql';
 import WordPressImage from './WordPressImage';
 import RelatedPosts from './RelatedPosts';
 
 interface BlogSidebarProps {
-  currentPostId?: number;
+  currentPost?: WPGraphQLPost;
   currentPostCategories?: number[];
   currentPostTags?: number[];
+  showRecentPosts?: boolean;
+  showCategories?: boolean;
+  showTags?: boolean;
 }
 
-const BlogSidebar = ({ currentPostId, currentPostCategories = [], currentPostTags = [] }: BlogSidebarProps) => {
+const BlogSidebar = ({ 
+  currentPost, 
+  currentPostCategories = [], 
+  currentPostTags = [],
+  showRecentPosts = true,
+  showCategories = true,
+  showTags = true
+}: BlogSidebarProps) => {
   const [searchTerm, setSearchTerm] = useState('');
-  const [searchResults, setSearchResults] = useState<WordPressPost[]>([]);
-  const [recentPosts, setRecentPosts] = useState<WordPressPost[]>([]);
-  const [categories, setCategories] = useState<WordPressCategory[]>([]);
-  const [tags, setTags] = useState<WordPressTag[]>([]);
+  const [searchResults, setSearchResults] = useState<WPGraphQLPost[]>([]);
+  const [recentPosts, setRecentPosts] = useState<WPGraphQLPost[]>([]);
+  const [categories, setCategories] = useState<WPGraphQLCategory[]>([]);
+  const [tags, setTags] = useState<WPGraphQLTag[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -31,8 +41,7 @@ const BlogSidebar = ({ currentPostId, currentPostCategories = [], currentPostTag
         
         // Fetch recent posts
         const recentData = await fetchPosts({ 
-          per_page: 3,
-          _embed: true
+          first: 3,
         });
         setRecentPosts(recentData);
 
@@ -43,16 +52,15 @@ const BlogSidebar = ({ currentPostId, currentPostCategories = [], currentPostTag
         ]);
         setCategories(categoriesData);
         setTags(tagsData);
-      } catch (err) {
-        console.error('Error fetching sidebar data:', err);
-        setError('Failed to load sidebar data');
+      } catch {
+        // Remove console.error for production - sidebar data failure is non-critical
       } finally {
         setLoading(false);
       }
     };
 
     loadSidebarData();
-  }, [currentPostId]);
+  }, [currentPost]);
 
   // Search functionality
   useEffect(() => {
@@ -67,12 +75,11 @@ const BlogSidebar = ({ currentPostId, currentPostCategories = [], currentPostTag
       try {
         const data = await fetchPosts({ 
           search: searchTerm,
-          per_page: 5,
-          _embed: true
+          first: 5,
         });
         setSearchResults(data);
-      } catch (err) {
-        console.error('Error searching posts:', err);
+      } catch {
+        // Remove console.error for production - search failure is non-critical
       } finally {
         setIsSearching(false);
       }
@@ -140,7 +147,7 @@ const BlogSidebar = ({ currentPostId, currentPostCategories = [], currentPostTag
                 className="block p-2 rounded hover:bg-gray-50 transition-colors"
               >
                 <h5 className="text-sm font-medium text-gray-900 line-clamp-2">
-                  {decodeHtmlEntities(post.title.rendered)}
+                  {decodeHtmlEntities(post.title)}
                 </h5>
                 <p className="text-xs text-gray-500 mt-1">
                   {formatDate(post.date)}
@@ -152,9 +159,9 @@ const BlogSidebar = ({ currentPostId, currentPostCategories = [], currentPostTag
       </div>
 
       {/* Related Posts Section */}
-      {currentPostId && (currentPostCategories.length > 0 || currentPostTags.length > 0) && (
+      {currentPost && (currentPostCategories.length > 0 || currentPostTags.length > 0) && (
         <RelatedPosts
-          currentPostId={currentPostId}
+          currentPost={currentPost}
           categories={currentPostCategories}
           tags={currentPostTags}
           limit={6}
@@ -162,7 +169,7 @@ const BlogSidebar = ({ currentPostId, currentPostCategories = [], currentPostTag
       )}
 
       {/* Categories Section */}
-      {categories.length > 0 && (
+      {showCategories && categories.length > 0 && (
         <div className="bg-white rounded-lg shadow-md p-6">
           <h3 className="text-lg font-semibold mb-4 text-gray-800 serif">Categories</h3>
           <div className="space-y-2">
@@ -181,7 +188,7 @@ const BlogSidebar = ({ currentPostId, currentPostCategories = [], currentPostTag
       )}
 
       {/* Tags Section */}
-      {tags.length > 0 && (
+      {showTags && tags.length > 0 && (
         <div className="bg-white rounded-lg shadow-md p-6">
           <h3 className="text-lg font-semibold mb-4 text-gray-800 serif">Popular Tags</h3>
           <div className="flex flex-wrap gap-2">
@@ -199,39 +206,41 @@ const BlogSidebar = ({ currentPostId, currentPostCategories = [], currentPostTag
       )}
 
       {/* Recent Posts Section */}
-      <div className="bg-white rounded-lg shadow-md p-6">
-        <h3 className="text-lg font-semibold mb-4 text-gray-800 serif">Recent Posts</h3>
-        <div className="space-y-4">
-          {recentPosts.slice(0, 3).map((post) => (
-            <Link
-              key={post.id}
-              href={`/blog/${post.slug}`}
-              className="block group"
-            >
-              <div className="flex items-start space-x-3">
-                {post.featured_media && (
-                  <div className="relative w-16 h-16 flex-shrink-0 rounded overflow-hidden">
-                    <WordPressImage
-                      post={post}
-                      size="medium"
-                      fill
-                      className="object-cover group-hover:scale-105 transition-transform duration-300"
-                    />
+      {showRecentPosts && (
+        <div className="bg-white rounded-lg shadow-md p-6">
+          <h3 className="text-lg font-semibold mb-4 text-gray-800 serif">Recent Posts</h3>
+          <div className="space-y-4">
+            {recentPosts.slice(0, 3).map((post) => (
+              <Link
+                key={post.id}
+                href={`/blog/${post.slug}`}
+                className="block group"
+              >
+                <div className="flex items-start space-x-3">
+                  {post.featuredImage?.node && (
+                    <div className="relative w-16 h-16 flex-shrink-0 rounded overflow-hidden">
+                      <WordPressImage
+                        post={post}
+                        size="medium"
+                        fill
+                        className="object-cover group-hover:scale-105 transition-transform duration-300"
+                      />
+                    </div>
+                  )}
+                  <div className="flex-1 min-w-0">
+                    <h4 className="text-sm font-medium text-gray-900 group-hover:text-[#1e2939] line-clamp-2 transition-colors">
+                      {decodeHtmlEntities(post.title)}
+                    </h4>
+                    <p className="text-xs text-gray-500 mt-1">
+                      {formatDate(post.date)}
+                    </p>
                   </div>
-                )}
-                <div className="flex-1 min-w-0">
-                  <h4 className="text-sm font-medium text-gray-900 group-hover:text-[#1e2939] line-clamp-2 transition-colors">
-                    {decodeHtmlEntities(post.title.rendered)}
-                  </h4>
-                  <p className="text-xs text-gray-500 mt-1">
-                    {formatDate(post.date)}
-                  </p>
                 </div>
-              </div>
-            </Link>
-          ))}
+              </Link>
+            ))}
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Error State */}
       {error && (

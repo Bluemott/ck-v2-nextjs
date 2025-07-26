@@ -2,10 +2,10 @@
 
 import { useState } from 'react';
 import Image from 'next/image';
-import { getFeaturedImageUrl, getFeaturedImageAlt, type WordPressPost } from '../lib/wordpress';
+import { getFeaturedImageUrl, getFeaturedImageAlt, type WPGraphQLPost } from '../lib/wpgraphql';
 
 interface WordPressImageProps {
-  post: WordPressPost;
+  post: WPGraphQLPost;
   size?: 'thumbnail' | 'medium' | 'large' | 'full';
   className?: string;
   fill?: boolean;
@@ -14,6 +14,7 @@ interface WordPressImageProps {
   priority?: boolean;
   sizes?: string;
   alt?: string;
+  objectFit?: 'cover' | 'contain' | 'fill' | 'none' | 'scale-down';
 }
 
 const WordPressImage = ({ 
@@ -25,15 +26,14 @@ const WordPressImage = ({
   height,
   priority = false,
   sizes,
-  alt
+  alt,
+  objectFit = 'cover'
 }: WordPressImageProps) => {
   const [imageError, setImageError] = useState(false);
   const [imageLoading, setImageLoading] = useState(true);
 
   const imageUrl = getFeaturedImageUrl(post, size);
   const imageAlt = alt || getFeaturedImageAlt(post);
-
-
 
   // If no image URL or error occurred, show placeholder
   if (!imageUrl || imageError) {
@@ -44,6 +44,7 @@ const WordPressImage = ({
           fill="none" 
           stroke="currentColor" 
           viewBox="0 0 24 24"
+          aria-hidden="true"
         >
           <path 
             strokeLinecap="round" 
@@ -93,7 +94,7 @@ const WordPressImage = ({
             alt={imageAlt}
             width={width || 400}
             height={height || 300}
-            className={`object-cover transition-opacity duration-300 ${imageLoading ? 'opacity-0' : 'opacity-100'}`}
+            className={`object-${objectFit} transition-opacity duration-300 ${imageLoading ? 'opacity-0' : 'opacity-100'}`}
             sizes={sizes}
             priority={priority}
             onError={handleError}

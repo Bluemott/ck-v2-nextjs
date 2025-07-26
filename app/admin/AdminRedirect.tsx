@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
-import { getWordPressAdminUrl } from '../lib/wordpress';
+import { getWordPressAdminUrl } from '../lib/wpgraphql';
 
 export default function AdminRedirect() {
   useEffect(() => {

@@ -41,10 +41,9 @@ const HomeBlogCards = () => {
 
   if (loading) {
     return (
-      <div className="bg-white py-12">
+      <div className="py-12">
         <div className="max-w-7xl mx-auto px-4">
           <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-gray-900 mb-4">Latest from the Blog</h2>
             <p className="text-gray-600">Loading recent posts...</p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 animate-pulse">
@@ -59,7 +58,7 @@ const HomeBlogCards = () => {
 
   if (error) {
     return (
-      <div className="bg-white py-12">
+      <div className="py-12">
         <div className="max-w-7xl mx-auto px-4">
           <div className="text-center">
             <p className="text-red-600 mb-4">{error}</p>
@@ -80,10 +79,9 @@ const HomeBlogCards = () => {
   }
 
   return (
-    <div className="bg-white py-12">
+    <div className="py-12">
       <div className="max-w-7xl mx-auto px-4">
         <div className="text-center mb-12">
-          <h2 className="text-3xl font-bold text-gray-900 mb-4">Latest from the Blog</h2>
           <p className="text-gray-600">Discover stories, inspiration, and insights from the world of Cowboy Kimono</p>
         </div>
         

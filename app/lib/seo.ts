@@ -116,6 +116,33 @@ export function generateSEOMetadata({
   const seoAuthor = author || defaultSEO.author;
   const seoCanonical = yoastCanonical || canonical || '/';
   
+  // Enhanced robots meta tag logic
+  const shouldIndex = (() => {
+    // If Yoast SEO has explicitly set noindex, respect it
+    if (yoastSEO?.metaRobotsNoindex) {
+      const noindexValue = yoastSEO.metaRobotsNoindex.toLowerCase();
+      // Check for various noindex values that Yoast might return
+      if (noindexValue === '1' || noindexValue === 'true' || noindexValue === 'noindex') {
+        return false;
+      }
+    }
+    // Default to allowing indexing for blog posts
+    return true;
+  })();
+  
+  const shouldFollow = (() => {
+    // If Yoast SEO has explicitly set nofollow, respect it
+    if (yoastSEO?.metaRobotsNofollow) {
+      const nofollowValue = yoastSEO.metaRobotsNofollow.toLowerCase();
+      // Check for various nofollow values that Yoast might return
+      if (nofollowValue === '1' || nofollowValue === 'true' || nofollowValue === 'nofollow') {
+        return false;
+      }
+    }
+    // Default to allowing following for blog posts
+    return true;
+  })();
+  
   const metadata: Metadata = {
     title: seoTitle,
     description: seoDescription,
@@ -163,11 +190,11 @@ export function generateSEOMetadata({
       site: '@cowboykimono',
     },
     robots: {
-      index: yoastSEO?.metaRobotsNoindex !== '1',
-      follow: yoastSEO?.metaRobotsNofollow !== '1',
+      index: shouldIndex,
+      follow: shouldFollow,
       googleBot: {
-        index: yoastSEO?.metaRobotsNoindex !== '1',
-        follow: yoastSEO?.metaRobotsNofollow !== '1',
+        index: shouldIndex,
+        follow: shouldFollow,
         'max-video-preview': -1,
         'max-image-preview': 'large',
         'max-snippet': -1,

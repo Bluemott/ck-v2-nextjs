@@ -1,4 +1,5 @@
 import type { NextConfig } from "next";
+import { createRedirectsConfig } from "./app/lib/redirect-manager";
 
 const nextConfig: NextConfig = {
   // Output configuration for Amplify
@@ -82,9 +83,9 @@ const nextConfig: NextConfig = {
     ignoreBuildErrors: false,
   },
   
-  // Redirects for old WordPress media URLs
+  // Redirects for old WordPress media URLs and dynamic slug changes
   async redirects() {
-    return [
+    const staticRedirects = [
       {
         source: '/wp-content/uploads/:path*',
         destination: 'https://api.cowboykimono.com/wp-content/uploads/:path*',
@@ -96,6 +97,11 @@ const nextConfig: NextConfig = {
         permanent: true,
       },
     ];
+    
+    // Get dynamic redirects from the redirect manager
+    const dynamicRedirects = createRedirectsConfig();
+    
+    return [...staticRedirects, ...dynamicRedirects];
   },
 
   // Headers for better caching

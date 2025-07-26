@@ -68,7 +68,7 @@ const BlogClient = ({ initialCategory, initialTag, showHeader = true }: BlogClie
         });
 
         setSearchResults(searchData.posts);
-        setSearchTotalResults(searchData.posts.length);
+        setSearchTotalResults(searchData.totalCount);
       } catch (error) {
         console.error('Search error:', error);
         setSearchResults([]);
@@ -115,10 +115,9 @@ const BlogClient = ({ initialCategory, initialTag, showHeader = true }: BlogClie
           setEndCursor(result.pageInfo.endCursor);
         }
         
-        // Calculate total pages (approximate since GraphQL doesn't provide total count)
-        const estimatedTotalPosts = result.posts.length + (result.pageInfo.hasNextPage ? POSTS_PER_PAGE * 2 : 0);
-        setTotalPosts(estimatedTotalPosts);
-        setTotalPages(Math.ceil(estimatedTotalPosts / POSTS_PER_PAGE));
+        // Use actual total count from WordPress
+        setTotalPosts(result.totalCount);
+        setTotalPages(Math.ceil(result.totalCount / POSTS_PER_PAGE));
       } catch {
         setError('Failed to load blog posts. Please try again later.');
         // Remove console.error for production

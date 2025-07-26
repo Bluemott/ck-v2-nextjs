@@ -18,10 +18,14 @@ export async function generateMetadata({ params }: BlogPostPageProps): Promise<M
   const { slug } = await params;
   const post = await fetchPostBySlug(slug);
   
-  if (!post) {
+  if (!post || post.status !== 'publish') {
     return {
       title: 'Post Not Found',
       description: 'The requested blog post could not be found.',
+      robots: {
+        index: false,
+        follow: false,
+      },
     };
   }
 
@@ -48,7 +52,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
   const { slug } = await params;
   const post = await fetchPostBySlug(slug);
   
-  if (!post) {
+  if (!post || post.status !== 'publish') {
     notFound();
   }
 

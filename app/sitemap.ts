@@ -10,14 +10,16 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   let tagUrls: MetadataRoute.Sitemap = [];
   
   try {
-    // Fetch posts
+    // Fetch posts - only include published posts
     const posts = await fetchPosts({ first: 100 });
-    blogUrls = posts.map((post) => ({
-      url: `${baseUrl}/blog/${post.slug}`,
-      lastModified: new Date(post.modified || post.date).toISOString(),
-      changeFrequency: 'monthly',
-      priority: 0.7,
-    }));
+    blogUrls = posts
+      .filter(post => post.status === 'publish') // Only include published posts
+      .map((post) => ({
+        url: `${baseUrl}/blog/${post.slug}`,
+        lastModified: new Date(post.modified || post.date).toISOString(),
+        changeFrequency: 'monthly',
+        priority: 0.7,
+      }));
 
     // Fetch categories
     const categories = await fetchCategories();
@@ -40,7 +42,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         changeFrequency: 'weekly',
         priority: 0.5,
       }));
-  } catch {
+  } catch (error) {
+    console.error('Sitemap generation error:', error);
     // Fallback: do nothing
   }
 
@@ -55,18 +58,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     // Add more download URLs if you have dynamic download pages
   ];
 
-  return [
+  // Core site pages - only include pages that actually exist and have content
+  const corePages: MetadataRoute.Sitemap = [
     {
       url: baseUrl,
       lastModified: new Date().toISOString(),
       changeFrequency: 'daily',
       priority: 1,
-    },
-    {
-      url: `${baseUrl}/about`,
-      lastModified: new Date().toISOString(),
-      changeFrequency: 'monthly',
-      priority: 0.8,
     },
     {
       url: `${baseUrl}/blog`,
@@ -80,6 +78,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: 'daily',
       priority: 0.9,
     },
+  ];
+
+  return [
+    ...corePages,
     ...blogUrls,
     ...categoryUrls,
     ...tagUrls,

@@ -180,6 +180,7 @@ const POSTS_QUERY = `
       where: {
         categoryName: $categorySlug
         search: $searchQuery
+        status: PUBLISH
       }
     ) {
       pageInfo {
@@ -188,33 +189,47 @@ const POSTS_QUERY = `
       }
       nodes {
         id
+        databaseId
         title
         slug
+        status
         excerpt
         date
         modified
+        content
         author {
           node {
+            id
+            databaseId
             name
             slug
+            avatar {
+              url
+            }
           }
         }
         categories {
           nodes {
             id
+            databaseId
             name
             slug
+            count
           }
         }
         tags {
           nodes {
             id
+            databaseId
             name
             slug
+            count
           }
         }
         featuredImage {
           node {
+            id
+            databaseId
             sourceUrl
             altText
             mediaDetails {
@@ -261,6 +276,8 @@ const POSTS_QUERY = `
     }
   }
 `;
+
+
 
 // Query for posts by category ID
 const POSTS_BY_CATEGORY_ID_QUERY = `
@@ -470,7 +487,10 @@ const POSTS_BY_CATEGORY_QUERY = `
     posts(
       first: $first
       after: $after
-      where: { categoryName: $categorySlug }
+      where: { 
+        categoryName: $categorySlug
+        status: PUBLISH
+      }
     ) {
       pageInfo {
         hasNextPage
@@ -478,33 +498,47 @@ const POSTS_BY_CATEGORY_QUERY = `
       }
       nodes {
         id
+        databaseId
         title
         slug
+        status
         excerpt
         date
         modified
+        content
         author {
           node {
+            id
+            databaseId
             name
             slug
+            avatar {
+              url
+            }
           }
         }
         categories {
           nodes {
             id
+            databaseId
             name
             slug
+            count
           }
         }
         tags {
           nodes {
             id
+            databaseId
             name
             slug
+            count
           }
         }
         featuredImage {
           node {
+            id
+            databaseId
             sourceUrl
             altText
             mediaDetails {
@@ -558,7 +592,10 @@ const POSTS_BY_TAG_QUERY = `
     posts(
       first: $first
       after: $after
-      where: { tagSlugAnd: [$tagSlug] }
+      where: { 
+        tagSlugAnd: [$tagSlug]
+        status: PUBLISH
+      }
     ) {
       pageInfo {
         hasNextPage
@@ -566,33 +603,47 @@ const POSTS_BY_TAG_QUERY = `
       }
       nodes {
         id
+        databaseId
         title
         slug
+        status
         excerpt
         date
         modified
+        content
         author {
           node {
+            id
+            databaseId
             name
             slug
+            avatar {
+              url
+            }
           }
         }
         categories {
           nodes {
             id
+            databaseId
             name
             slug
+            count
           }
         }
         tags {
           nodes {
             id
+            databaseId
             name
             slug
+            count
           }
         }
         featuredImage {
           node {
+            id
+            databaseId
             sourceUrl
             altText
             mediaDetails {
@@ -646,7 +697,10 @@ const POSTS_BY_SEARCH_QUERY = `
     posts(
       first: $first
       after: $after
-      where: { search: $searchQuery }
+      where: { 
+        search: $searchQuery
+        status: PUBLISH
+      }
     ) {
       pageInfo {
         hasNextPage
@@ -654,33 +708,47 @@ const POSTS_BY_SEARCH_QUERY = `
       }
       nodes {
         id
+        databaseId
         title
         slug
+        status
         excerpt
         date
         modified
+        content
         author {
           node {
+            id
+            databaseId
             name
             slug
+            avatar {
+              url
+            }
           }
         }
         categories {
           nodes {
             id
+            databaseId
             name
             slug
+            count
           }
         }
         tags {
           nodes {
             id
+            databaseId
             name
             slug
+            count
           }
         }
         featuredImage {
           node {
+            id
+            databaseId
             sourceUrl
             altText
             mediaDetails {
@@ -1269,6 +1337,30 @@ export async function fetchTagBySlug(slug: string): Promise<WPGraphQLTag | null>
   }
 }
 
+// Function to get total count of posts
+export async function fetchPostsCount(params?: {
+  categoryName?: string;
+  tagName?: string;
+  search?: string;
+}): Promise<number> {
+  const { categoryName, tagName, search } = params || {};
+  
+  try {
+    // Get a large number of posts to count them
+    const result = await fetchPosts({
+      first: 1000, // Get a large number to count all posts
+      categoryName,
+      tagName,
+      search,
+    });
+    
+    return result.length;
+  } catch (error) {
+    console.error('Error fetching posts count:', error);
+    return 0;
+  }
+}
+
 export async function fetchPostsWithPagination(params?: {
   first?: number;
   after?: string;
@@ -1283,6 +1375,7 @@ export async function fetchPostsWithPagination(params?: {
     startCursor: string;
     endCursor: string;
   };
+  totalCount: number;
 }> {
   const { first = 10, after, categoryName, tagName, search } = params || {};
   
@@ -1314,9 +1407,17 @@ export async function fetchPostsWithPagination(params?: {
     };
   }>(query, variables);
 
+  // Get the total count separately
+  const totalCount = await fetchPostsCount({
+    categoryName,
+    tagName,
+    search,
+  });
+
   return {
     posts: result.posts.nodes,
     pageInfo: result.posts.pageInfo,
+    totalCount,
   };
 }
 

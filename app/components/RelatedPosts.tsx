@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { fetchRelatedPosts, type WPGraphQLPost, decodeHtmlEntities } from '../lib/wpgraphql';
+import { fetchRelatedPosts, type WPGraphQLPost, decodeHtmlEntities } from '../lib/api';
 import WordPressImage from './WordPressImage';
 
 interface RelatedPostsProps {

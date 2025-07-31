@@ -4,6 +4,7 @@ import "./globals.css";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
 import FloatingSocialMedia from "./components/FloatingSocialMedia";
+import ErrorBoundary from "./components/ErrorBoundary";
 import StructuredData, {
   organizationStructuredData,
   websiteStructuredData,
@@ -120,11 +121,13 @@ export default function RootLayout({
           />
         </noscript>
         
-        <Navbar />
-        {children}
-        <FloatingSocialMedia />
-        <Footer />
-        <GoogleAnalytics />
+        <ErrorBoundary>
+          <Navbar />
+          {children}
+          <FloatingSocialMedia />
+          <Footer />
+          <GoogleAnalytics />
+        </ErrorBoundary>
       </body>
     </html>
   );

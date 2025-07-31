@@ -1,5 +1,5 @@
 import { Metadata } from 'next';
-import { WPGraphQLPost } from './wpgraphql';
+import { WPGraphQLPost } from './api';
 
 interface SEOProps {
   title?: string;

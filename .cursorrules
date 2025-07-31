@@ -1,185 +1,137 @@
-# Cursor Rules for ck-v2-nextjs Project
-
-## MANDATORY: Always Read Project Documentation First
-
-**BEFORE writing any code, ALWAYS read and reference the `ck-v2-nextjs.md` file to understand:**
-- Project architecture and structure
-- Coding standards and conventions
-- Technology stack and dependencies
-- Development workflow and guidelines
-- Component patterns and best practices
-- File organization and naming conventions
-
-## Project Context Requirements
-
-1. **Documentation Priority**: The `ck-v2-nextjs.md` file is the authoritative source for project guidelines. Always consult it first.
-
-2. **Consistency Check**: Before implementing any feature or making changes, verify alignment with the documented patterns in `ck-v2-nextjs.md`.
-
-3. **Architecture Compliance**: Ensure all code changes follow the architectural decisions and patterns documented in the project file.
-
-## Development Workflow
-
-### Before Writing Code:
-1. Read `ck-v2-nextjs.md` completely
-2. Understand the current project structure and patterns
-3. Identify relevant sections for your task
-4. Follow documented conventions and standards
-
-### Code Implementation:
-- Use the patterns and conventions specified in `ck-v2-nextjs.md`
-- Maintain consistency with existing codebase structure
-- Follow the documented component architecture
-- Adhere to the specified file organization
-
-### Quality Assurance:
-- Verify code aligns with project guidelines
-- Ensure consistency with documented patterns
-- Check for adherence to architectural decisions
-
-## Technology Stack Compliance
-
-- **Next.js**: Follow Next.js 13+ App Router patterns
-- **TypeScript**: Use strict typing as specified
-- **Styling**: Follow the documented CSS/styling approach
-- **Components**: Use the component patterns and structure defined in the project file
-
-## File Organization
-
-- Follow the file structure and naming conventions documented in `ck-v2-nextjs.md`
-- Maintain the established directory organization
-- Use the specified import/export patterns
-
-## Error Handling and Validation
-
-- Implement error handling as specified in the project documentation
-- Follow the validation patterns and approaches documented
-- Ensure proper error boundaries and user feedback
-
-## Performance and Optimization
-
-- Follow the performance guidelines in `ck-v2-nextjs.md`
-- Implement optimizations as specified
-- Maintain the documented loading and rendering strategies
-
-## Testing and Quality
-
-- Follow the testing approach documented in the project file
-- Ensure code quality standards are met
-- Validate against the specified acceptance criteria
-
-## Deployment and Build
-
-- Follow the deployment process documented in `ck-v2-nextjs.md`
-- Ensure build configuration aligns with project requirements
-- Verify environment setup matches documented specifications
-
-## Communication
-
-When providing code suggestions or implementations:
-1. Reference specific sections of `ck-v2-nextjs.md` that informed your decisions
-2. Explain how your implementation aligns with documented patterns
-3. Note any deviations from the documented approach and justify them
-
-## Continuous Updates and Documentation Maintenance
-
-### MANDATORY: Update ck-v2-nextjs.md with All Changes
-
-**ALWAYS update the `ck-v2-nextjs.md` file when making any of the following changes:**
-
-#### New Features and Components
-- **New Components**: Document all new components with their purpose, props, and usage patterns
-- **New Pages**: Add new routes to the file structure and document their functionality
-- **New Utilities**: Document new utility functions and their interfaces
-- **New Dependencies**: Update the technology stack section with new packages
-
-#### Architectural Changes
-- **File Structure Changes**: Update the file structure documentation
-- **Component Patterns**: Document new component patterns and conventions
-- **Styling Changes**: Update design system and color palette documentation
-- **Build Configuration**: Document changes to Next.js config, build scripts, or deployment
-
-#### Technology Updates
-- **Framework Updates**: Update version numbers and migration notes
-- **New Tools**: Document new development tools, linters, or testing frameworks
-- **Performance Optimizations**: Document new optimization strategies
-- **Security Enhancements**: Update security best practices
-
-#### Content and SEO Changes
-- **SEO Updates**: Document new SEO strategies or metadata patterns
-- **Analytics Changes**: Update analytics implementation documentation
-- **Content Structure**: Document changes to blog, shop, or download sections
-- **Image Management**: Update image optimization and management strategies
-
-### Documentation Update Process
-
-#### Before Making Changes:
-1. **Read Current Documentation**: Understand existing patterns in `ck-v2-nextjs.md`
-2. **Plan Documentation Updates**: Identify which sections need updates
-3. **Follow Established Patterns**: Ensure changes align with documented standards
-
-#### During Implementation:
-1. **Update Documentation Simultaneously**: Don't wait until after coding
-2. **Add New Sections**: Create new documentation sections as needed
-3. **Update Existing Sections**: Modify relevant existing documentation
-4. **Maintain Consistency**: Ensure documentation matches implementation
-
-#### After Implementation:
-1. **Verify Documentation Accuracy**: Ensure docs reflect actual code
-2. **Update Examples**: Provide code examples for new patterns
-3. **Review Completeness**: Check that all changes are documented
-4. **Test Documentation**: Ensure new developers can follow the docs
-
-### Documentation Sections to Update
-
-#### Always Update These Sections:
-- **Technology Stack**: New dependencies, versions, tools
-- **File Structure**: New files, directories, organization changes
-- **Component Architecture**: New components, patterns, interfaces
-- **Development Workflow**: New scripts, guidelines, standards
-- **Deployment and Build**: Configuration changes, environment updates
-
-#### Update When Relevant:
-- **Styling and Design System**: New design patterns, color changes
-- **SEO and Performance**: New optimization strategies, analytics
-- **Content Management**: New content types, management strategies
-- **Error Handling**: New error patterns, validation strategies
-- **Security**: New security measures, best practices
-
-### Documentation Standards
-
-#### Writing Style:
-- **Clear and Concise**: Use simple, direct language
-- **Code Examples**: Include practical code examples
-- **Step-by-Step**: Break complex processes into steps
-- **Consistent Formatting**: Use consistent markdown formatting
-
-#### Content Organization:
-- **Logical Flow**: Organize information logically
-- **Cross-References**: Link related sections
-- **Version Notes**: Document version-specific information
-- **Migration Guides**: Include upgrade/migration instructions
-
-#### Maintenance:
-- **Regular Reviews**: Periodically review and update documentation
-- **Version Control**: Track documentation changes in git
-- **Feedback Loop**: Incorporate developer feedback
-- **Living Document**: Treat documentation as a living, evolving resource
-
-### Automated Documentation Checks
-
-#### Before Committing:
-1. **Documentation Completeness**: Ensure all changes are documented
-2. **Code-Doc Alignment**: Verify documentation matches implementation
-3. **Example Accuracy**: Test all code examples
-4. **Link Validation**: Check all internal and external links
-
-#### Quality Assurance:
-- **Spell Check**: Ensure proper spelling and grammar
-- **Format Consistency**: Maintain consistent formatting
-- **Section Completeness**: Ensure all sections are complete
-- **Cross-Reference Accuracy**: Verify all references are accurate
+---
+name: nextjs-aws-optimization.mdc
+description: Next.js best practices optimized for AWS deployment and performance
+globs: ***/**.{ts,tsx,js,jsx}
+---
+- Use App Router with static generation (generateStaticParams) to minimize Lambda cold starts
+- Implement ISR (Incremental Static Regeneration) for dynamic content to reduce server costs
+- Leverage Next.js Image Optimization with CloudFront for automatic WebP conversion and caching
+- Use middleware sparingly to avoid additional Lambda invocations; prefer static edge functions
+- Configure output: 'standalone' for smaller Docker images in ECS/Fargate deployments
+- Implement proper caching headers to maximize CloudFront cache hit ratios
+- Use dynamic imports and code splitting to reduce bundle sizes and improve cold start times
 
 ---
+name: aws-serverless-best-practices.mdc
+description: AWS serverless optimization for cost and performance
+globs: ***/**.{ts,tsx,js,jsx}
+---
+- Minimize Lambda function size by using tree shaking and excluding dev dependencies
+- Implement connection reuse for database connections (RDS Proxy for relational DBs)
+- Use DynamoDB single-table design patterns to reduce costs and improve performance
+- Leverage Lambda@Edge for global content delivery and reduced latency
+- Implement proper error handling to avoid unnecessary Lambda retries and costs
+- Use AWS SDK v3 with modular imports to reduce bundle size
+- Configure appropriate memory allocation for Lambda functions to optimize cost/performance ratio
+- Use provisioned concurrency only for high-traffic, latency-sensitive functions
 
-**CRITICAL**: The `ck-v2-nextjs.md` file is your primary reference AND living documentation. Always consult it before writing code AND always update it when making changes. This ensures the documentation stays current and useful for all developers working on the project.
+---
+name: typescript-aws-integration.mdc
+description: TypeScript patterns for AWS services with type safety
+globs: ***/**.{ts,tsx}
+---
+- Use AWS SDK v3 types for better IntelliSense and compile-time error checking
+- Create strict types for DynamoDB items and API Gateway responses
+- Implement proper error types for AWS service exceptions
+- Use utility types for AWS resource configurations (CloudFormation, CDK)
+- Define environment variable types with proper validation using zod or similar
+- Create reusable type definitions for common AWS patterns (Lambda events, S3 objects)
+- Use conditional types for service-specific configurations
+
+---
+name: tailwindcss-performance-optimization.mdc
+description: Tailwind CSS optimization for faster builds and smaller bundles
+globs: ***/**.{ts,tsx,css}
+---
+- Configure JIT mode and purge unused styles to minimize CSS bundle size
+- Use Tailwind's container queries and dynamic viewports for responsive AWS CloudFront delivery
+- Implement CSS-in-JS alternatives like styled-components only when necessary for SSR
+- Leverage Tailwind's built-in dark mode for reduced JavaScript bundle size
+- Use Tailwind plugins sparingly to avoid build-time performance issues
+- Configure proper content paths to ensure efficient purging in CI/CD pipelines
+- Use CSS custom properties for theme values that need runtime changes
+
+---
+name: aws-data-fetching-patterns.mdc
+description: Optimized data fetching patterns for AWS services
+globs: ***/**.{ts,tsx}
+---
+- Use React Query/TanStack Query with proper caching strategies to reduce API calls
+- Implement optimistic updates to improve perceived performance
+- Use SWR or similar for client-side data fetching with built-in retry logic
+- Leverage Next.js streaming and Suspense for improved loading states
+- Implement proper error boundaries for AWS service failures
+- Use GraphQL with AWS AppSync for real-time data synchronization
+- Cache API responses in Redis/ElastiCache for frequently accessed data
+- Implement request deduplication to avoid duplicate AWS API calls
+
+---
+name: aws-security-and-monitoring.mdc
+description: Security and monitoring best practices for AWS deployments
+globs: ***/**.{ts,tsx,js,jsx}
+---
+- Use AWS IAM roles with least privilege principle for all services
+- Implement proper input validation and sanitization for all user inputs
+- Use AWS Secrets Manager or Parameter Store for sensitive configuration
+- Enable AWS CloudTrail and CloudWatch for comprehensive monitoring
+- Implement structured logging with correlation IDs for distributed tracing
+- Use Content Security Policy (CSP) headers for XSS protection
+- Enable AWS WAF for API Gateway and CloudFront distributions
+- Implement rate limiting to prevent abuse and control costs
+
+---
+name: react-aws-performance.mdc
+description: React optimization patterns for AWS environments
+globs: ***/**.{ts,tsx}
+---
+- Use React.lazy with Suspense for code splitting aligned with Lambda function boundaries
+- Implement proper memoization (useMemo, useCallback) to reduce re-renders in serverless environments
+- Use React Query's background refetching to keep data fresh without blocking UI
+- Implement virtualization for large lists to reduce memory usage in client-side rendering
+- Use React Server Components where possible to reduce client bundle size
+- Implement proper loading states that work well with CloudFront caching
+- Use React's concurrent features (useTransition, useDeferredValue) for better UX
+- Optimize component re-renders to minimize hydration mismatches in SSR
+
+---
+name: aws-cost-optimization.mdc
+description: Cost optimization strategies for AWS services
+globs: ***/**.{ts,tsx,js,jsx,json,yml,yaml}
+---
+- Use AWS Cost Explorer APIs to implement cost monitoring in applications
+- Implement proper CloudWatch log retention policies to control storage costs
+- Use S3 lifecycle policies for static assets and user uploads
+- Configure appropriate auto-scaling policies for ECS/Fargate services
+- Implement request batching for DynamoDB operations to reduce consumed capacity
+- Use CloudFront caching strategies to minimize origin requests
+- Monitor and optimize Lambda function duration to reduce execution costs
+- Use Spot instances for development and non-critical workloads
+- Implement proper resource tagging for cost allocation and monitoring
+
+---
+name: eslint-aws-focused.mdc
+description: ESLint configuration optimized for AWS development
+globs: ***/**.{ts,tsx,js,jsx}
+---
+- Enable AWS SDK-specific linting rules to catch common mistakes
+- Use eslint-plugin-security to identify potential security vulnerabilities
+- Configure rules for proper async/await usage in Lambda functions
+- Enable rules for environment variable validation and usage
+- Use custom rules for consistent error handling patterns across AWS services
+- Configure rules to enforce proper logging patterns for CloudWatch
+- Enable rules for consistent naming conventions for AWS resources
+- Use rules to enforce proper TypeScript usage with AWS SDK types
+
+---
+name: aws-infrastructure-as-code.mdc
+description: Best practices for AWS CDK and infrastructure management
+globs: ***/**.{ts,js,yml,yaml,json}
+---
+- Use AWS CDK constructs for consistent resource creation and management
+- Implement proper stack separation (dev/staging/prod) with parameter overrides
+- Use CDK aspects for cross-cutting concerns like tagging and security policies
+- Implement proper secret management with AWS Secrets Manager integration
+- Use CloudFormation outputs for cross-stack resource sharing
+- Implement proper backup and disaster recovery strategies in IaC
+- Use CDK pipelines for automated deployment and rollback capabilities
+- Configure proper monitoring and alerting through CloudWatch in IaC templates

@@ -39,3 +39,37 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# AWS CDK
+infrastructure/cdk.out/
+infrastructure/node_modules/
+
+# Migration artifacts  
+chunk-*.json
+import-results-*.json
+*-payload.json
+full-encoded-payload.txt
+encoded-payload.txt
+migration.log
+safe-migration.log
+security-fix.log
+output.json
+diagnostic-report-*.json
+deployment-summary.json
+utputFormat
+
+# WordPress migration data
+wordpress-export/
+database-backups/
+security-backups/
+lambda-deploy/
+lambda-layer/
+lambda-layers/
+deployment/
+
+# Test files
+test-*.json
+direct-test-payload.json
+
+# VSCode
+.vscode/

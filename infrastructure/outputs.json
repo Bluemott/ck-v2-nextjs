@@ -1,0 +1,11 @@
+{
+  "WordPressBlogStack": {
+    "CloudFrontURL": "https://d36tlab2rh5hc6.cloudfront.net",
+    "AuroraClusterEndpoint": "wordpressblogstack-wordpressauroracaf35a28-l7qlgwhkiu93.cluster-cwp008gg4ymh.us-east-1.rds.amazonaws.com",
+    "DatabaseSetupEndpoint": "https://0m6piyoypi.execute-api.us-east-1.amazonaws.com/prod/setup-database",
+    "StaticContentBucketName": "wordpress-static-925242451851-us-east-1",
+    "GraphQLEndpoint": "https://0m6piyoypi.execute-api.us-east-1.amazonaws.com/prod/graphql",
+    "WordPressAPIEndpoint71532FA3": "https://0m6piyoypi.execute-api.us-east-1.amazonaws.com/prod/",
+    "DataImportEndpoint": "https://0m6piyoypi.execute-api.us-east-1.amazonaws.com/prod/import-data"
+  }
+}

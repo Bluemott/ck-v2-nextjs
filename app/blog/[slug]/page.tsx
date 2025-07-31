@@ -5,7 +5,7 @@ import BlogSidebar from '../../components/BlogSidebar';
 import BlogPostFooter from '../../components/BlogPostFooter';
 import StructuredData, { generateArticleStructuredData } from '../../components/StructuredData';
 import YoastSchema from '../../components/YoastSchema';
-import { fetchPostBySlug, decodeHtmlEntities, getFeaturedImageUrl, fetchCategoryBySlug, fetchTagBySlug, fetchAdjacentPosts } from '../../lib/wpgraphql';
+import { fetchPostBySlug, decodeHtmlEntities, getFeaturedImageUrl, fetchCategoryBySlug, fetchTagBySlug, fetchAdjacentPosts } from '../../lib/api';
 import WordPressImage from '../../components/WordPressImage';
 import { generateSEOMetadata, extractYoastSEOData } from '../../lib/seo';
 import Breadcrumbs from '../../components/Breadcrumbs';

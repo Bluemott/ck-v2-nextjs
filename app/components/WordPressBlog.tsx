@@ -1,8 +1,8 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, memo } from 'react';
 import Link from 'next/link';
-import { fetchPosts, type WPGraphQLPost, decodeHtmlEntities } from '../lib/wpgraphql';
+import { fetchPosts, type WPGraphQLPost, decodeHtmlEntities } from '../lib/api';
 import WordPressImage from './WordPressImage';
 
 interface WordPressBlogProps {
@@ -10,39 +10,39 @@ interface WordPressBlogProps {
   showHeader?: boolean;
 }
 
-const WordPressBlog = ({ postsPerPage = 6, showHeader = true }: WordPressBlogProps) => {
+const WordPressBlog = memo(({ postsPerPage = 6, showHeader = true }: WordPressBlogProps) => {
   const [posts, setPosts] = useState<WPGraphQLPost[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    const loadPosts = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-        
-        const data = await fetchPosts({ 
-          first: postsPerPage,
-        });
-        setPosts(data);
-      } catch (err) {
-        console.error('Error fetching blog posts:', err);
-        setError('Failed to load blog posts');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadPosts();
+  const loadPosts = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      const data = await fetchPosts({ 
+        first: postsPerPage,
+      });
+      setPosts(data);
+    } catch (err) {
+      console.error('Error fetching blog posts:', err);
+      setError('Failed to load blog posts');
+    } finally {
+      setLoading(false);
+    }
   }, [postsPerPage]);
 
-  const formatDate = (dateString: string) => {
+  useEffect(() => {
+    loadPosts();
+  }, [loadPosts]);
+
+  const formatDate = useCallback((dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', {
       year: 'numeric',
       month: 'long',
       day: 'numeric'
     });
-  };
+  }, []);
 
   if (loading) {
     return (
@@ -69,10 +69,11 @@ const WordPressBlog = ({ postsPerPage = 6, showHeader = true }: WordPressBlogPro
       <div className="bg-white py-12">
         <div className="max-w-7xl mx-auto px-4">
           <div className="text-center">
-            <p className="text-red-600 mb-4">{error}</p>
+            <p className="text-red-600 mb-4" role="alert">{error}</p>
             <button
-              onClick={() => window.location.reload()}
-              className="bg-[#1e2939] text-white px-4 py-2 rounded hover:bg-[#2a3441] transition-colors"
+              onClick={loadPosts}
+              className="bg-[#1e2939] text-white px-4 py-2 rounded hover:bg-[#2a3441] transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+              aria-label="Retry loading blog posts"
             >
               Try Again
             </button>
@@ -104,10 +105,10 @@ const WordPressBlog = ({ postsPerPage = 6, showHeader = true }: WordPressBlogPro
           </div>
         )}
         
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8" role="feed" aria-label="Blog posts">
           {posts.map((post) => (
-            <Link key={post.id} href={`/blog/${post.slug}`} className="block group">
-              <article className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
+            <Link key={post.id} href={`/blog/${post.slug}`} className="block group" aria-label={`Read ${decodeHtmlEntities(post.title)}`}>
+              <article className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 focus-within:ring-2 focus-within:ring-blue-500 focus-within:ring-offset-2">
                 {/* Featured Image */}
                 {post.featuredImage?.node && (
                   <div className="relative h-48 overflow-hidden">
@@ -117,6 +118,7 @@ const WordPressBlog = ({ postsPerPage = 6, showHeader = true }: WordPressBlogPro
                       fill
                       className="object-cover transition-transform duration-300 group-hover:scale-105"
                       sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                      alt={`Featured image for ${decodeHtmlEntities(post.title)}`}
                     />
                   </div>
                 )}
@@ -127,9 +129,9 @@ const WordPressBlog = ({ postsPerPage = 6, showHeader = true }: WordPressBlogPro
                     <span dangerouslySetInnerHTML={{ __html: decodeHtmlEntities(post.title) }} />
                   </h3>
                   
-                  <p className="text-gray-600 text-sm mb-3">
+                  <time className="text-gray-600 text-sm mb-3 block" dateTime={post.date}>
                     {formatDate(post.date)}
-                  </p>
+                  </time>
                   
                   <div
                     className="text-gray-700 line-clamp-3 text-sm leading-relaxed"
@@ -140,7 +142,7 @@ const WordPressBlog = ({ postsPerPage = 6, showHeader = true }: WordPressBlogPro
                   
                   <div className="mt-4 inline-flex items-center text-[#1e2939] hover:text-[#2a3441] font-medium transition-colors group/link">
                     Read More
-                    <span className="ml-1 group-hover/link:translate-x-1 transition-transform">→</span>
+                    <span className="ml-1 group-hover/link:translate-x-1 transition-transform" aria-hidden="true">→</span>
                   </div>
                 </div>
               </article>
@@ -163,6 +165,8 @@ const WordPressBlog = ({ postsPerPage = 6, showHeader = true }: WordPressBlogPro
       </div>
     </div>
   );
-};
+});
+
+WordPressBlog.displayName = 'WordPressBlog';
 
 export default WordPressBlog; 

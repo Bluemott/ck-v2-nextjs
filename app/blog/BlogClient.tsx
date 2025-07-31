@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { fetchPosts, fetchPostsWithPagination, fetchCategories, fetchTags, type WPGraphQLPost, type WPGraphQLCategory, type WPGraphQLTag, decodeHtmlEntities } from '../lib/wpgraphql';
+import { fetchPosts, fetchPostsWithPagination, fetchCategories, fetchTags, type WPGraphQLPost, type WPGraphQLCategory, type WPGraphQLTag, decodeHtmlEntities } from '../lib/api';
 import WordPressImage from '../components/WordPressImage';
 
 const POSTS_PER_PAGE = 9; // Reduced from 12 to accommodate larger cards

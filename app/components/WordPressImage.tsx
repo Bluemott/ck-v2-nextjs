@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import Image from 'next/image';
-import { getFeaturedImageUrl, getFeaturedImageAlt, type WPGraphQLPost } from '../lib/wpgraphql';
+import { getFeaturedImageUrl, getFeaturedImageAlt, type WPGraphQLPost } from '../lib/api';
 
 interface WordPressImageProps {
   post: WPGraphQLPost;

@@ -1,5 +1,5 @@
 import { MetadataRoute } from 'next'
-import { fetchPosts, fetchCategories, fetchTags } from './lib/wpgraphql'
+import { fetchPosts, fetchCategories, fetchTags } from './lib/api'
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.cowboykimono.com';

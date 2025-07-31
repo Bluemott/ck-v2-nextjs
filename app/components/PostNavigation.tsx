@@ -1,6 +1,5 @@
 import Link from 'next/link';
-import { WPGraphQLPost } from '../lib/wpgraphql';
-import { decodeHtmlEntities } from '../lib/wpgraphql';
+import { WPGraphQLPost, decodeHtmlEntities } from '../lib/api';
 
 interface PostNavigationProps {
   previousPost: WPGraphQLPost | null;

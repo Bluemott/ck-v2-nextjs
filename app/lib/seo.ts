@@ -62,7 +62,7 @@ const defaultSEO = {
 // Helper function to truncate titles to reasonable length
 function truncateTitle(title: string, maxLength: number = 50): string {
   if (title.length <= maxLength) return title;
-  return title.substring(0, maxLength).trim() + '...';
+  return `${title.substring(0, maxLength).trim()}...`;
 }
 
 // Helper function to ensure HTML entities are decoded
@@ -112,7 +112,12 @@ export function generateSEOMetadata({
   const seoTitle = yoastTitle || (truncatedTitle ? `${truncatedTitle} | ${defaultSEO.title}` : defaultSEO.title);
   const seoDescription = yoastDescription || description || defaultSEO.description;
   const seoKeywords = [...defaultSEO.keywords, ...keywords, ...tags, ...yoastKeywords, ...yoastFocusKw];
-  const seoImage = yoastOgImage || ogImage || defaultSEO.ogImage;
+  // Import the convertToS3Url function
+  const { convertToS3Url } = await import('./wpgraphql');
+  
+  // Convert any WordPress URLs to S3 URLs
+  const convertedOgImage = ogImage ? convertToS3Url(ogImage) : undefined;
+  const seoImage = yoastOgImage || convertedOgImage || defaultSEO.ogImage;
   const seoAuthor = author || defaultSEO.author;
   const seoCanonical = yoastCanonical || canonical || '/';
   
@@ -215,16 +220,19 @@ export function generateSEOMetadata({
 export function extractYoastSEOData(post: WPGraphQLPost): SEOProps['yoastSEO'] {
   if (!post?.seo) return undefined;
   
+  // Import the convertToS3Url function
+  const { convertToS3Url } = await import('./wpgraphql');
+  
   return {
     title: post.seo.title,
     metaDesc: post.seo.metaDesc,
     canonical: post.seo.canonical,
     opengraphTitle: post.seo.opengraphTitle,
     opengraphDescription: post.seo.opengraphDescription,
-    opengraphImage: post.seo.opengraphImage?.sourceUrl,
+    opengraphImage: post.seo.opengraphImage?.sourceUrl ? convertToS3Url(post.seo.opengraphImage.sourceUrl) : undefined,
     twitterTitle: post.seo.twitterTitle,
     twitterDescription: post.seo.twitterDescription,
-    twitterImage: post.seo.twitterImage?.sourceUrl,
+    twitterImage: post.seo.twitterImage?.sourceUrl ? convertToS3Url(post.seo.twitterImage.sourceUrl) : undefined,
     focuskw: post.seo.focuskw,
     metaKeywords: post.seo.metaKeywords,
     metaRobotsNoindex: post.seo.metaRobotsNoindex,

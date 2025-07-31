@@ -16,6 +16,9 @@ export type {
   AWSGraphQLPageInfo
 } from './aws-graphql';
 
+// Re-export media URL conversion functions
+export { convertToS3Url, debugUrlConversion } from './wpgraphql';
+
 // Feature flag to switch between WordPress and AWS GraphQL
 const USE_AWS_GRAPHQL = process.env.NEXT_PUBLIC_USE_AWS_GRAPHQL === 'true';
 const USE_TEMP_WORDPRESS = process.env.NODE_ENV === 'development' && !USE_AWS_GRAPHQL;

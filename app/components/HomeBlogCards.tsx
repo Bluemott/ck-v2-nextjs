@@ -114,7 +114,7 @@ const HomeBlogCards = () => {
                   <div
                     className="text-gray-700 line-clamp-3 text-base leading-relaxed"
                     dangerouslySetInnerHTML={{
-                      __html: post.excerpt.substring(0, 150) + '...'
+                      __html: `${post.excerpt.substring(0, 150)}...`
                     }}
                   />
                   

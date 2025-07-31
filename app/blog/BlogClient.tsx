@@ -454,7 +454,7 @@ const BlogClient = ({ initialCategory, initialTag, showHeader = true }: BlogClie
                           <div
                             className="text-gray-700 mb-6 line-clamp-4 leading-relaxed text-sm sm:text-base"
                             dangerouslySetInnerHTML={{
-                              __html: post.excerpt.substring(0, 180) + '...'
+                              __html: `${post.excerpt.substring(0, 180)}...`
                             }}
                           />
 

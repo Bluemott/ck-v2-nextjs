@@ -156,7 +156,7 @@ async function handleSlugChange({
 }) {
   try {
     // Log the slug change
-    console.log(`Slug change detected: "${oldSlug}" → "${newSlug}" for post "${postTitle}" (ID: ${postId})`);
+    console.warn(`Slug change detected: "${oldSlug}" → "${newSlug}" for post "${postTitle}" (ID: ${postId})`);
     
     // Use the redirect manager to handle the slug change
     handleSlugChangeRedirect({

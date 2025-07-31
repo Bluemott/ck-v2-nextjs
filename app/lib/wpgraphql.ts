@@ -1121,6 +1121,91 @@ export function getWordPressAdminUrl(): string {
   return process.env.NEXT_PUBLIC_WORDPRESS_ADMIN_URL || 'https://admin.cowboykimono.com';
 }
 
+/**
+ * Convert WordPress media URL to S3/CloudFront URL
+ */
+export function convertToS3Url(wordpressUrl: string): string {
+  const cloudFrontUrl = process.env.NEXT_PUBLIC_CLOUDFRONT_URL;
+  
+  if (!cloudFrontUrl) {
+    console.warn('CloudFront URL not configured, using original WordPress URL');
+    return wordpressUrl;
+  }
+  
+  // Extract the path from WordPress URL
+  // Example: https://api.cowboykimono.com/wp-content/uploads/2022/08/image.jpg
+  // Should become: https://d36tlab2rh5hc6.cloudfront.net/media/2022/08/image.jpg
+  
+  try {
+    const url = new URL(wordpressUrl);
+    const pathParts = url.pathname.split('/');
+    
+    // Find wp-content/uploads in the path
+    const uploadsIndex = pathParts.findIndex(part => part === 'uploads');
+    if (uploadsIndex === -1) {
+      // If no uploads directory found, return original URL
+      return wordpressUrl;
+    }
+    
+    // Extract the year/month/filename parts after uploads
+    const mediaPathParts = pathParts.slice(uploadsIndex + 1);
+    if (mediaPathParts.length === 0) {
+      return wordpressUrl;
+    }
+    
+    // Reconstruct the S3 path
+    const s3Path = `media/${mediaPathParts.join('/')}`;
+    return `${cloudFrontUrl}/${s3Path}`;
+    
+  } catch (error) {
+    console.warn('Error converting WordPress URL to S3 URL:', error);
+    return wordpressUrl;
+  }
+}
+
+/**
+ * Debug function to test URL conversion
+ */
+export function debugUrlConversion(wordpressUrl: string): {
+  original: string;
+  converted: string;
+  cloudFrontUrl: string | undefined;
+  pathParts: string[];
+  s3Path: string | null;
+} {
+  const cloudFrontUrl = process.env.NEXT_PUBLIC_CLOUDFRONT_URL;
+  
+  try {
+    const url = new URL(wordpressUrl);
+    const pathParts = url.pathname.split('/');
+    const uploadsIndex = pathParts.findIndex(part => part === 'uploads');
+    
+    let s3Path = null;
+    if (uploadsIndex !== -1) {
+      const mediaPathParts = pathParts.slice(uploadsIndex + 1);
+      if (mediaPathParts.length > 0) {
+        s3Path = `media/${mediaPathParts.join('/')}`;
+      }
+    }
+    
+    return {
+      original: wordpressUrl,
+      converted: convertToS3Url(wordpressUrl),
+      cloudFrontUrl,
+      pathParts,
+      s3Path
+    };
+  } catch (error) {
+    return {
+      original: wordpressUrl,
+      converted: wordpressUrl,
+      cloudFrontUrl,
+      pathParts: [],
+      s3Path: null
+    };
+  }
+}
+
 export function getFeaturedImageUrl(post: WPGraphQLPost, size: 'thumbnail' | 'medium' | 'large' | 'full' = 'medium'): string | null {
   if (!post.featuredImage?.node) return null;
   
@@ -1131,12 +1216,12 @@ export function getFeaturedImageUrl(post: WPGraphQLPost, size: 'thumbnail' | 'me
     // Find the requested size
     const requestedSize = mediaDetails.sizes.find(s => s.name === size);
     if (requestedSize) {
-      return requestedSize.sourceUrl;
+      return convertToS3Url(requestedSize.sourceUrl);
     }
   }
   
   // Fallback to source URL if size not found or sizes is not available
-  return post.featuredImage.node.sourceUrl;
+  return convertToS3Url(post.featuredImage.node.sourceUrl);
 }
 
 export function getFeaturedImageAlt(post: WPGraphQLPost): string {
@@ -1193,7 +1278,7 @@ async function graphqlRequest<T>(query: string, variables?: Record<string, unkno
       console.error('GraphQL request error:', {
         error: error instanceof Error ? error.message : String(error),
         url: WPGRAPHQL_URL,
-        query: query.substring(0, 100) + '...',
+        query: `${query.substring(0, 100)}...`,
         variables
       });
     }

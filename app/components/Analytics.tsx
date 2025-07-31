@@ -27,7 +27,7 @@ const Analytics = ({ measurementId }: AnalyticsProps) => {
         src={`https://www.googletagmanager.com/gtag/js?id=${measurementId}`}
         strategy="afterInteractive"
         onLoad={() => {
-          console.log('Google Analytics script loaded successfully');
+          // Google Analytics script loaded successfully
         }}
         onError={(e) => {
           console.error('Failed to load Google Analytics script:', e);

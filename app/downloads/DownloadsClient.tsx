@@ -205,7 +205,7 @@ const DownloadsClient = () => {
               >
                 <Image
                   src={section.image}
-                  alt={section.title + ' preview'}
+                  alt={`${section.title} preview`}
                   fill
                   className="object-cover object-center"
                   sizes="(max-width: 768px) 100vw, 33vw"

@@ -136,7 +136,7 @@ const WordPressBlog = memo(({ postsPerPage = 6, showHeader = true }: WordPressBl
                   <div
                     className="text-gray-700 line-clamp-3 text-sm leading-relaxed"
                     dangerouslySetInnerHTML={{
-                      __html: post.excerpt.substring(0, 120) + '...'
+                      __html: `${post.excerpt.substring(0, 120)}...`
                     }}
                   />
                   

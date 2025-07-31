@@ -8,6 +8,7 @@ A modern Next.js website for Cowboy Kimonos featuring:
 - **Interactive Components**: Floating social media icons and navigation
 - **Optimized Images**: Next.js Image optimization for all assets
 - **Advanced SEO**: Complete SEO optimization with structured data
+- **AWS Integration**: Serverless GraphQL API with Aurora database
 
 ## Features
 
@@ -24,6 +25,7 @@ A modern Next.js website for Cowboy Kimonos featuring:
 - Pagination support
 - Related posts algorithm
 - Individual post pages with full content
+- **NEW**: AWS GraphQL API integration for improved performance
 
 ### 🛍️ Shop
 - Etsy RSS feed integration
@@ -46,6 +48,7 @@ A modern Next.js website for Cowboy Kimonos featuring:
 - **API Integration**: WordPress WPGraphQL, Etsy RSS feed
 - **Deployment**: AWS Amplify
 - **SEO**: Yoast SEO integration, structured data, IndexNow
+- **AWS Services**: Lambda, Aurora Serverless, API Gateway, CloudFront
 
 ## Local Development
 
@@ -54,11 +57,36 @@ A modern Next.js website for Cowboy Kimonos featuring:
    ```bash
    npm install
    ```
-3. Run the development server:
+3. Set up environment variables (see `.env.local.example`)
+4. Run the development server:
    ```bash
    npm run dev
    ```
-4. Open [http://localhost:3000](http://localhost:3000)
+5. Open [http://localhost:3000](http://localhost:3000)
+
+## Environment Variables
+
+Create a `.env.local` file with the following variables:
+
+```env
+# WordPress API
+NEXT_PUBLIC_WPGRAPHQL_URL=https://api.cowboykimono.com/graphql
+
+# AWS GraphQL API (optional - for enhanced performance)
+NEXT_PUBLIC_AWS_GRAPHQL_URL=https://your-api-gateway-url/prod/graphql
+NEXT_PUBLIC_USE_AWS_GRAPHQL=false
+
+# Site Configuration
+NEXT_PUBLIC_SITE_URL=https://cowboykimono.com
+NEXT_PUBLIC_GTM_ID=your-gtm-id
+NEXT_PUBLIC_GOOGLE_VERIFICATION=your-verification-code
+
+# AWS S3 (for media uploads)
+AWS_S3_BUCKET=your-s3-bucket
+AWS_S3_REGION=us-east-1
+AWS_ACCESS_KEY_ID=your-access-key
+AWS_SECRET_ACCESS_KEY=your-secret-key
+```
 
 ## Deployment to AWS Amplify
 
@@ -86,8 +114,8 @@ This project is configured for deployment to AWS Amplify via GitHub integration.
      - Build the project with `npm run build`
      - Cache `node_modules` and `.next/cache` for faster builds
 
-4. **Environment Variables** (if needed):
-   - Add any environment variables in the Amplify console
+4. **Environment Variables**:
+   - Add all required environment variables in the Amplify console
    - Go to App Settings > Environment variables
 
 5. **Deploy**: 
@@ -140,11 +168,18 @@ After deployment:
 - **GraphQL Endpoint**: `https://api.cowboykimono.com/graphql`
 - **Features**: WPGraphQL integration, pagination, featured images, full content
 - **SEO**: Yoast SEO integration with structured data
+- **AWS Integration**: Optional serverless GraphQL API for enhanced performance
 
 ### Etsy Shop
 - **RSS Feed**: `https://www.etsy.com/shop/CowboyKimono/rss`
 - **CORS Proxy**: `https://api.allorigins.win/raw?url=`
 - **Next.js config**: Allows images from Etsy CDNs
+
+### AWS GraphQL API (Optional)
+- **Endpoint**: Configurable via environment variables
+- **Features**: Serverless GraphQL with Aurora database
+- **Performance**: Reduced latency and improved scalability
+- **Activation**: Set `NEXT_PUBLIC_USE_AWS_GRAPHQL=true` in environment
 
 ## Performance Optimizations
 
@@ -154,6 +189,8 @@ After deployment:
 - Build-time optimization
 - Caching configuration for faster builds
 - Pinterest-style masonry layout for blog
+- AWS CloudFront integration for global CDN
+- Lambda function optimization for API calls
 
 ## SEO & Analytics
 
@@ -172,6 +209,27 @@ After deployment:
 - **E-commerce Tracking**: Product interactions and external link clicks
 - **Performance Optimized**: Uses Next.js Script component
 
+## Development Scripts
+
+```bash
+# Development
+npm run dev                    # Start development server
+npm run build                  # Build for production
+npm run start                  # Start production server
+npm run lint                   # Run ESLint
+npm run lint:fix              # Fix ESLint issues
+npm run type-check            # TypeScript type checking
+
+# AWS Infrastructure
+npm run deploy:infrastructure # Deploy AWS CDK infrastructure
+npm run deploy:lambda         # Deploy Lambda functions
+npm run test:aws-graphql      # Test AWS GraphQL API
+
+# Testing
+npm run test:build            # Test build process
+npm run check:workspaces      # Check workspace dependencies
+```
+
 ## Browser Support
 
 - Modern browsers (Chrome, Firefox, Safari, Edge)
@@ -183,8 +241,22 @@ After deployment:
 1. Fork the repository
 2. Create a feature branch
 3. Make your changes
-4. Test locally
+4. Test locally with `npm run lint` and `npm run type-check`
 5. Submit a pull request
+
+## Next Steps
+
+### Immediate Tasks
+1. **AWS GraphQL API Setup**: Configure the serverless GraphQL API for production use
+2. **Data Migration**: Import WordPress content to Aurora database
+3. **Performance Testing**: Benchmark API performance improvements
+4. **Monitoring**: Set up CloudWatch monitoring for AWS services
+
+### Future Enhancements
+1. **Media Management**: Implement S3-based media upload system
+2. **Caching Strategy**: Implement Redis caching for frequently accessed data
+3. **CDN Optimization**: Configure CloudFront for optimal content delivery
+4. **Security**: Implement WAF and additional security measures
 
 ## License
 

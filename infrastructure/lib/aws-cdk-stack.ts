@@ -237,7 +237,7 @@ export class WordPressBlogStack extends cdk.Stack {
       ],
     });
 
-    // S3 Bucket for static content
+    // S3 Bucket for static content and media
     const staticContentBucket = new s3.Bucket(this, 'StaticContentBucket', {
       bucketName: `wordpress-static-${this.account}-${this.region}`,
       versioned: false, // Cost optimization: disable versioning
@@ -248,9 +248,43 @@ export class WordPressBlogStack extends cdk.Stack {
           id: 'DeleteOldVersions',
           noncurrentVersionExpiration: cdk.Duration.days(30),
         },
+        {
+          id: 'MediaLifecycle',
+          prefix: 'media/',
+          transitions: [
+            {
+              storageClass: s3.StorageClass.INFREQUENT_ACCESS,
+              transitionAfter: cdk.Duration.days(90),
+            },
+            {
+              storageClass: s3.StorageClass.GLACIER,
+              transitionAfter: cdk.Duration.days(365),
+            },
+          ],
+        },
       ],
       removalPolicy: cdk.RemovalPolicy.DESTROY, // For development
     });
+
+    // Grant Lambda functions access to S3 for media operations
+    const s3MediaPolicy = new cdk.aws_iam.PolicyStatement({
+      effect: cdk.aws_iam.Effect.ALLOW,
+      actions: [
+        's3:GetObject',
+        's3:PutObject',
+        's3:DeleteObject',
+        's3:ListBucket',
+        's3:GetObjectVersion',
+        's3:PutObjectAcl'
+      ],
+      resources: [
+        staticContentBucket.bucketArn,
+        `${staticContentBucket.bucketArn}/*`
+      ]
+    });
+
+    graphqlLambda.addToRolePolicy(s3MediaPolicy);
+    dataImportLambda.addToRolePolicy(s3MediaPolicy);
 
     // CloudFront Distribution
     const cloudfrontDistribution = new cloudfront.Distribution(this, 'WordPressDistribution', {
@@ -268,6 +302,33 @@ export class WordPressBlogStack extends cdk.Stack {
           viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
           cachePolicy: cloudfront.CachePolicy.CACHING_DISABLED,
           originRequestPolicy: cloudfront.OriginRequestPolicy.ALL_VIEWER,
+        },
+        '/media/*': {
+          origin: new origins.S3Origin(staticContentBucket),
+          viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
+          cachePolicy: cloudfront.CachePolicy.CACHING_OPTIMIZED_FOR_UNCOMPRESSED_OBJECTS,
+          originRequestPolicy: cloudfront.OriginRequestPolicy.CORS_S3_ORIGIN,
+          functionAssociations: [
+            {
+              function: new cloudfront.Function(this, 'MediaURLRewrite', {
+                code: cloudfront.FunctionCode.fromInline(`
+                  function handler(event) {
+                    var request = event.request;
+                    var uri = request.uri;
+                    
+                    // Rewrite media URLs to include proper headers
+                    if (uri.startsWith('/media/')) {
+                      request.headers['cache-control'] = { value: 'public, max-age=31536000' };
+                      request.headers['access-control-allow-origin'] = { value: '*' };
+                    }
+                    
+                    return request;
+                  }
+                `),
+              }),
+              eventType: cloudfront.FunctionEventType.VIEWER_REQUEST,
+            },
+          ],
         },
       },
       priceClass: cloudfront.PriceClass.PRICE_CLASS_100, // Cost optimization: use only North America and Europe
@@ -303,6 +364,16 @@ export class WordPressBlogStack extends cdk.Stack {
     new cdk.CfnOutput(this, 'DataImportEndpoint', {
       value: `${api.url}import-data`,
       description: 'Data Import API Endpoint',
+    });
+
+    new cdk.CfnOutput(this, 'CloudFrontDistributionId', {
+      value: cloudfrontDistribution.distributionId,
+      description: 'CloudFront Distribution ID for media invalidation',
+    });
+
+    new cdk.CfnOutput(this, 'CloudFrontDomainName', {
+      value: cloudfrontDistribution.distributionDomainName,
+      description: 'CloudFront Distribution Domain Name',
     });
   }
 } 

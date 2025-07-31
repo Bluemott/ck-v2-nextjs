@@ -11,6 +11,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
+    "lint:fix": "next lint --fix",
+    "type-check": "tsc --noEmit",
     "build:workspaces": "npm run build --workspace=infrastructure && npm run build --workspace=lambda/graphql || echo 'Workspace builds completed with warnings'",
     "test:build": "node scripts/test-build.js",
     "check:workspaces": "node scripts/check-workspaces.js",
@@ -20,11 +22,14 @@
     "deploy:infrastructure": "cd infrastructure && cdk deploy",
     "deploy:lambda": "cd lambda/graphql && npm run package",
     "test:aws-graphql": "curl -X POST $NEXT_PUBLIC_AWS_GRAPHQL_URL -H 'Content-Type: application/json' -d '{\"query\": \"{ __typename }\"}'",
-    "setup:infrastructure": "node scripts/setup-infrastructure.js",
-    "setup:check": "node scripts/setup-infrastructure.js --check-only"
+    "migrate:media": "node scripts/run-media-migration.js",
+    "migrate:media:dry-run": "node scripts/run-media-migration.js --dry-run",
+    "migrate:media:force": "node scripts/run-media-migration.js --force"
   },
   "dependencies": {
+    "@aws-sdk/client-cloudfront": "^3.858.0",
     "@aws-sdk/client-lambda": "^3.857.0",
+    "@aws-sdk/client-s3": "^3.858.0",
     "@aws-sdk/client-secrets-manager": "^3.857.0",
     "@tailwindcss/typography": "^0.5.16",
     "graphql": "^16.8.1",
@@ -33,13 +38,15 @@
     "pg": "^8.16.3",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
-    "rss-parser": "^3.13.0"
+    "rss-parser": "^3.13.0",
+    "uuid": "^9.0.1"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
     "@types/node": "^20",
     "@types/react": "19.1.9",
     "@types/react-dom": "^19",
+    "@types/uuid": "^9.0.8",
     "autoprefixer": "^10.4.20",
     "eslint": "^9",
     "eslint-config-next": "15.3.4",

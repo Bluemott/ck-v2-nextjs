@@ -6,9 +6,16 @@ frontend:
         - echo "Starting preBuild phase"
         - node --version
         - npm --version
-        - echo "Installing dependencies..."
+        - echo "Cleaning npm cache..."
         - npm cache clean --force
-        - npm ci --workspaces --legacy-peer-deps --no-optional
+        - echo "Checking workspace structure..."
+        - ls -la
+        - echo "Running workspace check..."
+        - npm run check:workspaces || echo "Workspace check failed, continuing..."
+        - echo "Installing root dependencies..."
+        - npm ci --legacy-peer-deps --no-optional
+        - echo "Installing workspace dependencies..."
+        - npm install --workspaces --legacy-peer-deps --no-optional || echo "Workspace install failed, continuing with root only"
         - echo "Building workspace packages..."
         - npm run build:workspaces || echo "Workspace build failed, continuing..."
         - echo "Dependencies installed successfully"

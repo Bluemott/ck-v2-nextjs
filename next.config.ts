@@ -83,6 +83,9 @@ const nextConfig: NextConfig = {
     ignoreBuildErrors: true, // Temporarily ignore TypeScript errors during build
   },
   
+  // Disable telemetry for cleaner builds
+  telemetry: false,
+  
   // Redirects for old WordPress media URLs and dynamic slug changes
   async redirects() {
     const staticRedirects = [

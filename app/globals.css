@@ -7,7 +7,9 @@
   Use the .serif class or font-family: var(--font-playfair), serif for Playfair Display.
 */
 
-@import "tailwindcss";
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
 :root {
   --background: #ffffff;

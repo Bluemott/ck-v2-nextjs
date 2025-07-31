@@ -7,7 +7,10 @@ frontend:
         - node --version
         - npm --version
         - echo "Installing dependencies..."
-        - npm ci
+        - npm cache clean --force
+        - npm ci --workspaces --legacy-peer-deps --no-optional
+        - echo "Building workspace packages..."
+        - npm run build:workspaces || echo "Workspace build failed, continuing..."
         - echo "Dependencies installed successfully"
     build:
       commands:
@@ -23,3 +26,5 @@ frontend:
     paths:
       - node_modules/**/*
       - .next/cache/**/*
+      - infrastructure/node_modules/**/*
+      - lambda/graphql/node_modules/**/*

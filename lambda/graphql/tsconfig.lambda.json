@@ -12,10 +12,12 @@
     "moduleResolution": "node",
     "declaration": false,
     "removeComments": true,
-    "resolveJsonModule": true
+    "resolveJsonModule": true,
+    "allowJs": true
   },
   "include": [
-    "index.ts"
+    "*.ts",
+    "*.js"
   ],
   "exclude": [
     "node_modules",

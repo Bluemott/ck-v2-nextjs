@@ -2,12 +2,12 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { fetchPosts, fetchCategories, fetchTags, type WPGraphQLPost, type WPGraphQLCategory, type WPGraphQLTag, decodeHtmlEntities } from '../lib/api';
+import { fetchPosts, fetchCategories, fetchTags, type BlogPost, decodeHtmlEntities } from '../lib/api';
 import WordPressImage from './WordPressImage';
 import RelatedPosts from './RelatedPosts';
 
 interface BlogSidebarProps {
-  currentPost?: WPGraphQLPost;
+  currentPost?: BlogPost;
   currentPostCategories?: number[];
   currentPostTags?: number[];
   showRecentPosts?: boolean;
@@ -24,10 +24,10 @@ const BlogSidebar = ({
   showTags = true
 }: BlogSidebarProps) => {
   const [searchTerm, setSearchTerm] = useState('');
-  const [searchResults, setSearchResults] = useState<WPGraphQLPost[]>([]);
-  const [recentPosts, setRecentPosts] = useState<WPGraphQLPost[]>([]);
-  const [categories, setCategories] = useState<WPGraphQLCategory[]>([]);
-  const [tags, setTags] = useState<WPGraphQLTag[]>([]);
+  const [searchResults, setSearchResults] = useState<BlogPost[]>([]);
+  const [recentPosts, setRecentPosts] = useState<BlogPost[]>([]);
+  const [categories, setCategories] = useState<any[]>([]);
+  const [tags, setTags] = useState<any[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);

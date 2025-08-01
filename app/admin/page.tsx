@@ -1,6 +1,5 @@
 import { Metadata } from 'next';
 import { generateSEOMetadata } from '../lib/seo';
-import { testAPIEndpoint } from '../lib/api';
 
 export const metadata: Metadata = generateSEOMetadata({
   title: "Admin Dashboard",
@@ -9,7 +8,6 @@ export const metadata: Metadata = generateSEOMetadata({
 });
 
 export default async function AdminPage() {
-  const apiStatus = await testAPIEndpoint();
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -30,7 +28,7 @@ export default async function AdminPage() {
             </div>
             <div className="flex items-center">
               <div className="w-3 h-3 bg-green-500 rounded-full mr-3"></div>
-              <span>AWS GraphQL API Active</span>
+              <span>WordPress REST API Active</span>
             </div>
             <div className="flex items-center">
               <div className="w-3 h-3 bg-green-500 rounded-full mr-3"></div>
@@ -44,13 +42,13 @@ export default async function AdminPage() {
           <h2 className="text-xl font-semibold mb-4">🔧 API Configuration</h2>
           <div className="space-y-3">
             <div>
-              <strong>Active API:</strong> {apiStatus.api}
+              <strong>Active API:</strong> WordPress REST API
             </div>
             <div>
               <strong>Environment:</strong> {process.env.NODE_ENV}
             </div>
             <div>
-              <strong>AWS GraphQL:</strong> {process.env.NEXT_PUBLIC_USE_AWS_GRAPHQL === 'true' ? 'Enabled' : 'Disabled'}
+              <strong>REST API:</strong> {process.env.NEXT_PUBLIC_USE_REST_API === 'true' ? 'Enabled' : 'Disabled'}
             </div>
           </div>
         </div>

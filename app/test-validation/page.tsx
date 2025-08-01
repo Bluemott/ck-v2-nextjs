@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { env, isDevelopment, isProduction, isAWSGraphQLEnabled } from '../lib/env';
+import { env, isDevelopment, isProduction, isRestAPIEnabled } from '../lib/env';
 import { 
   validateGraphQLQuery, 
   validateSearchParams, 
@@ -39,7 +39,7 @@ export default function TestValidationPage() {
           siteUrl: env.NEXT_PUBLIC_SITE_URL,
           isDevelopment,
           isProduction,
-          isAWSGraphQLEnabled,
+          isRestAPIEnabled,
           hasValidUrls: env.NEXT_PUBLIC_SITE_URL.startsWith('http'),
         }
       };
@@ -220,7 +220,7 @@ export default function TestValidationPage() {
             <strong>Site URL:</strong> {env.NEXT_PUBLIC_SITE_URL}
           </div>
           <div>
-            <strong>AWS GraphQL Enabled:</strong> {isAWSGraphQLEnabled ? 'Yes' : 'No'}
+            <strong>REST API Enabled:</strong> {isRestAPIEnabled ? 'Yes' : 'No'}
           </div>
           <div>
             <strong>Development Mode:</strong> {isDevelopment ? 'Yes' : 'No'}

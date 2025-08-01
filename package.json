@@ -13,18 +13,13 @@
     "lint": "next lint",
     "lint:fix": "next lint --fix",
     "type-check": "tsc --noEmit --skipLibCheck",
-    "build:workspaces": "npm run build --workspace=infrastructure && npm run build --workspace=lambda/graphql || echo 'Workspace builds completed with warnings'",
+    "build:workspaces": "npm run build --workspace=infrastructure || echo 'Workspace builds completed with warnings'",
     "build:simple": "node scripts/simple-build.js && npm run build",
     "test:build": "node scripts/test-build.js",
     "check:workspaces": "node scripts/check-workspaces.js",
     "install:deps": "node scripts/install-dependencies.js",
     "cleanup:windows": "node scripts/cleanup-windows.js",
-    "check:lambda": "node scripts/check-lambda-setup.js",
     "deploy:infrastructure": "cd infrastructure && cdk deploy",
-    "deploy:lambda": "cd lambda/graphql && npm run package",
-    "deploy:lambda-graphql": "node scripts/deploy-lambda-graphql.js",
-    "test:aws-graphql": "curl -X POST $NEXT_PUBLIC_AWS_GRAPHQL_URL -H 'Content-Type: application/json' -d '{\"query\": \"{ __typename }\"}'",
-    "test:graphql-schema": "node scripts/test-graphql-schema.js",
     "migrate:media": "node scripts/run-media-migration.js",
     "migrate:media:dry-run": "node scripts/run-media-migration.js --dry-run",
     "migrate:media:force": "node scripts/run-media-migration.js --force"
@@ -35,7 +30,6 @@
     "@aws-sdk/client-s3": "^3.858.0",
     "@aws-sdk/client-secrets-manager": "^3.857.0",
     "@tailwindcss/typography": "^0.5.16",
-    "graphql": "^16.8.1",
     "next": "15.3.4",
     "node-fetch": "^3.3.2",
     "pg": "^8.16.3",
@@ -59,7 +53,6 @@
     "typescript": "^5"
   },
   "workspaces": [
-    "infrastructure",
-    "lambda/graphql"
+    "infrastructure"
   ]
 }

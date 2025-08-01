@@ -1,5 +1,4 @@
 import { Metadata } from 'next';
-import { WPGraphQLPost } from './api';
 
 interface SEOProps {
   title?: string;
@@ -113,11 +112,8 @@ export async function generateSEOMetadata({
   const seoDescription = yoastDescription || description || defaultSEO.description;
   const seoKeywords = [...defaultSEO.keywords, ...keywords, ...tags, ...yoastKeywords, ...yoastFocusKw];
   
-  // Import the convertToS3Url function
-  const { convertToS3Url } = await import('./wpgraphql');
-  
-  // Convert any WordPress URLs to S3 URLs
-  const convertedOgImage = ogImage ? convertToS3Url(ogImage) : undefined;
+  // Use the original image URL (no S3 conversion needed for REST API)
+  const convertedOgImage = ogImage;
   const seoImage = yoastOgImage || convertedOgImage || defaultSEO.ogImage;
   const seoAuthor = author || defaultSEO.author;
   const seoCanonical = yoastCanonical || canonical || '/';
@@ -217,36 +213,7 @@ export async function generateSEOMetadata({
   return metadata;
 }
 
-// Helper function to extract Yoast SEO data from WordPress posts
-export async function extractYoastSEOData(post: WPGraphQLPost): Promise<SEOProps['yoastSEO']> {
-  if (!post?.seo) return undefined;
-  
-  // Import the convertToS3Url function
-  const { convertToS3Url } = await import('./wpgraphql');
-  
-  return {
-    title: post.seo.title,
-    metaDesc: post.seo.metaDesc,
-    canonical: post.seo.canonical,
-    opengraphTitle: post.seo.opengraphTitle,
-    opengraphDescription: post.seo.opengraphDescription,
-    opengraphImage: post.seo.opengraphImage?.sourceUrl ? convertToS3Url(post.seo.opengraphImage.sourceUrl) : undefined,
-    twitterTitle: post.seo.twitterTitle,
-    twitterDescription: post.seo.twitterDescription,
-    twitterImage: post.seo.twitterImage?.sourceUrl ? convertToS3Url(post.seo.twitterImage.sourceUrl) : undefined,
-    focuskw: post.seo.focuskw,
-    metaKeywords: post.seo.metaKeywords,
-    metaRobotsNoindex: post.seo.metaRobotsNoindex,
-    metaRobotsNofollow: post.seo.metaRobotsNofollow,
-    opengraphType: post.seo.opengraphType,
-    opengraphUrl: post.seo.opengraphUrl,
-    opengraphSiteName: post.seo.opengraphSiteName,
-    opengraphAuthor: post.seo.opengraphAuthor,
-    opengraphPublishedTime: post.seo.opengraphPublishedTime,
-    opengraphModifiedTime: post.seo.opengraphModifiedTime,
-    schema: post.seo.schema?.raw,
-  };
-}
+
 
 export const defaultMetadata: Metadata = {
   title: 'Cowboy Kimono - Creative Crafts & DIY Projects',

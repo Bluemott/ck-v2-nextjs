@@ -22,7 +22,6 @@ const envSchema = z.object({
   AWS_ACCESS_KEY_ID: z.string().optional(),
   AWS_SECRET_ACCESS_KEY: z.string().optional(),
   S3_BUCKET_NAME: z.string().optional(),
-  NEXT_PUBLIC_AWS_GRAPHQL_URL: z.string().optional(),
 
   // Site Configuration
   NEXT_PUBLIC_SITE_URL: z.string().default('https://cowboykimono.com'),
@@ -30,20 +29,19 @@ const envSchema = z.object({
   NEXT_PUBLIC_GOOGLE_VERIFICATION: z.string().optional(),
   NEXT_PUBLIC_GA_MEASUREMENT_ID: z.string().optional(),
 
-  // WordPress Configuration
-  NEXT_PUBLIC_WORDPRESS_GRAPHQL_URL: z.string().optional(),
+  // WordPress Configuration - REST API only
   NEXT_PUBLIC_WORDPRESS_ADMIN_URL: z.string().optional(),
   NEXT_PUBLIC_WPGRAPHQL_URL: z.string().optional(),
 
-  // Feature Flags - Fixed to properly handle boolean values
-  NEXT_PUBLIC_USE_AWS_GRAPHQL: z.string()
+  // Feature Flags - REST API is now the default and only option
+  NEXT_PUBLIC_USE_REST_API: z.string()
     .transform((val) => {
       if (val === 'true' || val === '1' || val === 'yes') return true;
       if (val === 'false' || val === '0' || val === 'no' || val === '') return false;
-      return false; // Default to false for any other value
+      return true; // Default to true for REST API
     })
     .pipe(z.boolean())
-    .default('false'),
+    .default('true'),
 
   // CloudFront Configuration
   NEXT_PUBLIC_CLOUDFRONT_URL: z.string().optional(),
@@ -70,8 +68,8 @@ try {
   env = {
     AWS_REGION: 'us-east-1',
     NEXT_PUBLIC_SITE_URL: process.env.NEXT_PUBLIC_SITE_URL || 'https://cowboykimono.com',
-    NEXT_PUBLIC_USE_AWS_GRAPHQL: false,
-    NEXT_PUBLIC_WPGRAPHQL_URL: process.env.NEXT_PUBLIC_WPGRAPHQL_URL || 'https://api.cowboykimono.com/graphql',
+    NEXT_PUBLIC_USE_REST_API: true,
+    NEXT_PUBLIC_WPGRAPHQL_URL: process.env.NEXT_PUBLIC_WPGRAPHQL_URL || 'https://api.cowboykimono.com',
     NODE_ENV: (process.env.NODE_ENV as any) || 'development',
     DB_HOST: process.env.DB_HOST,
     DB_USER: process.env.DB_USER,
@@ -80,11 +78,9 @@ try {
     AWS_ACCESS_KEY_ID: process.env.AWS_ACCESS_KEY_ID,
     AWS_SECRET_ACCESS_KEY: process.env.AWS_SECRET_ACCESS_KEY,
     S3_BUCKET_NAME: process.env.S3_BUCKET_NAME,
-    NEXT_PUBLIC_AWS_GRAPHQL_URL: process.env.NEXT_PUBLIC_AWS_GRAPHQL_URL,
     NEXT_PUBLIC_GTM_ID: process.env.NEXT_PUBLIC_GTM_ID,
     NEXT_PUBLIC_GOOGLE_VERIFICATION: process.env.NEXT_PUBLIC_GOOGLE_VERIFICATION,
     NEXT_PUBLIC_GA_MEASUREMENT_ID: process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID,
-    NEXT_PUBLIC_WORDPRESS_GRAPHQL_URL: process.env.NEXT_PUBLIC_WORDPRESS_GRAPHQL_URL,
     NEXT_PUBLIC_WORDPRESS_ADMIN_URL: process.env.NEXT_PUBLIC_WORDPRESS_ADMIN_URL,
     NEXT_PUBLIC_CLOUDFRONT_URL: process.env.NEXT_PUBLIC_CLOUDFRONT_URL,
     CUSTOM_KEY: process.env.CUSTOM_KEY,
@@ -112,5 +108,5 @@ export const isDevelopment = env.NODE_ENV === 'development';
 // Helper function to check if we're in production
 export const isProduction = env.NODE_ENV === 'production';
 
-// Helper function to check if AWS GraphQL is enabled - Fixed to work during build time
-export const isAWSGraphQLEnabled = env.NEXT_PUBLIC_USE_AWS_GRAPHQL; 
+// Helper function to check if REST API is enabled (always true now)
+export const isRestAPIEnabled = true; 

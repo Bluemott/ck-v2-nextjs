@@ -3,12 +3,12 @@
 A modern Next.js website for Cowboy Kimonos featuring:
 
 - **Responsive Design**: Optimized for all devices
-- **Blog Integration**: WordPress WPGraphQL integration with pagination
+- **Blog Integration**: WordPress REST API integration with pagination
 - **Shop Integration**: Etsy RSS feed integration for product display
 - **Interactive Components**: Floating social media icons and navigation
 - **Optimized Images**: Next.js Image optimization for all assets
 - **Advanced SEO**: Complete SEO optimization with structured data
-- **AWS Integration**: Serverless GraphQL API with Aurora database
+- **AWS Integration**: Serverless REST API with enhanced recommendations
 
 ## Features
 
@@ -19,13 +19,13 @@ A modern Next.js website for Cowboy Kimonos featuring:
 - Responsive navigation and footer
 
 ### 📝 Blog
-- WordPress WPGraphQL integration
+- WordPress REST API integration
 - Pinterest-style masonry layout
 - Advanced search functionality
 - Pagination support
-- Related posts algorithm
+- Smart recommendations algorithm
 - Individual post pages with full content
-- **NEW**: AWS GraphQL API integration for improved performance
+- **NEW**: Enhanced recommendations with Lambda functions
 
 ### 🛍️ Shop
 - Etsy RSS feed integration
@@ -45,10 +45,10 @@ A modern Next.js website for Cowboy Kimonos featuring:
 - **Styling**: Tailwind CSS 4.0
 - **Language**: TypeScript
 - **Image Optimization**: Next.js Image component
-- **API Integration**: WordPress WPGraphQL, Etsy RSS feed
+- **API Integration**: WordPress REST API, Etsy RSS feed
 - **Deployment**: AWS Amplify
 - **SEO**: Yoast SEO integration, structured data, IndexNow
-- **AWS Services**: Lambda, Aurora Serverless, API Gateway, CloudFront
+- **AWS Services**: Lambda, API Gateway, CloudFront
 
 ## Local Development
 
@@ -69,199 +69,92 @@ A modern Next.js website for Cowboy Kimonos featuring:
 Create a `.env.local` file with the following variables:
 
 ```env
-# WordPress API
-NEXT_PUBLIC_WPGRAPHQL_URL=https://api.cowboykimono.com/graphql
-
-# AWS GraphQL API (✅ WORKING - enhanced performance)
-NEXT_PUBLIC_AWS_GRAPHQL_URL=https://0m6piyoypi.execute-api.us-east-1.amazonaws.com/prod/graphql
-NEXT_PUBLIC_USE_AWS_GRAPHQL=true
+# WordPress REST API
+NEXT_PUBLIC_WPGRAPHQL_URL=https://api.cowboykimono.com
 
 # Site Configuration
 NEXT_PUBLIC_SITE_URL=https://cowboykimono.com
-NEXT_PUBLIC_GTM_ID=your-gtm-id
-NEXT_PUBLIC_GOOGLE_VERIFICATION=your-verification-code
+NEXT_PUBLIC_GTM_ID=GTM-PNZTN4S4
+NEXT_PUBLIC_GOOGLE_VERIFICATION=your-google-verification-code
 
-# AWS S3 (for media uploads)
-AWS_S3_BUCKET=your-s3-bucket
-AWS_S3_REGION=us-east-1
+# AWS Configuration (optional)
+AWS_REGION=us-east-1
 AWS_ACCESS_KEY_ID=your-access-key
 AWS_SECRET_ACCESS_KEY=your-secret-key
+S3_BUCKET_NAME=your-s3-bucket
+
+# WordPress Admin
+NEXT_PUBLIC_WORDPRESS_ADMIN_URL=https://admin.cowboykimono.com
+
+# CloudFront (optional)
+NEXT_PUBLIC_CLOUDFRONT_URL=https://your-cloudfront-distribution.cloudfront.net
 ```
 
-## Deployment to AWS Amplify
-
-This project is configured for deployment to AWS Amplify via GitHub integration.
-
-### Prerequisites
-- GitHub repository
-- AWS Account with Amplify access
-
-### Setup Steps
-
-1. **Push to GitHub**: Ensure your code is pushed to a GitHub repository
-
-2. **Connect to Amplify**:
-   - Go to AWS Amplify Console
-   - Choose "Host your web app"
-   - Select GitHub as your repository service
-   - Authorize AWS Amplify to access your GitHub account
-   - Select your repository and branch
-
-3. **Build Settings**: 
-   - Amplify will automatically detect the `amplify.yml` file
-   - The build process is configured to:
-     - Install dependencies with `npm ci`
-     - Build the project with `npm run build`
-     - Cache `node_modules` and `.next/cache` for faster builds
-
-4. **Environment Variables**:
-   - Add all required environment variables in the Amplify console
-   - Go to App Settings > Environment variables
-
-5. **Deploy**: 
-   - Click "Save and deploy"
-   - Amplify will build and deploy your app
-   - Subsequent pushes to your main branch will trigger automatic deployments
-
-### Build Configuration
-
-The `amplify.yml` file is configured for Next.js SSR deployment:
-
-```yaml
-version: 1
-frontend:
-  phases:
-    preBuild:
-      commands:
-        - echo "Starting preBuild phase"
-        - node --version
-        - npm --version
-        - echo "Installing dependencies..."
-        - npm ci
-        - echo "Dependencies installed successfully"
-    build:
-      commands:
-        - echo "Starting build phase"
-        - echo "Running Next.js build..."
-        - npm run build
-        - echo "Build completed successfully"
-  artifacts:
-    baseDirectory: .next
-    files:
-      - '**/*'
-  cache:
-    paths:
-      - node_modules/**/*
-      - .next/cache/**/*
-```
-
-### Domain Configuration
-
-After deployment:
-1. Your app will be available at a generated Amplify URL
-2. You can add a custom domain in the Amplify console
-3. Amplify provides free SSL certificates for custom domains
-
-## API Integrations
-
-### WordPress Blog
-- **GraphQL Endpoint**: `https://api.cowboykimono.com/graphql`
-- **Features**: WPGraphQL integration, pagination, featured images, full content
-- **SEO**: Yoast SEO integration with structured data
-- **AWS Integration**: Optional serverless GraphQL API for enhanced performance
-
-### Etsy Shop
-- **RSS Feed**: `https://www.etsy.com/shop/CowboyKimono/rss`
-- **CORS Proxy**: `https://api.allorigins.win/raw?url=`
-- **Next.js config**: Allows images from Etsy CDNs
-
-### AWS GraphQL API (Optional)
-- **Endpoint**: Configurable via environment variables
-- **Features**: Serverless GraphQL with Aurora database
-- **Performance**: Reduced latency and improved scalability
-- **Activation**: Set `NEXT_PUBLIC_USE_AWS_GRAPHQL=true` in environment
-
-## Performance Optimizations
-
-- Next.js Image optimization for all images
-- Responsive image loading
-- CSS-in-JS with Tailwind CSS
-- Build-time optimization
-- Caching configuration for faster builds
-- Pinterest-style masonry layout for blog
-- AWS CloudFront integration for global CDN
-- Lambda function optimization for API calls
-
-## SEO & Analytics
-
-### Complete SEO Implementation
-- **Meta Tags**: Dynamic title, description, keywords for each page
-- **Open Graph**: Social media sharing optimization
-- **Twitter Cards**: Optimized Twitter sharing
-- **Structured Data**: JSON-LD schema markup
-- **Sitemap**: Auto-generated XML sitemap
-- **Robots.txt**: Search engine crawling instructions
-- **IndexNow**: Instant search engine indexing
-
-### Google Analytics 4 Integration
-- **Page View Tracking**: Automatic page view tracking
-- **Custom Events**: Button clicks, navigation, product views
-- **E-commerce Tracking**: Product interactions and external link clicks
-- **Performance Optimized**: Uses Next.js Script component
-
-## Development Scripts
+## Available Scripts
 
 ```bash
-# Development
-npm run dev                    # Start development server
-npm run build                  # Build for production
-npm run start                  # Start production server
-npm run lint                   # Run ESLint
-npm run lint:fix              # Fix ESLint issues
-npm run type-check            # TypeScript type checking
-
-# AWS Infrastructure
-npm run deploy:infrastructure # Deploy AWS CDK infrastructure
-npm run deploy:lambda         # Deploy Lambda functions
-npm run test:aws-graphql      # Test AWS GraphQL API
-
-# Testing
-npm run test:build            # Test build process
-npm run check:workspaces      # Check workspace dependencies
+npm run dev              # Start development server
+npm run build            # Build for production
+npm run start            # Start production server
+npm run lint             # Run ESLint
+npm run lint:fix         # Fix ESLint errors
+npm run type-check       # TypeScript type checking
+npm run build:simple     # Simple build process
+npm run test:build       # Test build process
+npm run deploy:infrastructure  # Deploy AWS infrastructure
 ```
 
-## Browser Support
+## Deployment
 
-- Modern browsers (Chrome, Firefox, Safari, Edge)
-- Mobile responsive design
-- Progressive enhancement
+### AWS Amplify
+
+The project is configured for AWS Amplify deployment with:
+
+- **Build Configuration**: Optimized for REST API usage
+- **Environment Variables**: Properly configured for production
+- **Caching**: Static asset optimization
+- **Performance**: Next.js Image optimization
+
+### Manual Deployment
+
+1. Build the project:
+   ```bash
+   npm run build
+   ```
+
+2. Deploy to your hosting platform
+
+## Architecture
+
+### Frontend
+- **Next.js 15.3.4**: App Router with server components
+- **React 19**: Latest React features
+- **TypeScript**: Type safety throughout
+- **Tailwind CSS**: Utility-first styling
+
+### Backend Integration
+- **WordPress REST API**: Primary content source
+- **Etsy RSS Feed**: Shop product integration
+- **AWS Lambda**: Serverless functions for recommendations
+
+### Performance Optimizations
+- **Static Generation**: Pre-rendered pages for SEO
+- **Image Optimization**: Next.js Image component
+- **Code Splitting**: Automatic bundle optimization
+- **Caching**: Strategic caching for performance
 
 ## Contributing
 
 1. Fork the repository
 2. Create a feature branch
 3. Make your changes
-4. Test locally with `npm run lint` and `npm run type-check`
+4. Test thoroughly
 5. Submit a pull request
-
-## Next Steps
-
-### Immediate Tasks
-1. **AWS GraphQL API Setup**: Configure the serverless GraphQL API for production use
-2. **Data Migration**: Import WordPress content to Aurora database
-3. **Performance Testing**: Benchmark API performance improvements
-4. **Monitoring**: Set up CloudWatch monitoring for AWS services
-
-### Future Enhancements
-1. **Media Management**: Implement S3-based media upload system
-2. **Caching Strategy**: Implement Redis caching for frequently accessed data
-3. **CDN Optimization**: Configure CloudFront for optimal content delivery
-4. **Security**: Implement WAF and additional security measures
 
 ## License
 
-Private repository - All rights reserved.
+This project is private and proprietary to Cowboy Kimono.
 
----
+## Support
 
-For detailed project documentation, see `ck-v2-nextjs.md`.
+For support, contact the development team or create an issue in the repository.

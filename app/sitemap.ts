@@ -4,14 +4,14 @@ import { fetchPosts, fetchCategories, fetchTags } from './lib/api'
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.cowboykimono.com';
 
-  // Fetch blog post slugs from WPGraphQL
+  // Fetch blog post slugs from WordPress REST API
   let blogUrls: MetadataRoute.Sitemap = [];
   let categoryUrls: MetadataRoute.Sitemap = [];
   let tagUrls: MetadataRoute.Sitemap = [];
   
   try {
     // Fetch posts - only include published posts
-    const posts = await fetchPosts({ first: 100 });
+    const posts = await fetchPosts({ per_page: 100 });
     if (posts && Array.isArray(posts)) {
       blogUrls = posts
         .filter(post => post && post.status === 'publish') // Only include published posts

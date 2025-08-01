@@ -1,6 +1,5 @@
 import { Metadata } from 'next';
 import { generateSEOMetadata } from '../lib/seo';
-import { testAPIEndpoint } from '../lib/api';
 
 export const metadata: Metadata = generateSEOMetadata({
   title: "API Test Page",
@@ -9,7 +8,6 @@ export const metadata: Metadata = generateSEOMetadata({
 });
 
 export default async function TestAPIPage() {
-  const apiStatus = await testAPIEndpoint();
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -20,13 +18,13 @@ export default async function TestAPIPage() {
         
         <div className="space-y-3">
           <div>
-            <strong>Active API:</strong> {apiStatus.api}
+            <strong>Active API:</strong> WordPress REST API
           </div>
           <div>
-            <strong>API URL:</strong> {apiStatus.url}
+            <strong>API URL:</strong> {process.env.NEXT_PUBLIC_WPGRAPHQL_URL?.replace('/graphql', '') || 'https://api.cowboykimono.com'}
           </div>
           <div>
-            <strong>Feature Flag:</strong> {process.env.NEXT_PUBLIC_USE_AWS_GRAPHQL === 'true' ? 'Enabled (AWS)' : 'Disabled (WordPress)'}
+            <strong>Feature Flag:</strong> {process.env.NEXT_PUBLIC_USE_REST_API === 'true' ? 'Enabled (REST)' : 'Disabled'}
           </div>
           <div>
             <strong>Environment:</strong> {process.env.NODE_ENV}
@@ -37,8 +35,7 @@ export default async function TestAPIPage() {
       <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
         <h3 className="text-lg font-semibold text-blue-800 mb-2">✅ Site Status</h3>
         <p className="text-blue-700">
-          Your site is successfully deployed and the database migration appears to be working. 
-          The AWS GraphQL API is configured and should be serving your WordPress data.
+          Your site is successfully deployed and the WordPress REST API is configured and serving your WordPress data.
         </p>
       </div>
 

@@ -2,18 +2,18 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { fetchRelatedPosts, type WPGraphQLPost, decodeHtmlEntities } from '../lib/api';
+import { fetchRelatedPosts, type BlogPost, decodeHtmlEntities } from '../lib/api';
 import WordPressImage from './WordPressImage';
 
 interface RelatedPostsProps {
-  currentPost: WPGraphQLPost;
+  currentPost: BlogPost;
   categories: number[];
   tags: number[];
   limit?: number;
 }
 
 const RelatedPosts = ({ currentPost, categories, tags, limit = 3 }: RelatedPostsProps) => {
-  const [relatedPosts, setRelatedPosts] = useState<WPGraphQLPost[]>([]);
+  const [relatedPosts, setRelatedPosts] = useState<BlogPost[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -24,9 +24,7 @@ const RelatedPosts = ({ currentPost, categories, tags, limit = 3 }: RelatedPosts
         setError(null);
         
         const posts = await fetchRelatedPosts(
-          currentPost, 
-          categories.map(id => id.toString()), 
-          tags.map(id => id.toString()), 
+          currentPost.id, 
           limit
         );
         setRelatedPosts(posts);

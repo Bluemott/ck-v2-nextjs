@@ -2,10 +2,10 @@
 
 import { useState } from 'react';
 import Image from 'next/image';
-import { getFeaturedImageUrl, getFeaturedImageAlt, type WPGraphQLPost } from '../lib/api';
+import { getFeaturedImageUrl, getFeaturedImageAlt, type BlogPost } from '../lib/api';
 
 interface WordPressImageProps {
-  post: WPGraphQLPost;
+  post: BlogPost;
   size?: 'thumbnail' | 'medium' | 'large' | 'full';
   className?: string;
   fill?: boolean;
@@ -32,7 +32,7 @@ const WordPressImage = ({
   const [imageError, setImageError] = useState(false);
   const [imageLoading, setImageLoading] = useState(true);
 
-  const imageUrl = getFeaturedImageUrl(post, size);
+  const imageUrl = getFeaturedImageUrl(post);
   const imageAlt = alt || getFeaturedImageAlt(post);
 
   // If no image URL or error occurred, show placeholder

@@ -1,4 +1,4 @@
-import { fetchPosts, getFeaturedImageUrl, convertToS3Url, debugUrlConversion } from '../lib/api';
+import { fetchPosts, getFeaturedImageUrl } from '../lib/api';
 import Image from 'next/image';
 
 export default async function TestMediaUrlsPage() {
@@ -7,25 +7,18 @@ export default async function TestMediaUrlsPage() {
 
   try {
     // Fetch posts with error handling
-    posts = await fetchPosts({ first: 10 });
+    posts = await fetchPosts({ per_page: 10 });
   } catch (err) {
     error = err instanceof Error ? err.message : 'Failed to fetch posts';
     // Continue with empty posts array
   }
 
-  // Test URLs for URL conversion
+  // Test URLs for media display
   const testUrls = [
     'https://cowboykimono.com/wp-content/uploads/2024/01/test-image-1.jpg',
     'https://cowboykimono.com/wp-content/uploads/2024/01/test-image-2.jpg',
     'https://cowboykimono.com/wp-content/uploads/2024/01/test-image-3.jpg',
   ];
-
-  // Convert test URLs
-  const convertedUrls = testUrls.map(url => ({
-    original: url,
-    converted: convertToS3Url(url),
-    debug: debugUrlConversion(url)
-  }));
 
   return (
     <div className="min-h-screen bg-gray-50 py-8">
@@ -49,35 +42,7 @@ export default async function TestMediaUrlsPage() {
           </div>
         )}
 
-        {/* URL Conversion Test */}
-        <div className="mb-12">
-          <h2 className="text-2xl font-bold text-gray-900 mb-6">URL Conversion Test</h2>
-          <div className="bg-white rounded-lg shadow-md p-6">
-            <div className="space-y-4">
-              {convertedUrls.map((item, index) => (
-                <div key={index} className="border border-gray-200 rounded-lg p-4">
-                  <h3 className="font-semibold text-gray-800 mb-2">Test Case {index + 1}</h3>
-                  <div className="space-y-2 text-sm">
-                    <div>
-                      <span className="font-medium text-gray-700">Original:</span>
-                      <span className="ml-2 text-gray-600 break-all">{item.original}</span>
-                    </div>
-                    <div>
-                      <span className="font-medium text-gray-700">Converted:</span>
-                      <span className="ml-2 text-gray-600 break-all">{item.converted}</span>
-                    </div>
-                    <div>
-                      <span className="font-medium text-gray-700">Debug Info:</span>
-                      <pre className="mt-1 p-2 bg-gray-100 rounded text-xs overflow-x-auto">
-                        {JSON.stringify(item.debug, null, 2)}
-                      </pre>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
+
 
         {/* Image Display Test */}
         <div className="mb-12">
@@ -111,13 +76,13 @@ export default async function TestMediaUrlsPage() {
                 return (
                   <div key={post.id || index} className="bg-white rounded-lg shadow-md p-4">
                     <h3 className="font-semibold text-gray-800 mb-2">
-                      {post.title || `Post ${index + 1}`}
+                      {post.title?.rendered || `Post ${index + 1}`}
                     </h3>
                     {featuredImageUrl && (
                       <div className="aspect-video bg-gray-100 rounded overflow-hidden mb-4">
                         <Image
                           src={featuredImageUrl}
-                          alt={post.title || `Post ${index + 1}`}
+                          alt={post.title?.rendered || `Post ${index + 1}`}
                           width={400}
                           height={300}
                           className="w-full h-full object-cover"
@@ -125,7 +90,7 @@ export default async function TestMediaUrlsPage() {
                       </div>
                     )}
                     <p className="text-sm text-gray-600">
-                      {post.excerpt || 'No excerpt available'}
+                      {post.excerpt?.rendered || 'No excerpt available'}
                     </p>
                   </div>
                 );

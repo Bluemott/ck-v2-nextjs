@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { fetchPosts, fetchCategories, fetchTags, type WPGraphQLPost, type WPGraphQLCategory, type WPGraphQLTag, decodeHtmlEntities } from '../lib/api';
+import { fetchPosts, fetchCategories, fetchTags, type BlogPost, type WPRestCategory, type WPRestTag, decodeHtmlEntities } from '../lib/api';
 import WordPressImage from './WordPressImage';
 import SocialShare from './SocialShare';
 import PostNavigation from './PostNavigation';
@@ -10,14 +10,14 @@ import PostNavigation from './PostNavigation';
 interface BlogPostFooterProps {
   postTitle: string;
   postUrl: string;
-  previousPost?: WPGraphQLPost | null;
-  nextPost?: WPGraphQLPost | null;
+  previousPost?: BlogPost | null;
+  nextPost?: BlogPost | null;
 }
 
 const BlogPostFooter = ({ postTitle, postUrl, previousPost, nextPost }: BlogPostFooterProps) => {
-  const [recentPosts, setRecentPosts] = useState<WPGraphQLPost[]>([]);
-  const [categories, setCategories] = useState<WPGraphQLCategory[]>([]);
-  const [tags, setTags] = useState<WPGraphQLTag[]>([]);
+  const [recentPosts, setRecentPosts] = useState<BlogPost[]>([]);
+  const [categories, setCategories] = useState<WPRestCategory[]>([]);
+  const [tags, setTags] = useState<WPRestTag[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {

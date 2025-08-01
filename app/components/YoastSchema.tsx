@@ -1,7 +1,7 @@
-import { WPGraphQLPost } from '../lib/api';
+import { BlogPost } from '../lib/api';
 
 interface YoastSchemaProps {
-  post: WPGraphQLPost;
+  post: BlogPost;
 }
 
 export default function YoastSchema({ post }: YoastSchemaProps) {

@@ -2,12 +2,10 @@ import { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import BlogSidebar from '../../components/BlogSidebar';
-import BlogPostFooter from '../../components/BlogPostFooter';
 import StructuredData, { generateArticleStructuredData } from '../../components/StructuredData';
-import YoastSchema from '../../components/YoastSchema';
-import { fetchPostBySlug, decodeHtmlEntities, getFeaturedImageUrl, fetchCategoryBySlug, fetchTagBySlug, fetchAdjacentPosts } from '../../lib/api';
+import { fetchPostBySlug, decodeHtmlEntities, getFeaturedImageUrl, getPostCategories, getPostTags } from '../../lib/api';
 import WordPressImage from '../../components/WordPressImage';
-import { generateSEOMetadata, extractYoastSEOData } from '../../lib/seo';
+import { generateSEOMetadata } from '../../lib/seo';
 import Breadcrumbs from '../../components/Breadcrumbs';
 
 interface BlogPostPageProps {
@@ -29,10 +27,9 @@ export async function generateMetadata({ params }: BlogPostPageProps): Promise<M
     };
   }
 
-  const title = decodeHtmlEntities(post.title);
-  const description = post.excerpt.replace(/<[^>]+>/g, '').slice(0, 160);
+  const title = decodeHtmlEntities(post.title.rendered);
+  const description = post.excerpt.rendered.replace(/<[^>]+>/g, '').slice(0, 160);
   const image = getFeaturedImageUrl(post);
-  const yoastSEO = extractYoastSEOData(post);
   
   return generateSEOMetadata({
     title,
@@ -44,7 +41,6 @@ export async function generateMetadata({ params }: BlogPostPageProps): Promise<M
     publishedTime: post.date,
     modifiedTime: post.modified,
     author: 'Cowboy Kimono',
-    yoastSEO,
   });
 }
 
@@ -52,7 +48,7 @@ export async function generateStaticParams() {
   // Generate static paths for existing blog posts
   try {
     const { fetchPosts } = await import('../../lib/api');
-    const posts = await fetchPosts({ first: 100 });
+    const posts = await fetchPosts({ per_page: 100 });
     
     return posts.map((post) => ({
       slug: post.slug,
@@ -71,16 +67,9 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
     notFound();
   }
 
-  // Fetch category and tag details using slugs, and adjacent posts
-  const [categories, tags, adjacentPosts] = await Promise.all([
-    post.categories.nodes.length > 0 
-      ? Promise.all(post.categories.nodes.map(cat => fetchCategoryBySlug(cat.slug)))
-      : Promise.resolve([]),
-    post.tags.nodes.length > 0 
-      ? Promise.all(post.tags.nodes.map(tag => fetchTagBySlug(tag.slug)))
-      : Promise.resolve([]),
-    fetchAdjacentPosts(slug)
-  ]);
+  // Get categories and tags from the post data
+  const categories = getPostCategories(post);
+  const tags = getPostTags(post);
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', {
@@ -92,35 +81,30 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
 
   return (
     <>
-      {/* Yoast SEO Schema Data */}
-      <YoastSchema post={post} />
-      
-      {/* Structured Data for Blog Article (fallback if no Yoast schema) */}
-      {!post.seo?.schema?.raw && (
-        <StructuredData
-          type="BlogPosting"
-          data={generateArticleStructuredData({
-            title: decodeHtmlEntities(post.title),
-            description: post.content.replace(/<[^>]+>/g, '').slice(0, 160),
-            url: `${process.env.NEXT_PUBLIC_SITE_URL || 'https://www.cowboykimono.com'}/blog/${post.slug}`,
-            image: getFeaturedImageUrl(post) || undefined,
-            datePublished: post.date,
-            author: 'Cowboy Kimono',
-          })}
-        />
-      )}
+      {/* Structured Data for Blog Article */}
+      <StructuredData
+        type="BlogPosting"
+        data={generateArticleStructuredData({
+          title: decodeHtmlEntities(post.title.rendered),
+          description: post.content.rendered.replace(/<[^>]+>/g, '').slice(0, 160),
+          url: `${process.env.NEXT_PUBLIC_SITE_URL || 'https://www.cowboykimono.com'}/blog/${post.slug}`,
+          image: getFeaturedImageUrl(post) || undefined,
+          datePublished: post.date,
+          author: 'Cowboy Kimono',
+        })}
+      />
       
       {/* Main Article Content */}
       <article className="min-h-screen bg-[#f0f8ff] py-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           {/* Breadcrumbs */}
-          <Breadcrumbs
-            items={[
-              { label: 'Home', href: '/' },
-              { label: 'Blog', href: '/blog' },
-              { label: decodeHtmlEntities(post.title) }
-            ]}
-          />
+                        <Breadcrumbs
+                items={[
+                  { label: 'Home', href: '/' },
+                  { label: 'Blog', href: '/blog' },
+                  { label: decodeHtmlEntities(post.title.rendered) }
+                ]}
+              />
 
           {/* Main Content with Sidebar */}
           <div className="flex flex-col lg:flex-row gap-8 lg:gap-12 mt-8">
@@ -142,16 +126,10 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
                <header className="mb-10">
                  <h1 
                    className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6 text-gray-900 serif leading-tight"
-                   dangerouslySetInnerHTML={{ __html: decodeHtmlEntities(post.title) }}
+                   dangerouslySetInnerHTML={{ __html: decodeHtmlEntities(post.title.rendered) }}
                  />
                  <div className="flex items-center space-x-4 text-gray-600 font-medium mb-6">
                    <span>Published on {formatDate(post.date)}</span>
-                   {post.author?.node?.name && (
-                     <>
-                       <span>•</span>
-                       <span>By {post.author.node.name}</span>
-                     </>
-                   )}
                  </div>
                  
                  {/* Post Categories and Tags */}
@@ -203,27 +181,21 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
                   lineHeight: '1.75'
                 }}
                 dangerouslySetInnerHTML={{ 
-                  __html: decodeHtmlEntities(post.content)
+                  __html: decodeHtmlEntities(post.content.rendered)
                 }}
                 // Add security attributes for content
                 suppressHydrationWarning={true}
               />
 
-               {/* Blog Post Footer Component */}
-               <BlogPostFooter
-                 postTitle={decodeHtmlEntities(post.title)}
-                 postUrl={`${process.env.NEXT_PUBLIC_SITE_URL || 'https://www.cowboykimono.com'}/blog/${post.slug}`}
-                 previousPost={adjacentPosts.previousPost}
-                 nextPost={adjacentPosts.nextPost}
-               />
+
              </div>
 
             {/* Sidebar - Simplified */}
             <div className="w-full lg:w-80 lg:sticky lg:top-8 lg:self-start">
               <BlogSidebar 
                 currentPost={post}
-                currentPostCategories={post.categories.nodes.map(cat => cat.databaseId)}
-                currentPostTags={post.tags.nodes.map(tag => tag.databaseId)}
+                currentPostCategories={categories.map(cat => cat.id)}
+                currentPostTags={tags.map(tag => tag.id)}
                 showRecentPosts={false}
                 showCategories={false}
                 showTags={false}

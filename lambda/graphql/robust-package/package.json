@@ -1,9 +1,0 @@
-{
-  "name": "robust-graphql-lambda",
-  "version": "1.0.0",
-  "main": "index.js",
-  "dependencies": {
-    "graphql": "^16.8.1",
-    "pg": "^8.16.3"
-  }
-}

@@ -1,9 +1,9 @@
 import Link from 'next/link';
-import { WPGraphQLPost, decodeHtmlEntities } from '../lib/api';
+import { BlogPost, decodeHtmlEntities } from '../lib/api';
 
 interface PostNavigationProps {
-  previousPost: WPGraphQLPost | null;
-  nextPost: WPGraphQLPost | null;
+  previousPost: BlogPost | null;
+  nextPost: BlogPost | null;
 }
 
 export default function PostNavigation({ previousPost, nextPost }: PostNavigationProps) {

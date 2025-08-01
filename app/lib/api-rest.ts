@@ -1,12 +1,5 @@
-import { env, isDevelopment } from './env';
 import { restAPIClient, type WPRestPost, type WPRestCategory, type WPRestTag } from './rest-api';
 import { z } from 'zod';
-
-// API Configuration with validated environment variables
-const API_CONFIG = {
-  WORDPRESS_REST_URL: env.NEXT_PUBLIC_WPGRAPHQL_URL || 'https://api.cowboykimono.com',
-  WORDPRESS_ADMIN_URL: env.NEXT_PUBLIC_WORDPRESS_ADMIN_URL || 'https://admin.cowboykimono.com',
-};
 
 // Blog Post Schema for validation
 const blogPostSchema = z.object({
@@ -20,7 +13,34 @@ const blogPostSchema = z.object({
   excerpt: z.object({ rendered: z.string() }),
   author: z.number(),
   featured_media: z.number(),
-  _embedded: z.any().optional()
+  _embedded: z.object({
+    author: z.array(z.object({
+      id: z.number(),
+      name: z.string(),
+      slug: z.string(),
+      avatar_urls: z.record(z.string())
+    })).optional(),
+    'wp:featuredmedia': z.array(z.object({
+      id: z.number(),
+      source_url: z.string(),
+      alt_text: z.string().optional(),
+      media_details: z.object({
+        width: z.number().optional(),
+        height: z.number().optional(),
+        sizes: z.record(z.object({
+          source_url: z.string(),
+          width: z.number(),
+          height: z.number()
+        })).optional()
+      }).optional()
+    })).optional(),
+    'wp:term': z.array(z.array(z.object({
+      id: z.number(),
+      name: z.string(),
+      slug: z.string(),
+      taxonomy: z.string()
+    }))).optional()
+  }).optional()
 });
 
 export type BlogPost = z.infer<typeof blogPostSchema>;
@@ -197,21 +217,6 @@ export async function fetchCategories(): Promise<WPRestCategory[]> {
   }
 }
 
-export async function fetchCategoryBySlug(slug: string): Promise<WPRestCategory | null> {
-  try {
-    const categories = await restAPIClient.getCategories({
-      per_page: 100,
-      orderby: 'name',
-      order: 'asc'
-    });
-    
-    return categories.find(category => category.slug === slug) || null;
-  } catch (error) {
-    console.error('Error fetching category by slug:', error);
-    return null;
-  }
-}
-
 /**
  * Fetch tags
  */
@@ -225,21 +230,6 @@ export async function fetchTags(): Promise<WPRestTag[]> {
   } catch (error) {
     console.error('Error fetching tags:', error);
     return [];
-  }
-}
-
-export async function fetchTagBySlug(slug: string): Promise<WPRestTag | null> {
-  try {
-    const tags = await restAPIClient.getTags({
-      per_page: 100,
-      orderby: 'name',
-      order: 'asc'
-    });
-    
-    return tags.find(tag => tag.slug === slug) || null;
-  } catch (error) {
-    console.error('Error fetching tag by slug:', error);
-    return null;
   }
 }
 
@@ -374,7 +364,7 @@ export function getPostCategories(post: BlogPost): Array<{
   
   // Categories are typically the first term array (taxonomy: category)
   const categories = post._embedded['wp:term'][0] || [];
-  return categories.map((cat: any) => ({
+  return categories.map(cat => ({
     id: cat.id,
     name: cat.name,
     slug: cat.slug
@@ -395,7 +385,7 @@ export function getPostTags(post: BlogPost): Array<{
   
   // Tags are typically the second term array (taxonomy: post_tag)
   const tags = post._embedded['wp:term'][1] || [];
-  return tags.map((tag: any) => ({
+  return tags.map(tag => ({
     id: tag.id,
     name: tag.name,
     slug: tag.slug
@@ -420,15 +410,8 @@ export function getPostAuthor(post: BlogPost): {
     id: author.id,
     name: author.name,
     slug: author.slug,
-    avatar: author.avatar_urls?.['96'] || author.avatar_urls?.['48'] || ''
+    avatar: author.avatar_urls?.['96'] || author.avatar_urls?.['48'] || undefined
   };
-}
-
-/**
- * Get WordPress admin URL with validation
- */
-export function getWordPressAdminUrl(): string {
-  return API_CONFIG.WORDPRESS_ADMIN_URL;
 }
 
 /**
@@ -436,10 +419,6 @@ export function getWordPressAdminUrl(): string {
  */
 export function getApiConfig() {
   return {
-    ...API_CONFIG,
-    // Don't expose sensitive URLs in development
-    WORDPRESS_REST_URL: isDevelopment ? '[REDACTED]' : API_CONFIG.WORDPRESS_REST_URL,
-    WORDPRESS_ADMIN_URL: isDevelopment ? '[REDACTED]' : API_CONFIG.WORDPRESS_ADMIN_URL,
     restAPIClient: restAPIClient.getConfig(),
   };
 } 

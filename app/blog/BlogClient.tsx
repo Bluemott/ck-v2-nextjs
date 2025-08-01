@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { fetchPosts, fetchPostsWithPagination, fetchCategories, fetchTags, type WPGraphQLPost, type WPGraphQLCategory, type WPGraphQLTag, decodeHtmlEntities } from '../lib/api';
+import { fetchPosts, fetchPostsWithPagination, fetchCategories, fetchTags, type BlogPost, decodeHtmlEntities } from '../lib/api';
 import WordPressImage from '../components/WordPressImage';
 
 const POSTS_PER_PAGE = 9; // Reduced from 12 to accommodate larger cards
@@ -15,10 +15,10 @@ interface BlogClientProps {
 }
 
 const BlogClient = ({ initialCategory, initialTag, showHeader = true }: BlogClientProps = {}) => {
-  const [posts, setPosts] = useState<WPGraphQLPost[]>([]);
-  const [recentPosts, setRecentPosts] = useState<WPGraphQLPost[]>([]);
-  const [categories, setCategories] = useState<WPGraphQLCategory[]>([]);
-  const [tags, setTags] = useState<WPGraphQLTag[]>([]);
+  const [posts, setPosts] = useState<BlogPost[]>([]);
+  const [recentPosts, setRecentPosts] = useState<BlogPost[]>([]);
+  const [categories, setCategories] = useState<any[]>([]);
+  const [tags, setTags] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
@@ -33,7 +33,7 @@ const BlogClient = ({ initialCategory, initialTag, showHeader = true }: BlogClie
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [isSearching, setIsSearching] = useState(false);
-  const [searchResults, setSearchResults] = useState<WPGraphQLPost[]>([]);
+  const [searchResults, setSearchResults] = useState<BlogPost[]>([]);
   const [searchTotalResults, setSearchTotalResults] = useState(0);
 
   // Debounce search term
@@ -61,10 +61,8 @@ const BlogClient = ({ initialCategory, initialTag, showHeader = true }: BlogClie
       try {
         // Use WordPress search to search ALL content
         const searchData = await fetchPostsWithPagination({
-          first: 50, // Get more results for search
+          per_page: 50, // Get more results for search
           search: debouncedSearchTerm.trim(),
-          categoryName: initialCategory,
-          tagName: initialTag,
         });
 
         setSearchResults(searchData.posts);
@@ -101,10 +99,8 @@ const BlogClient = ({ initialCategory, initialTag, showHeader = true }: BlogClie
         }
 
         const result = await fetchPostsWithPagination({
-          first: POSTS_PER_PAGE,
-          after: afterCursor,
-          categoryName: initialCategory,
-          tagName: initialTag,
+          page: currentPage,
+          per_page: POSTS_PER_PAGE,
         });
 
         setPosts(result.posts);
@@ -136,7 +132,7 @@ const BlogClient = ({ initialCategory, initialTag, showHeader = true }: BlogClie
         // Fetch recent posts, categories, and tags for sidebar
         const [recentData, categoriesData, tagsData] = await Promise.all([
           fetchPosts({ 
-            first: 5,
+            per_page: 5,
           }),
           fetchCategories(),
           fetchTags()

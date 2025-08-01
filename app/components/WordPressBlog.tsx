@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, memo } from 'react';
 import Link from 'next/link';
-import { fetchPosts, type WPGraphQLPost, decodeHtmlEntities } from '../lib/api';
+import { fetchPosts, type BlogPost, decodeHtmlEntities } from '../lib/api';
 import WordPressImage from './WordPressImage';
 
 interface WordPressBlogProps {
@@ -11,7 +11,7 @@ interface WordPressBlogProps {
 }
 
 const WordPressBlog = memo(({ postsPerPage = 6, showHeader = true }: WordPressBlogProps) => {
-  const [posts, setPosts] = useState<WPGraphQLPost[]>([]);
+  const [posts, setPosts] = useState<BlogPost[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 

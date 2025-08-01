@@ -193,9 +193,6 @@ const nextConfig: NextConfig = {
     // Add any server runtime config here
   },
 
-  // Add build-time optimizations for Amplify
-  swcMinify: true,
-  
   // Ensure proper handling of static exports
   trailingSlash: false,
   

@@ -2,8 +2,8 @@ import type { NextConfig } from "next";
 import { createRedirectsConfig } from "./app/lib/redirect-manager";
 
 const nextConfig: NextConfig = {
-  // AWS-optimized output for smaller Docker images
-  output: 'standalone',
+  // Remove output: 'standalone' for Amplify hosting to enable dynamic routes
+  // output: 'standalone', // Commented out for Amplify compatibility
   
   images: {
     // Enable optimization for better performance

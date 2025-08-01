@@ -48,6 +48,21 @@ export async function generateMetadata({ params }: BlogPostPageProps): Promise<M
   });
 }
 
+export async function generateStaticParams() {
+  // Generate static paths for existing blog posts
+  try {
+    const { fetchPosts } = await import('../../lib/api');
+    const posts = await fetchPosts({ first: 100 });
+    
+    return posts.map((post) => ({
+      slug: post.slug,
+    }));
+  } catch (error) {
+    console.error('Error generating static params:', error);
+    return [];
+  }
+}
+
 export default async function BlogPostPage({ params }: BlogPostPageProps) {
   const { slug } = await params;
   const post = await fetchPostBySlug(slug);

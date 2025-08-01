@@ -4,33 +4,23 @@ import { writeFile, unlink } from 'fs/promises';
 import { join } from 'path';
 import { tmpdir } from 'os';
 import { v4 as uuidv4 } from 'uuid';
+import { env } from '../../../lib/env';
+import { 
+  validateMediaUpload, 
+  fileTypeSchema, 
+  fileSizeSchema,
+  allowedFileTypes,
+  maxFileSize 
+} from '../../../lib/validation';
+import { z } from 'zod';
 
-// Initialize S3 client
+// Initialize S3 client with validated environment variables
 const s3Client = new S3Client({ 
-  region: process.env.AWS_REGION || 'us-east-1' 
+  region: env.AWS_REGION 
 });
 
-const S3_BUCKET = process.env.S3_BUCKET_NAME || 'wordpress-static-content';
+const S3_BUCKET = env.S3_BUCKET_NAME;
 const MEDIA_FOLDER = 'media';
-
-// Supported file types
-const ALLOWED_TYPES = [
-  'image/jpeg',
-  'image/jpg', 
-  'image/png',
-  'image/gif',
-  'image/webp',
-  'image/svg+xml',
-  'application/pdf',
-  'video/mp4',
-  'video/quicktime',
-  'video/x-msvideo'
-];
-
-// Maximum file size (10MB)
-const MAX_FILE_SIZE = 10 * 1024 * 1024;
-
-
 
 export async function POST(request: NextRequest) {
   try {
@@ -54,29 +44,65 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Validate file type
-    if (!ALLOWED_TYPES.includes(file.type)) {
-      return NextResponse.json(
-        { error: `File type ${file.type} is not supported` },
-        { status: 400 }
-      );
+    // Validate file type using Zod
+    try {
+      fileTypeSchema.parse(file.type);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return NextResponse.json(
+          { 
+            error: `File type ${file.type} is not supported. Allowed types: ${allowedFileTypes.join(', ')}` 
+          },
+          { status: 400 }
+        );
+      }
+      throw error;
     }
 
-    // Validate file size
-    if (file.size > MAX_FILE_SIZE) {
-      return NextResponse.json(
-        { error: `File size ${file.size} bytes exceeds maximum of ${MAX_FILE_SIZE} bytes` },
-        { status: 400 }
-      );
+    // Validate file size using Zod
+    try {
+      fileSizeSchema.parse(file.size);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return NextResponse.json(
+          { 
+            error: `File size ${file.size} bytes exceeds maximum of ${maxFileSize} bytes` 
+          },
+          { status: 400 }
+        );
+      }
+      throw error;
     }
 
-    // Extract metadata from form data
-    const title = formData.get('title') as string || file.name;
-    const altText = formData.get('altText') as string || '';
-    const caption = formData.get('caption') as string || '';
-    const description = formData.get('description') as string || '';
-    const category = formData.get('category') as string || '';
-    const tags = formData.get('tags') as string || '';
+    // Extract and validate metadata from form data
+    const uploadData = {
+      file,
+      title: formData.get('title') as string || file.name,
+      altText: formData.get('altText') as string || '',
+      caption: formData.get('caption') as string || '',
+      description: formData.get('description') as string || '',
+      category: formData.get('category') as string || '',
+      tags: formData.get('tags') as string || '',
+    };
+
+    // Validate the upload data structure
+    try {
+      validateMediaUpload(uploadData);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return NextResponse.json(
+          { 
+            error: 'Invalid upload data',
+            details: error.errors.map(err => ({
+              field: err.path.join('.'),
+              message: err.message
+            }))
+          },
+          { status: 400 }
+        );
+      }
+      throw error;
+    }
 
     // Generate unique filename
     const fileExtension = file.name.split('.').pop()?.toLowerCase();
@@ -97,61 +123,46 @@ export async function POST(request: NextRequest) {
     await writeFile(tempPath, buffer);
 
     try {
-      // Upload to S3
+      // Upload to S3 with validated configuration
       const uploadCommand = new PutObjectCommand({
         Bucket: S3_BUCKET,
         Key: s3Key,
         Body: buffer,
         ContentType: file.type,
         Metadata: {
-          'original-filename': file.name,
-          title,
-          'alt-text': altText,
-          caption,
-          description,
-          category,
-          tags,
-          'upload-date': now.toISOString(),
-          'file-size': file.size.toString(),
-          'content-type': file.type
+          originalName: file.name,
+          title: uploadData.title,
+          altText: uploadData.altText,
+          caption: uploadData.caption,
+          description: uploadData.description,
+          category: uploadData.category,
+          tags: uploadData.tags,
+          uploadedAt: new Date().toISOString(),
         },
-        CacheControl: 'public, max-age=31536000', // 1 year cache
       });
 
       await s3Client.send(uploadCommand);
 
-      // Generate URLs
-      const s3Url = `https://${S3_BUCKET}.s3.${process.env.AWS_REGION || 'us-east-1'}.amazonaws.com/${s3Key}`;
-      const cloudFrontUrl = process.env.CLOUDFRONT_DOMAIN 
-        ? `https://${process.env.CLOUDFRONT_DOMAIN}/${s3Key}`
-        : s3Url;
-
       // Clean up temp file
       await unlink(tempPath);
 
+      // Return success response
       return NextResponse.json({
         success: true,
-        data: {
-          id: uniqueId,
-          filename: fileName,
+        file: {
+          name: fileName,
           originalName: file.name,
-          title,
-          altText,
-          caption,
-          description,
-          category,
-          tags: tags ? tags.split(',').map(tag => tag.trim()) : [],
           size: file.size,
           type: file.type,
-          urls: {
-            s3: s3Url,
-            cloudfront: cloudFrontUrl,
-            relative: `/${s3Key}`
-          },
+          url: `https://${S3_BUCKET}.s3.${env.AWS_REGION}.amazonaws.com/${s3Key}`,
+          s3Key,
           metadata: {
-            uploadedAt: now.toISOString(),
-            s3Key,
-            bucket: S3_BUCKET
+            title: uploadData.title,
+            altText: uploadData.altText,
+            caption: uploadData.caption,
+            description: uploadData.description,
+            category: uploadData.category,
+            tags: uploadData.tags,
           }
         }
       });
@@ -161,7 +172,7 @@ export async function POST(request: NextRequest) {
       try {
         await unlink(tempPath);
       } catch (cleanupError) {
-        console.error('Failed to cleanup temp file:', cleanupError);
+        console.error('Failed to clean up temp file:', cleanupError);
       }
       
       console.error('S3 upload error:', uploadError);
@@ -173,6 +184,21 @@ export async function POST(request: NextRequest) {
 
   } catch (error) {
     console.error('Media upload error:', error);
+    
+    // Handle Zod validation errors
+    if (error instanceof z.ZodError) {
+      return NextResponse.json(
+        { 
+          error: 'Validation error',
+          details: error.errors.map(err => ({
+            field: err.path.join('.'),
+            message: err.message
+          }))
+        },
+        { status: 400 }
+      );
+    }
+    
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -181,12 +207,10 @@ export async function POST(request: NextRequest) {
 }
 
 export async function GET(_request: NextRequest) {
-  // Return upload configuration and limits
   return NextResponse.json({
-    allowedTypes: ALLOWED_TYPES,
-    maxFileSize: MAX_FILE_SIZE,
-    maxFileSizeMB: MAX_FILE_SIZE / (1024 * 1024),
-    mediaFolder: MEDIA_FOLDER,
-    s3Bucket: S3_BUCKET
+    message: 'Media upload endpoint',
+    allowedTypes: allowedFileTypes,
+    maxFileSize: `${maxFileSize / (1024 * 1024)}MB`,
+    supportedFields: ['file', 'title', 'altText', 'caption', 'description', 'category', 'tags']
   });
 } 

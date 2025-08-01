@@ -298,10 +298,12 @@ export class WordPressBlogStack extends cdk.Stack {
         '/api/*': {
           origin: new origins.HttpOrigin(`${api.restApiId}.execute-api.${this.region}.amazonaws.com`, {
             protocolPolicy: cloudfront.OriginProtocolPolicy.HTTPS_ONLY,
+            originPath: '/prod', // Add the API Gateway stage path
           }),
           viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
           cachePolicy: cloudfront.CachePolicy.CACHING_DISABLED,
           originRequestPolicy: cloudfront.OriginRequestPolicy.ALL_VIEWER,
+          allowedMethods: cloudfront.AllowedMethods.ALLOW_ALL, // Allow POST methods
         },
         '/media/*': {
           origin: new origins.S3Origin(staticContentBucket),

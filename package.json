@@ -22,7 +22,9 @@
     "check:lambda": "node scripts/check-lambda-setup.js",
     "deploy:infrastructure": "cd infrastructure && cdk deploy",
     "deploy:lambda": "cd lambda/graphql && npm run package",
+    "deploy:lambda-graphql": "node scripts/deploy-lambda-graphql.js",
     "test:aws-graphql": "curl -X POST $NEXT_PUBLIC_AWS_GRAPHQL_URL -H 'Content-Type: application/json' -d '{\"query\": \"{ __typename }\"}'",
+    "test:graphql-schema": "node scripts/test-graphql-schema.js",
     "migrate:media": "node scripts/run-media-migration.js",
     "migrate:media:dry-run": "node scripts/run-media-migration.js --dry-run",
     "migrate:media:force": "node scripts/run-media-migration.js --force"
@@ -40,7 +42,8 @@
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "rss-parser": "^3.13.0",
-    "uuid": "^9.0.1"
+    "uuid": "^9.0.1",
+    "zod": "^4.0.14"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",

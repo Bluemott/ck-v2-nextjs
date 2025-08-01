@@ -7,18 +7,14 @@
 
 export interface WPGraphQLPost {
   id: string;
-  databaseId: number;
   date: string;
-  modified: string;
   slug: string;
-  status: string;
   title: string;
   content: string;
   excerpt: string;
   author: {
     node: {
       id: string;
-      databaseId: number;
       name: string;
       slug: string;
       avatar: {
@@ -29,7 +25,6 @@ export interface WPGraphQLPost {
   featuredImage: {
     node: {
       id: string;
-      databaseId: number;
       sourceUrl: string;
       altText: string;
       mediaDetails: {
@@ -47,7 +42,6 @@ export interface WPGraphQLPost {
   categories: {
     nodes: Array<{
       id: string;
-      databaseId: number;
       name: string;
       slug: string;
       count: number;
@@ -56,7 +50,6 @@ export interface WPGraphQLPost {
   tags: {
     nodes: Array<{
       id: string;
-      databaseId: number;
       name: string;
       slug: string;
       count: number;
@@ -98,7 +91,6 @@ export interface WPGraphQLPost {
 
 export interface WPGraphQLCategory {
   id: string;
-  databaseId: number;
   name: string;
   slug: string;
   description: string;
@@ -110,7 +102,6 @@ export interface WPGraphQLCategory {
 
 export interface WPGraphQLTag {
   id: string;
-  databaseId: number;
   name: string;
   slug: string;
   description: string;
@@ -122,7 +113,6 @@ export interface WPGraphQLTag {
 
 export interface WPGraphQLAuthor {
   id: string;
-  databaseId: number;
   name: string;
   slug: string;
   description: string;
@@ -133,7 +123,6 @@ export interface WPGraphQLAuthor {
 
 export interface WPGraphQLMedia {
   id: string;
-  databaseId: number;
   sourceUrl: string;
   altText: string;
   title: string;
@@ -162,8 +151,16 @@ export interface WPGraphQLResponse<T> {
 // CONFIGURATION
 // ============================================================================
 
-const WPGRAPHQL_URL = process.env.NEXT_PUBLIC_WORDPRESS_GRAPHQL_URL || 
-                     'https://api.cowboykimono.com/graphql';
+// Determine which GraphQL endpoint to use
+// Fixed: Allow AWS GraphQL during build time if properly configured
+const isBuildTime = typeof window === 'undefined' && process.env.NODE_ENV === 'production';
+const useAWSGraphQL = process.env.NEXT_PUBLIC_USE_AWS_GRAPHQL === 'true';
+
+const WPGRAPHQL_URL = useAWSGraphQL 
+  ? (process.env.NEXT_PUBLIC_AWS_GRAPHQL_URL || 'https://0m6piyoypi.execute-api.us-east-1.amazonaws.com/prod/graphql')
+  : (process.env.NEXT_PUBLIC_WORDPRESS_GRAPHQL_URL || 'https://api.cowboykimono.com/graphql');
+
+console.log(`🔗 Using GraphQL endpoint: ${WPGRAPHQL_URL} (AWS: ${useAWSGraphQL}, Build: ${isBuildTime})`);
 
 
 
@@ -189,18 +186,14 @@ const POSTS_QUERY = `
       }
       nodes {
         id
-        databaseId
         title
         slug
-        status
         excerpt
         date
-        modified
         content
         author {
           node {
             id
-            databaseId
             name
             slug
             avatar {
@@ -211,7 +204,6 @@ const POSTS_QUERY = `
         categories {
           nodes {
             id
-            databaseId
             name
             slug
             count
@@ -220,7 +212,6 @@ const POSTS_QUERY = `
         tags {
           nodes {
             id
-            databaseId
             name
             slug
             count
@@ -229,7 +220,6 @@ const POSTS_QUERY = `
         featuredImage {
           node {
             id
-            databaseId
             sourceUrl
             altText
             mediaDetails {
@@ -892,7 +882,6 @@ const CATEGORIES_QUERY = `
     categories(first: $first) {
       nodes {
         id
-        databaseId
         name
         slug
         description
@@ -907,7 +896,6 @@ const TAGS_QUERY = `
     tags(first: $first) {
       nodes {
         id
-        databaseId
         name
         slug
         description
@@ -1624,13 +1612,13 @@ export async function fetchRelatedPosts(
 ): Promise<WPGraphQLPost[]> {
   try {
     // Validate current post has required fields
-    if (!currentPost || !currentPost.databaseId) {
+    if (!currentPost || !currentPost.id) {
       console.error('Invalid current post provided to fetchRelatedPosts');
       return [];
     }
 
     // Enhanced related posts algorithm focusing on content diversity
-    const usedPostIds = new Set<number>([currentPost.databaseId]);
+    const usedPostIds = new Set<string>([currentPost.id]);
     const scoredPosts = new Map<number, { 
       post: WPGraphQLPost; 
       score: number; 
@@ -1649,9 +1637,9 @@ export async function fetchRelatedPosts(
       reason: string,
       diversityFactor?: string
     ) => {
-      if (usedPostIds.has(post.databaseId)) return;
+      if (usedPostIds.has(post.id)) return;
       
-      const existingEntry = scoredPosts.get(post.databaseId);
+      const existingEntry = scoredPosts.get(post.id);
       if (existingEntry) {
         existingEntry.score += additionalScore;
         existingEntry.reasons.push(reason);
@@ -1662,7 +1650,7 @@ export async function fetchRelatedPosts(
         const diversityFactors = new Set<string>();
         if (diversityFactor) diversityFactors.add(diversityFactor);
         
-        scoredPosts.set(post.databaseId, {
+        scoredPosts.set(post.id, {
           post,
           score: additionalScore,
           reasons: [reason],
@@ -1679,10 +1667,10 @@ export async function fetchRelatedPosts(
         const tagPosts = await fetchPostsByTagId(tagId, 30);
         
         tagPosts.forEach(post => {
-          if (!usedPostIds.has(post.databaseId)) {
-            const matchingTags = post.tags.nodes.filter(tag => 
-              tagIds.includes(tag.databaseId.toString())
-            );
+                  if (!usedPostIds.has(post.id)) {
+          const matchingTags = post.tags.nodes.filter(tag => 
+            tagIds.includes(tag.id)
+          );
             
             matchingTags.forEach(tag => {
               const baseScore = 15; // High base score for exact matches
@@ -1705,10 +1693,10 @@ export async function fetchRelatedPosts(
         const categoryPosts = await fetchPostsByCategoryId(categoryId, 30);
         
         categoryPosts.forEach(post => {
-          if (!usedPostIds.has(post.databaseId)) {
-            const matchingCategories = post.categories.nodes.filter(cat => 
-              categoryIds.includes(cat.databaseId.toString())
-            );
+                  if (!usedPostIds.has(post.id)) {
+          const matchingCategories = post.categories.nodes.filter(cat => 
+            categoryIds.includes(cat.id)
+          );
             
             matchingCategories.forEach(category => {
               const baseScore = 12;
@@ -1725,16 +1713,16 @@ export async function fetchRelatedPosts(
 
     // Strategy 3: Cross-Category Exploration (NEW)
     // Actively seek content from different categories to showcase site diversity
-    const currentPostCategories = currentPost.categories.nodes.map(c => c.databaseId);
+    const currentPostCategories = currentPost.categories.nodes.map(c => c.id);
     const exploreCategories = await fetchCategories();
     
     exploreCategories.forEach(category => {
-      if (!currentPostCategories.includes(category.databaseId)) {
+      if (!currentPostCategories.includes(category.id)) {
         // Give bonus points to posts from entirely different categories
         allPosts.forEach(post => {
-          if (!usedPostIds.has(post.databaseId)) {
+          if (!usedPostIds.has(post.id)) {
             const hasThisCategory = post.categories.nodes.some(c => 
-              c.databaseId === category.databaseId
+              c.id === category.id
             );
             if (hasThisCategory) {
               updatePostScore(post, 6, `Content diversity: ${category.name}`, `explore-${category.slug}`);
@@ -1775,7 +1763,7 @@ export async function fetchRelatedPosts(
 
     // Strategy 5: Content Similarity (Refined)
     allPosts.forEach(post => {
-      if (!usedPostIds.has(post.databaseId) && post.content && post.title) {
+      if (!usedPostIds.has(post.id) && post.content && post.title) {
         const contentSimilarity = calculateContentSimilarity(currentPost.content, post.content);
         const titleSimilarity = calculateTitleSimilarity(currentPost.title, post.title);
         
@@ -1804,10 +1792,10 @@ export async function fetchRelatedPosts(
           currentTag.startsWith(tagName.substring(0, 4))))
       );
       
-      if (isRelated && !tagIds.includes(tag.databaseId.toString())) {
+      if (isRelated && !tagIds.includes(tag.id)) {
         allPosts.forEach(post => {
-          if (!usedPostIds.has(post.databaseId)) {
-            const hasRelatedTag = post.tags.nodes.some(t => t.databaseId === tag.databaseId);
+          if (!usedPostIds.has(post.id)) {
+            const hasRelatedTag = post.tags.nodes.some(t => t.id === tag.id);
             if (hasRelatedTag) {
               updatePostScore(post, 5, `Related tag: ${tag.name}`, `related-tag-${tag.slug}`);
             }
@@ -1821,7 +1809,7 @@ export async function fetchRelatedPosts(
     const contentLengths = new Map<string, number>();
     
     allPosts.forEach(post => {
-      if (!usedPostIds.has(post.databaseId) && post.content) {
+      if (!usedPostIds.has(post.id) && post.content) {
         const contentLength = post.content.replace(/<[^>]+>/g, '').length;
         let lengthCategory = '';
         let bonus = 0;
@@ -1848,7 +1836,7 @@ export async function fetchRelatedPosts(
     // Strategy 8: Featured Content Boost (NEW)
     // Give slight preference to posts with featured images for visual appeal
     allPosts.forEach(post => {
-      if (!usedPostIds.has(post.databaseId) && post.featuredImage?.node) {
+      if (!usedPostIds.has(post.id) && post.featuredImage?.node) {
         updatePostScore(post, 2, 'Featured image', 'visual');
       }
     });
@@ -1867,8 +1855,8 @@ export async function fetchRelatedPosts(
 
     // Select posts with guaranteed diversity
     const selectedPosts: (WPGraphQLPost & { _relatedScore: number; _relatedReasons: string[] })[] = [];
-    const usedCategories = new Set<number>();
-    const usedTags = new Set<number>();
+    const usedCategories = new Set<string>();
+    const usedTags = new Set<string>();
     
     // First pass: Select highest scoring posts while ensuring diversity
     for (const candidate of candidatePosts) {
@@ -1879,8 +1867,8 @@ export async function fetchRelatedPosts(
       
       if (!shouldInclude) {
         // For remaining slots, prioritize diversity
-        const hasNewCategory = post.categories.nodes.some(c => !usedCategories.has(c.databaseId));
-        const hasNewTag = post.tags.nodes.some(t => !usedTags.has(t.databaseId));
+        const hasNewCategory = post.categories.nodes.some(c => !usedCategories.has(c.id));
+        const hasNewTag = post.tags.nodes.some(t => !usedTags.has(t.id));
         shouldInclude = hasNewCategory || hasNewTag;
       }
       
@@ -1892,9 +1880,9 @@ export async function fetchRelatedPosts(
         });
         
         // Track used categories and tags for diversity
-        post.categories.nodes.forEach(c => usedCategories.add(c.databaseId));
-        post.tags.nodes.forEach(t => usedTags.add(t.databaseId));
-        usedPostIds.add(post.databaseId);
+        post.categories.nodes.forEach(c => usedCategories.add(c.id));
+        post.tags.nodes.forEach(t => usedTags.add(t.id));
+        usedPostIds.add(post.id);
       }
     }
 
@@ -1902,12 +1890,12 @@ export async function fetchRelatedPosts(
     if (selectedPosts.length < limit) {
       const remainingSlots = limit - selectedPosts.length;
       const fallbackPosts = allPosts
-        .filter(post => !usedPostIds.has(post.databaseId))
+        .filter(post => !usedPostIds.has(post.id))
         .slice(0, remainingSlots * 3) // Get more candidates
         .sort((a, b) => {
           // Sort by category/tag diversity first, then by date
-          const aHasNewCategory = a.categories.nodes.some(c => !usedCategories.has(c.databaseId));
-          const bHasNewCategory = b.categories.nodes.some(c => !usedCategories.has(c.databaseId));
+          const aHasNewCategory = a.categories.nodes.some(c => !usedCategories.has(c.id));
+          const bHasNewCategory = b.categories.nodes.some(c => !usedCategories.has(c.id));
           
           if (aHasNewCategory && !bHasNewCategory) return -1;
           if (!aHasNewCategory && bHasNewCategory) return 1;
@@ -1922,16 +1910,16 @@ export async function fetchRelatedPosts(
           _relatedScore: 2,
           _relatedReasons: ['Content diversity (fallback)']
         });
-        post.categories.nodes.forEach(c => usedCategories.add(c.databaseId));
-        post.tags.nodes.forEach(t => usedTags.add(t.databaseId));
-        usedPostIds.add(post.databaseId);
+        post.categories.nodes.forEach(c => usedCategories.add(c.id));
+        post.tags.nodes.forEach(t => usedTags.add(t.id));
+        usedPostIds.add(post.id);
       });
     }
 
     // Final verification: Ensure no duplicates (should be impossible now, but safety check)
     const finalResults = selectedPosts
       .filter((post, index, array) => 
-        array.findIndex(p => p.databaseId === post.databaseId) === index
+        array.findIndex(p => p.id === post.id) === index
       )
       .slice(0, limit);
 
@@ -1944,9 +1932,9 @@ export async function fetchRelatedPosts(
     try {
       const fallbackPosts = await fetchPosts({ first: limit * 2 });
       const uniqueFallback = fallbackPosts
-        .filter(post => post.databaseId !== currentPost.databaseId)
+        .filter(post => post.id !== currentPost.id)
         .filter((post, index, array) => 
-          array.findIndex(p => p.databaseId === post.databaseId) === index
+          array.findIndex(p => p.id === post.id) === index
         )
         .slice(0, limit);
 
@@ -2001,11 +1989,9 @@ export async function fetchAdjacentPosts(currentPostSlug: string): Promise<{
 // Convert WPGraphQL post to WordPress REST API format for compatibility
 export function convertToWordPressPost(graphqlPost: WPGraphQLPost): Record<string, unknown> {
   return {
-    id: graphqlPost.databaseId,
+    id: graphqlPost.id,
     date: graphqlPost.date,
-    modified: graphqlPost.modified,
     slug: graphqlPost.slug,
-    status: graphqlPost.status,
     title: {
       rendered: graphqlPost.title,
     },
@@ -2017,18 +2003,18 @@ export function convertToWordPressPost(graphqlPost: WPGraphQLPost): Record<strin
       rendered: graphqlPost.excerpt,
       protected: false,
     },
-    author: graphqlPost.author.node.databaseId,
-    featured_media: graphqlPost.featuredImage?.node?.databaseId || 0,
-    categories: graphqlPost.categories.nodes.map(cat => cat.databaseId),
-    tags: graphqlPost.tags.nodes.map(tag => tag.databaseId),
+    author: graphqlPost.author.node.id,
+    featured_media: graphqlPost.featuredImage?.node?.id || 0,
+    categories: graphqlPost.categories.nodes.map(cat => cat.id),
+    tags: graphqlPost.tags.nodes.map(tag => tag.id),
     _embedded: {
       'wp:featuredmedia': graphqlPost.featuredImage?.node ? [{
-        id: graphqlPost.featuredImage.node.databaseId,
+        id: graphqlPost.featuredImage.node.id,
         source_url: graphqlPost.featuredImage.node.sourceUrl,
         alt_text: graphqlPost.featuredImage.node.altText,
       }] : [],
       author: [{
-        id: graphqlPost.author.node.databaseId,
+        id: graphqlPost.author.node.id,
         name: graphqlPost.author.node.name,
         slug: graphqlPost.author.node.slug,
         avatar_urls: {

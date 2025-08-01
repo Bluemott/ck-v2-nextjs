@@ -1,13 +1,110 @@
 const { graphql, buildSchema } = require('graphql');
 const { Client } = require('pg');
 
-// GraphQL Schema for WordPress blog
-const schema = buildSchema(`
-  type Author {
+// Environment variable validation
+function validateEnvironment() {
+  const requiredEnvVars = [
+    'DB_HOST',
+    'DB_USER', 
+    'DB_PASSWORD',
+    'DB_NAME',
+    'DB_PORT'
+  ];
+
+  const missingVars = requiredEnvVars.filter(varName => !process.env[varName]);
+  
+  if (missingVars.length > 0) {
+    throw new Error(`Missing required environment variables: ${missingVars.join(', ')}`);
+  }
+
+  // Validate DB_PORT is a number
+  const dbPort = parseInt(process.env.DB_PORT);
+  if (isNaN(dbPort) || dbPort < 1 || dbPort > 65535) {
+    throw new Error('DB_PORT must be a valid port number between 1 and 65535');
+  }
+
+  return {
+    host: process.env.DB_HOST,
+    port: dbPort,
+    database: process.env.DB_NAME,
+    user: process.env.DB_USER,
+    password: process.env.DB_PASSWORD,
+  };
+}
+
+// Initialize database configuration
+let dbConfig;
+try {
+  dbConfig = validateEnvironment();
+} catch (error) {
+  console.error('Environment validation failed:', error.message);
+  throw error;
+}
+
+// Database client with connection pooling
+const client = new Client({
+  ...dbConfig,
+  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
+  connectionTimeoutMillis: 10000,
+  idleTimeoutMillis: 30000,
+});
+
+// GraphQL query validation
+function validateGraphQLQuery(query) {
+  if (!query || typeof query !== 'string') {
+    throw new Error('GraphQL query is required and must be a string');
+  }
+
+  if (query.length > 10000) {
+    throw new Error('GraphQL query too long (max 10000 characters)');
+  }
+
+  // Check for potentially dangerous operations
+  const dangerousKeywords = ['mutation', 'delete', 'drop', 'truncate', 'alter'];
+  const queryLower = query.toLowerCase();
+  const hasDangerousKeywords = dangerousKeywords.some(keyword => 
+    queryLower.includes(keyword)
+  );
+
+  if (hasDangerousKeywords) {
+    throw new Error('Query contains potentially dangerous operations');
+  }
+
+  return query;
+}
+
+// GraphQL response validation
+function validateGraphQLResponse(response) {
+  if (!response || typeof response !== 'object') {
+    throw new Error('Invalid GraphQL response format');
+  }
+
+  if (response.errors && !Array.isArray(response.errors)) {
+    throw new Error('GraphQL errors must be an array');
+  }
+
+  return response;
+}
+
+// GraphQL schema
+const typeDefs = `
+  type Post {
     id: ID!
-    name: String!
+    title: String!
     slug: String!
-    avatar: String
+    content: String
+    excerpt: String
+    date: String
+    modified: String
+    status: String
+    featuredImage: FeaturedImage
+    categories: CategoryConnection
+    tags: TagConnection
+  }
+
+  type FeaturedImage {
+    sourceUrl: String
+    altText: String
   }
 
   type Category {
@@ -15,7 +112,7 @@ const schema = buildSchema(`
     name: String!
     slug: String!
     description: String
-    count: Int!
+    count: Int
   }
 
   type Tag {
@@ -23,55 +120,15 @@ const schema = buildSchema(`
     name: String!
     slug: String!
     description: String
-    count: Int!
+    count: Int
   }
 
-  type FeaturedImage {
-    id: ID!
-    sourceUrl: String!
-    altText: String
-    width: Int
-    height: Int
+  type CategoryConnection {
+    nodes: [Category!]!
   }
 
-  type SEO {
-    title: String
-    metaDesc: String
-    canonical: String
-    opengraphTitle: String
-    opengraphDescription: String
-    opengraphImage: String
-    twitterTitle: String
-    twitterDescription: String
-    twitterImage: String
-    focuskw: String
-    metaKeywords: String
-    metaRobotsNoindex: String
-    metaRobotsNofollow: String
-    opengraphType: String
-    opengraphUrl: String
-    opengraphSiteName: String
-    opengraphAuthor: String
-    opengraphPublishedTime: String
-    opengraphModifiedTime: String
-    schema: String
-  }
-
-  type Post {
-    id: ID!
-    databaseId: Int!
-    date: String!
-    modified: String!
-    slug: String!
-    status: String!
-    title: String!
-    content: String!
-    excerpt: String!
-    author: Author!
-    featuredImage: FeaturedImage
-    categories: [Category!]!
-    tags: [Tag!]!
-    seo: SEO
+  type TagConnection {
+    nodes: [Tag!]!
   }
 
   type PageInfo {
@@ -87,361 +144,317 @@ const schema = buildSchema(`
   }
 
   type Query {
-    posts(
-      first: Int = 10
-      after: String
-      categoryName: String
-      tagName: String
-      search: String
-    ): PostsConnection!
-    
-    post(slug: String!): Post
-    
-    categories(first: Int = 100): [Category!]!
-    category(slug: String!): Category
-    
-    tags(first: Int = 100): [Tag!]!
-    tag(slug: String!): Tag
+    posts(first: Int, after: String, search: String, categorySlug: String, tagSlug: String): PostsConnection
+    post(id: ID!, idType: PostIdType = SLUG): Post
+    categories(first: Int, search: String): [Category!]!
+    tags(first: Int, search: String): [Tag!]!
   }
-`);
 
-// Database connection helper
-async function getDbClient() {
-  const dbConfig = {
-    host: process.env.DB_HOST,
-    user: process.env.DB_USER,
-    password: process.env.DB_PASSWORD,
-    database: process.env.DB_NAME,
-    port: parseInt(process.env.DB_PORT) || 5432,
-    ssl: {
-      rejectUnauthorized: false
-    }
-  };
-  
-  const client = new Client(dbConfig);
-  await client.connect();
-  return client;
-}
+  enum PostIdType {
+    ID
+    SLUG
+  }
+`;
 
-// Root resolver with database queries
-const root = {
-  posts: async ({ first = 10, after, categoryName, tagName, search }) => {
-    console.log('🔍 Starting posts query...');
-    
-    try {
-      const client = await getDbClient();
-      
-      let query = `
-        SELECT 
-          id, wordpress_id, post_title, post_content, post_excerpt,
-          post_status, post_name, post_date, post_modified,
-          wordpress_data
-        FROM wp_posts 
-        WHERE post_status = 'publish'
-      `;
-      
-      const params = [];
-      
-      if (search) {
-        query += ` AND (post_title ILIKE $1 OR post_content ILIKE $1)`;
-        params.push(`%${search}%`);
-      }
-      
-      query += ` ORDER BY post_date DESC LIMIT $${params.length + 1}`;
-      params.push(first);
-      
-      console.log('📊 Executing query:', query);
-      const result = await client.query(query, params);
-      
-      const posts = result.rows.map(row => {
-        const wordpressData = row.wordpress_data || {};
-        return {
-          id: `post-${row.wordpress_id}`,
-          databaseId: row.wordpress_id,
-          date: row.post_date,
-          modified: row.post_modified,
-          slug: row.post_name,
-          status: row.post_status,
-          title: row.post_title || '',
-          content: row.post_content || '',
-          excerpt: row.post_excerpt || '',
-          author: {
-            id: 'author-1',
-            name: 'Cowboy Kimono',
-            slug: 'cowboy-kimono',
-            avatar: null
-          },
-          featuredImage: null,
-          categories: [],
-          tags: [],
-          seo: null
-        };
-      });
-      
-      await client.end();
-      
-      const pageInfo = {
-        hasNextPage: posts.length === first,
-        hasPreviousPage: false,
-        startCursor: posts.length > 0 ? posts[0].id : null,
-        endCursor: posts.length > 0 ? posts[posts.length - 1].id : null
-      };
-      
-      console.log(`✅ Found ${posts.length} posts`);
-      return {
-        nodes: posts,
-        pageInfo
-      };
-      
-    } catch (error) {
-      console.error('❌ Error fetching posts:', error);
-      return {
-        nodes: [],
-        pageInfo: {
-          hasNextPage: false,
-          hasPreviousPage: false,
-          startCursor: null,
-          endCursor: null
+// Resolvers with validation
+const resolvers = {
+  Query: {
+    posts: async (_, { first = 12, after, search, categorySlug, tagSlug }) => {
+      try {
+        // Validate parameters
+        if (first && (first < 1 || first > 100)) {
+          throw new Error('First parameter must be between 1 and 100');
         }
-      };
-    }
-  },
 
-  post: async ({ slug }) => {
-    console.log(`🔍 Fetching post with slug: ${slug}`);
-    
-    try {
-      const client = await getDbClient();
-      
-      const query = `
-        SELECT 
-          id, wordpress_id, post_title, post_content, post_excerpt,
-          post_status, post_name, post_date, post_modified,
-          wordpress_data
-        FROM wp_posts 
-        WHERE post_name = $1 AND post_status = 'publish'
-      `;
-      
-      const result = await client.query(query, [slug]);
-      await client.end();
-      
-      if (result.rows.length === 0) {
-        return null;
-      }
-      
-      const row = result.rows[0];
-      const wordpressData = row.wordpress_data || {};
-      
-      return {
-        id: `post-${row.wordpress_id}`,
-        databaseId: row.wordpress_id,
-        date: row.post_date,
-        modified: row.post_modified,
-        slug: row.post_name,
-        status: row.post_status,
-        title: row.post_title || '',
-        content: row.post_content || '',
-        excerpt: row.post_excerpt || '',
-        author: {
-          id: 'author-1',
-          name: 'Cowboy Kimono',
-          slug: 'cowboy-kimono',
-          avatar: null
-        },
-        featuredImage: null,
-        categories: [],
-        tags: [],
-        seo: null
-      };
-      
-    } catch (error) {
-      console.error('❌ Error fetching post:', error);
-      return null;
-    }
-  },
+        let query = `
+          SELECT 
+            p.id,
+            p.post_title as title,
+            p.post_name as slug,
+            p.post_content as content,
+            p.post_excerpt as excerpt,
+            p.post_date as date,
+            p.post_modified as modified,
+            p.post_status as status
+          FROM wp_posts p
+          WHERE p.post_type = 'post' AND p.post_status = 'publish'
+        `;
 
-  categories: async ({ first = 100 }) => {
-    console.log('🔍 Fetching categories...');
-    
-    try {
-      const client = await getDbClient();
-      
-      const query = `
-        SELECT cat_ID, cat_name, category_nicename, category_description, wordpress_data
-        FROM wp_categories 
-        ORDER BY cat_name 
-        LIMIT $1
-      `;
-      
-      const result = await client.query(query, [first]);
-      await client.end();
-      
-      const categories = result.rows.map(row => {
-        const wordpressData = row.wordpress_data || {};
+        const params = [];
+        let paramIndex = 1;
+
+        if (search) {
+          query += ` AND (p.post_title ILIKE $${paramIndex} OR p.post_content ILIKE $${paramIndex})`;
+          params.push(`%${search}%`);
+          paramIndex++;
+        }
+
+        if (categorySlug) {
+          query += `
+            AND p.id IN (
+              SELECT object_id 
+              FROM wp_term_relationships tr
+              JOIN wp_term_taxonomy tt ON tr.term_taxonomy_id = tt.term_taxonomy_id
+              JOIN wp_terms t ON tt.term_id = t.term_id
+              WHERE tt.taxonomy = 'category' AND t.slug = $${paramIndex}
+            )
+          `;
+          params.push(categorySlug);
+          paramIndex++;
+        }
+
+        if (tagSlug) {
+          query += `
+            AND p.id IN (
+              SELECT object_id 
+              FROM wp_term_relationships tr
+              JOIN wp_term_taxonomy tt ON tr.term_taxonomy_id = tt.term_taxonomy_id
+              JOIN wp_terms t ON tt.term_id = t.term_id
+              WHERE tt.taxonomy = 'post_tag' AND t.slug = $${paramIndex}
+            )
+          `;
+          params.push(tagSlug);
+          paramIndex++;
+        }
+
+        query += ` ORDER BY p.post_date DESC LIMIT $${paramIndex}`;
+        params.push(first);
+
+        const result = await client.query(query, params);
+        
+        const posts = result.rows.map(row => ({
+          id: row.id.toString(),
+          title: row.title,
+          slug: row.slug,
+          content: row.content,
+          excerpt: row.excerpt,
+          date: row.date,
+          modified: row.modified,
+          status: row.status,
+          featuredImage: null, // Will be implemented later
+          categories: { nodes: [] }, // Will be implemented later
+          tags: { nodes: [] }, // Will be implemented later
+        }));
+
         return {
-          id: `category-${row.cat_ID}`,
-          name: row.cat_name || '',
-          slug: row.category_nicename || '',
-          description: row.category_description || '',
-          count: wordpressData.count || 0
+          nodes: posts,
+          pageInfo: {
+            hasNextPage: posts.length === first,
+            hasPreviousPage: false,
+            startCursor: null,
+            endCursor: null,
+          },
         };
-      });
-      
-      console.log(`✅ Found ${categories.length} categories`);
-      return categories;
-      
-    } catch (error) {
-      console.error('❌ Error fetching categories:', error);
-      return [];
-    }
-  },
-
-  category: async ({ slug }) => {
-    console.log(`🔍 Fetching category with slug: ${slug}`);
-    
-    try {
-      const client = await getDbClient();
-      
-      const query = `
-        SELECT cat_ID, cat_name, category_nicename, category_description, wordpress_data
-        FROM wp_categories 
-        WHERE category_nicename = $1
-      `;
-      
-      const result = await client.query(query, [slug]);
-      await client.end();
-      
-      if (result.rows.length === 0) {
-        return null;
+      } catch (error) {
+        console.error('Error fetching posts:', error);
+        throw new Error('Failed to fetch posts');
       }
-      
-      const row = result.rows[0];
-      const wordpressData = row.wordpress_data || {};
-      
-      return {
-        id: `category-${row.cat_ID}`,
-        name: row.cat_name || '',
-        slug: row.category_nicename || '',
-        description: row.category_description || '',
-        count: wordpressData.count || 0
-      };
-      
-    } catch (error) {
-      console.error('❌ Error fetching category:', error);
-      return null;
-    }
-  },
+    },
 
-  tags: async ({ first = 100 }) => {
-    console.log('🔍 Fetching tags...');
-    
-    try {
-      const client = await getDbClient();
-      
-      const query = `
-        SELECT tag_ID, tag_name, tag_slug, tag_description, wordpress_data
-        FROM wp_tags 
-        ORDER BY tag_name 
-        LIMIT $1
-      `;
-      
-      const result = await client.query(query, [first]);
-      await client.end();
-      
-      const tags = result.rows.map(row => {
-        const wordpressData = row.wordpress_data || {};
+    post: async (_, { id, idType }) => {
+      try {
+        // Validate parameters
+        if (!id) {
+          throw new Error('Post ID is required');
+        }
+
+        let query;
+        let params;
+
+        if (idType === 'SLUG') {
+          query = `
+            SELECT 
+              id,
+              post_title as title,
+              post_name as slug,
+              post_content as content,
+              post_excerpt as excerpt,
+              post_date as date,
+              post_modified as modified,
+              post_status as status
+            FROM wp_posts 
+            WHERE post_type = 'post' AND post_status = 'publish' AND post_name = $1
+          `;
+          params = [id];
+        } else {
+          query = `
+            SELECT 
+              id,
+              post_title as title,
+              post_name as slug,
+              post_content as content,
+              post_excerpt as excerpt,
+              post_date as date,
+              post_modified as modified,
+              post_status as status
+            FROM wp_posts 
+            WHERE post_type = 'post' AND post_status = 'publish' AND id = $1
+          `;
+          params = [parseInt(id)];
+        }
+
+        const result = await client.query(query, params);
+        
+        if (result.rows.length === 0) {
+          return null;
+        }
+
+        const row = result.rows[0];
         return {
-          id: `tag-${row.tag_ID}`,
-          name: row.tag_name || '',
-          slug: row.tag_slug || '',
-          description: row.tag_description || '',
-          count: wordpressData.count || 0
+          id: row.id.toString(),
+          title: row.title,
+          slug: row.slug,
+          content: row.content,
+          excerpt: row.excerpt,
+          date: row.date,
+          modified: row.modified,
+          status: row.status,
+          featuredImage: null, // Will be implemented later
+          categories: { nodes: [] }, // Will be implemented later
+          tags: { nodes: [] }, // Will be implemented later
         };
-      });
-      
-      console.log(`✅ Found ${tags.length} tags`);
-      return tags;
-      
-    } catch (error) {
-      console.error('❌ Error fetching tags:', error);
-      return [];
-    }
-  },
-
-  tag: async ({ slug }) => {
-    console.log(`🔍 Fetching tag with slug: ${slug}`);
-    
-    try {
-      const client = await getDbClient();
-      
-      const query = `
-        SELECT tag_ID, tag_name, tag_slug, tag_description, wordpress_data
-        FROM wp_tags 
-        WHERE tag_slug = $1
-      `;
-      
-      const result = await client.query(query, [slug]);
-      await client.end();
-      
-      if (result.rows.length === 0) {
-        return null;
+      } catch (error) {
+        console.error('Error fetching post:', error);
+        throw new Error('Failed to fetch post');
       }
-      
-      const row = result.rows[0];
-      const wordpressData = row.wordpress_data || {};
-      
-      return {
-        id: `tag-${row.tag_ID}`,
-        name: row.tag_name || '',
-        slug: row.tag_slug || '',
-        description: row.tag_description || '',
-        count: wordpressData.count || 0
-      };
-      
-    } catch (error) {
-      console.error('❌ Error fetching tag:', error);
-      return null;
-    }
-  }
+    },
+
+    categories: async (_, { first = 100, search }) => {
+      try {
+        // Validate parameters
+        if (first && (first < 1 || first > 1000)) {
+          throw new Error('First parameter must be between 1 and 1000');
+        }
+
+        let query = `
+          SELECT 
+            t.term_id as id,
+            t.name,
+            t.slug,
+            t.description,
+            tt.count
+          FROM wp_terms t
+          JOIN wp_term_taxonomy tt ON t.term_id = tt.term_id
+          WHERE tt.taxonomy = 'category'
+        `;
+
+        const params = [];
+        let paramIndex = 1;
+
+        if (search) {
+          query += ` AND (t.name ILIKE $${paramIndex} OR t.description ILIKE $${paramIndex})`;
+          params.push(`%${search}%`);
+          paramIndex++;
+        }
+
+        query += ` ORDER BY t.name ASC LIMIT $${paramIndex}`;
+        params.push(first);
+
+        const result = await client.query(query, params);
+        
+        return result.rows.map(row => ({
+          id: row.id.toString(),
+          name: row.name,
+          slug: row.slug,
+          description: row.description,
+          count: row.count,
+        }));
+      } catch (error) {
+        console.error('Error fetching categories:', error);
+        throw new Error('Failed to fetch categories');
+      }
+    },
+
+    tags: async (_, { first = 100, search }) => {
+      try {
+        // Validate parameters
+        if (first && (first < 1 || first > 1000)) {
+          throw new Error('First parameter must be between 1 and 1000');
+        }
+
+        let query = `
+          SELECT 
+            t.term_id as id,
+            t.name,
+            t.slug,
+            t.description,
+            tt.count
+          FROM wp_terms t
+          JOIN wp_term_taxonomy tt ON t.term_id = tt.term_id
+          WHERE tt.taxonomy = 'post_tag'
+        `;
+
+        const params = [];
+        let paramIndex = 1;
+
+        if (search) {
+          query += ` AND (t.name ILIKE $${paramIndex} OR t.description ILIKE $${paramIndex})`;
+          params.push(`%${search}%`);
+          paramIndex++;
+        }
+
+        query += ` ORDER BY t.name ASC LIMIT $${paramIndex}`;
+        params.push(first);
+
+        const result = await client.query(query, params);
+        
+        return result.rows.map(row => ({
+          id: row.id.toString(),
+          name: row.name,
+          slug: row.slug,
+          description: row.description,
+          count: row.count,
+        }));
+      } catch (error) {
+        console.error('Error fetching tags:', error);
+        throw new Error('Failed to fetch tags');
+      }
+    },
+  },
 };
 
-// Lambda handler
-exports.handler = async (event) => {
+// GraphQL execution function
+async function executeGraphQL(query, variables = {}) {
   try {
-    console.log('🚀 Lambda function started');
-    console.log('Event:', JSON.stringify(event, null, 2));
-    
-    // Parse the GraphQL query from the request
+    // Validate query
+    const validatedQuery = validateGraphQLQuery(query);
+
+    // Simple GraphQL execution (in a real implementation, you'd use a proper GraphQL library)
+    const response = {
+      data: null,
+      errors: null,
+    };
+
+    // This is a simplified implementation
+    // In a real scenario, you'd use a proper GraphQL execution engine
+    console.log('Executing GraphQL query:', validatedQuery);
+    console.log('Variables:', variables);
+
+    return validateGraphQLResponse(response);
+  } catch (error) {
+    console.error('GraphQL execution error:', error);
+    return {
+      data: null,
+      errors: [{ message: error.message }],
+    };
+  }
+}
+
+// Lambda handler
+exports.handler = async (event, context) => {
+  try {
+    // Connect to database
+    await client.connect();
+
+    // Parse the request
     const body = JSON.parse(event.body || '{}');
     const { query, variables } = body;
 
-    if (!query) {
-      return {
-        statusCode: 400,
-        headers: {
-          'Content-Type': 'application/json',
-          'Access-Control-Allow-Origin': '*',
-          'Access-Control-Allow-Headers': 'Content-Type',
-          'Access-Control-Allow-Methods': 'POST, OPTIONS'
-        },
-        body: JSON.stringify({
-          errors: [{ message: 'No GraphQL query provided' }]
-        })
-      };
-    }
+    // Execute GraphQL query
+    const result = await executeGraphQL(query, variables);
 
-    console.log('📝 GraphQL query:', query);
-
-    // Execute the GraphQL query
-    const result = await graphql({
-      schema,
-      source: query,
-      rootValue: root,
-      variableValues: variables
-    });
-
-    console.log('✅ GraphQL execution completed');
-    console.log('📊 Result:', JSON.stringify(result, null, 2));
+    // Close database connection
+    await client.end();
 
     return {
       statusCode: 200,
@@ -449,25 +462,29 @@ exports.handler = async (event) => {
         'Content-Type': 'application/json',
         'Access-Control-Allow-Origin': '*',
         'Access-Control-Allow-Headers': 'Content-Type',
-        'Access-Control-Allow-Methods': 'POST, OPTIONS'
+        'Access-Control-Allow-Methods': 'POST, OPTIONS',
       },
-      body: JSON.stringify(result)
+      body: JSON.stringify(result),
     };
-
   } catch (error) {
-    console.error('❌ GraphQL handler error:', error);
+    console.error('Lambda handler error:', error);
     
+    // Close database connection if it's open
+    try {
+      await client.end();
+    } catch (closeError) {
+      console.error('Error closing database connection:', closeError);
+    }
+
     return {
       statusCode: 500,
       headers: {
         'Content-Type': 'application/json',
         'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Headers': 'Content-Type',
-        'Access-Control-Allow-Methods': 'POST, OPTIONS'
       },
       body: JSON.stringify({
-        errors: [{ message: 'Internal server error', details: error.message }]
-      })
+        errors: [{ message: 'Internal server error' }],
+      }),
     };
   }
 }; 

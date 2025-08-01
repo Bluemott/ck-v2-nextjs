@@ -176,6 +176,20 @@ const nextConfig: NextConfig = {
     
     return config;
   },
+  
+  // Add build-time environment variable handling
+  env: {
+    CUSTOM_KEY: process.env.CUSTOM_KEY,
+  },
+  
+  // Ensure proper handling of environment variables
+  publicRuntimeConfig: {
+    // Add any public runtime config here
+  },
+  
+  serverRuntimeConfig: {
+    // Add any server runtime config here
+  },
 };
 
 export default nextConfig;

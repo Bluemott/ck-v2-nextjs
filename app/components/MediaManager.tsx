@@ -44,7 +44,6 @@ const MediaManager = ({
   const [uploadProgress, setUploadProgress] = useState(0);
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [mediaFiles, setMediaFiles] = useState<MediaFile[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('');
   const [showUploadForm, setShowUploadForm] = useState(false);
@@ -154,17 +153,22 @@ const MediaManager = ({
   };
 
   // Handle file selection
-  const handleFileSelect = (media: MediaFile) => {
+  const handleFileSelect = (_media: MediaFile) => {
     if (multiple && onSelectionChange) {
-      const isSelected = selectedMedia.some(m => m.id === media.id);
+      const isSelected = selectedMedia.some(m => m.id === _media.id);
       if (isSelected) {
-        onSelectionChange(selectedMedia.filter(m => m.id !== media.id));
+        onSelectionChange(selectedMedia.filter(m => m.id !== _media.id));
       } else {
-        onSelectionChange([...selectedMedia, media]);
+        onSelectionChange([...selectedMedia, _media]);
       }
     } else if (!multiple && onSelect) {
-      onSelect(media);
+      onSelect(_media);
     }
+  };
+
+  // Handle drag over
+  const handleDragOver = (_media: React.DragEvent) => {
+    // Handle drag over logic here
   };
 
   // Check if file is selected
@@ -176,7 +180,7 @@ const MediaManager = ({
   const filteredMedia = mediaFiles.filter(media => {
     const matchesSearch = media.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          media.originalName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         media.tags.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase()));
+                         media.tags.some((tag: string) => tag.toLowerCase().includes(searchTerm.toLowerCase()));
     
     const matchesCategory = !selectedCategory || media.category === selectedCategory;
     
@@ -192,7 +196,7 @@ const MediaManager = ({
     const k = 1024;
     const sizes = ['Bytes', 'KB', 'MB', 'GB'];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    return `${parseFloat((bytes / Math.pow(k, i)).toFixed(2))} ${sizes[i]}`;
   };
 
   // Get file type icon

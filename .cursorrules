@@ -1,137 +1,67 @@
 ---
-name: nextjs-aws-optimization.mdc
-description: Next.js best practices optimized for AWS deployment and performance
-globs: ***/**.{ts,tsx,js,jsx}
+name: nextjs-amplify-optimization
+description: Next.js best practices for AWS Amplify deployment
+globs: **/*.{ts,tsx,js,jsx}
 ---
-- Use App Router with static generation (generateStaticParams) to minimize Lambda cold starts
-- Implement ISR (Incremental Static Regeneration) for dynamic content to reduce server costs
-- Leverage Next.js Image Optimization with CloudFront for automatic WebP conversion and caching
-- Use middleware sparingly to avoid additional Lambda invocations; prefer static edge functions
-- Configure output: 'standalone' for smaller Docker images in ECS/Fargate deployments
-- Implement proper caching headers to maximize CloudFront cache hit ratios
-- Use dynamic imports and code splitting to reduce bundle sizes and improve cold start times
+- Use App Router with generateStaticParams for optimal Amplify SSG
+- Configure output: 'export' or 'standalone' based on Amplify hosting needs
+- Implement ISR sparingly; prefer static generation for Amplify's CDN caching
+- Use next/image with unoptimized={true} for Amplify compatibility
+- Leverage dynamic imports for code splitting and faster cold starts
 
 ---
-name: aws-serverless-best-practices.mdc
-description: AWS serverless optimization for cost and performance
-globs: ***/**.{ts,tsx,js,jsx}
+name: aws-amplify-integration
+description: AWS Amplify and serverless optimization
+globs: **/*.{ts,tsx,js,jsx}
 ---
-- Minimize Lambda function size by using tree shaking and excluding dev dependencies
-- Implement connection reuse for database connections (RDS Proxy for relational DBs)
-- Use DynamoDB single-table design patterns to reduce costs and improve performance
-- Leverage Lambda@Edge for global content delivery and reduced latency
-- Implement proper error handling to avoid unnecessary Lambda retries and costs
-- Use AWS SDK v3 with modular imports to reduce bundle size
-- Configure appropriate memory allocation for Lambda functions to optimize cost/performance ratio
-- Use provisioned concurrency only for high-traffic, latency-sensitive functions
+- Use AWS SDK v3 with modular imports to minimize bundle size
+- Implement proper error handling for AWS service timeouts and retries
+- Use environment variables through Amplify's env configuration
+- Leverage Amplify's built-in GraphQL with proper TypeScript codegen
+- Configure appropriate memory/timeout settings in amplify.yml
+- Use connection pooling for database connections in serverless functions
 
 ---
-name: typescript-aws-integration.mdc
-description: TypeScript patterns for AWS services with type safety
-globs: ***/**.{ts,tsx}
+name: typescript-aws-patterns
+description: TypeScript best practices for AWS services
+globs: **/*.{ts,tsx}
 ---
-- Use AWS SDK v3 types for better IntelliSense and compile-time error checking
-- Create strict types for DynamoDB items and API Gateway responses
-- Implement proper error types for AWS service exceptions
-- Use utility types for AWS resource configurations (CloudFormation, CDK)
-- Define environment variable types with proper validation using zod or similar
-- Create reusable type definitions for common AWS patterns (Lambda events, S3 objects)
-- Use conditional types for service-specific configurations
+- Define strict types for AWS SDK responses and Amplify GraphQL operations
+- Use zod or similar for runtime environment variable validation
+- Create reusable type definitions for common AWS service patterns
+- Implement proper error types extending AWS service exceptions
+- Use utility types for consistent API response shapes
 
 ---
-name: tailwindcss-performance-optimization.mdc
-description: Tailwind CSS optimization for faster builds and smaller bundles
-globs: ***/**.{ts,tsx,css}
+name: react-performance-amplify
+description: React optimization for Amplify hosting
+globs: **/*.{tsx,ts}
 ---
-- Configure JIT mode and purge unused styles to minimize CSS bundle size
-- Use Tailwind's container queries and dynamic viewports for responsive AWS CloudFront delivery
-- Implement CSS-in-JS alternatives like styled-components only when necessary for SSR
-- Leverage Tailwind's built-in dark mode for reduced JavaScript bundle size
-- Use Tailwind plugins sparingly to avoid build-time performance issues
-- Configure proper content paths to ensure efficient purging in CI/CD pipelines
-- Use CSS custom properties for theme values that need runtime changes
+- Use React.lazy with Suspense for component-level code splitting
+- Implement proper memoization (useMemo, useCallback) for expensive operations
+- Use React Query/TanStack Query for client-side caching and background updates
+- Implement loading states compatible with Amplify's SSG/SSR hybrid approach
+- Use React Server Components where supported by Amplify
 
 ---
-name: aws-data-fetching-patterns.mdc
-description: Optimized data fetching patterns for AWS services
-globs: ***/**.{ts,tsx}
+name: security-monitoring
+description: Security and monitoring for Amplify deployments
+globs: **/*.{ts,tsx,js,jsx}
 ---
-- Use React Query/TanStack Query with proper caching strategies to reduce API calls
-- Implement optimistic updates to improve perceived performance
-- Use SWR or similar for client-side data fetching with built-in retry logic
-- Leverage Next.js streaming and Suspense for improved loading states
-- Implement proper error boundaries for AWS service failures
-- Use GraphQL with AWS AppSync for real-time data synchronization
-- Cache API responses in Redis/ElastiCache for frequently accessed data
-- Implement request deduplication to avoid duplicate AWS API calls
+- Use Amplify's built-in authentication patterns (Cognito integration)
+- Implement input validation and sanitization for all user inputs
+- Use structured logging with correlation IDs for CloudWatch integration
+- Configure CSP headers through Amplify's custom headers
+- Implement rate limiting for API routes using Amplify's built-in protections
 
 ---
-name: aws-security-and-monitoring.mdc
-description: Security and monitoring best practices for AWS deployments
-globs: ***/**.{ts,tsx,js,jsx}
+name: code-quality-standards
+description: Code quality and consistency rules
+globs: **/*.{ts,tsx,js,jsx}
 ---
-- Use AWS IAM roles with least privilege principle for all services
-- Implement proper input validation and sanitization for all user inputs
-- Use AWS Secrets Manager or Parameter Store for sensitive configuration
-- Enable AWS CloudTrail and CloudWatch for comprehensive monitoring
-- Implement structured logging with correlation IDs for distributed tracing
-- Use Content Security Policy (CSP) headers for XSS protection
-- Enable AWS WAF for API Gateway and CloudFront distributions
-- Implement rate limiting to prevent abuse and control costs
-
----
-name: react-aws-performance.mdc
-description: React optimization patterns for AWS environments
-globs: ***/**.{ts,tsx}
----
-- Use React.lazy with Suspense for code splitting aligned with Lambda function boundaries
-- Implement proper memoization (useMemo, useCallback) to reduce re-renders in serverless environments
-- Use React Query's background refetching to keep data fresh without blocking UI
-- Implement virtualization for large lists to reduce memory usage in client-side rendering
-- Use React Server Components where possible to reduce client bundle size
-- Implement proper loading states that work well with CloudFront caching
-- Use React's concurrent features (useTransition, useDeferredValue) for better UX
-- Optimize component re-renders to minimize hydration mismatches in SSR
-
----
-name: aws-cost-optimization.mdc
-description: Cost optimization strategies for AWS services
-globs: ***/**.{ts,tsx,js,jsx,json,yml,yaml}
----
-- Use AWS Cost Explorer APIs to implement cost monitoring in applications
-- Implement proper CloudWatch log retention policies to control storage costs
-- Use S3 lifecycle policies for static assets and user uploads
-- Configure appropriate auto-scaling policies for ECS/Fargate services
-- Implement request batching for DynamoDB operations to reduce consumed capacity
-- Use CloudFront caching strategies to minimize origin requests
-- Monitor and optimize Lambda function duration to reduce execution costs
-- Use Spot instances for development and non-critical workloads
-- Implement proper resource tagging for cost allocation and monitoring
-
----
-name: eslint-aws-focused.mdc
-description: ESLint configuration optimized for AWS development
-globs: ***/**.{ts,tsx,js,jsx}
----
-- Enable AWS SDK-specific linting rules to catch common mistakes
-- Use eslint-plugin-security to identify potential security vulnerabilities
-- Configure rules for proper async/await usage in Lambda functions
-- Enable rules for environment variable validation and usage
-- Use custom rules for consistent error handling patterns across AWS services
-- Configure rules to enforce proper logging patterns for CloudWatch
-- Enable rules for consistent naming conventions for AWS resources
-- Use rules to enforce proper TypeScript usage with AWS SDK types
-
----
-name: aws-infrastructure-as-code.mdc
-description: Best practices for AWS CDK and infrastructure management
-globs: ***/**.{ts,js,yml,yaml,json}
----
-- Use AWS CDK constructs for consistent resource creation and management
-- Implement proper stack separation (dev/staging/prod) with parameter overrides
-- Use CDK aspects for cross-cutting concerns like tagging and security policies
-- Implement proper secret management with AWS Secrets Manager integration
-- Use CloudFormation outputs for cross-stack resource sharing
-- Implement proper backup and disaster recovery strategies in IaC
-- Use CDK pipelines for automated deployment and rollback capabilities
-- Configure proper monitoring and alerting through CloudWatch in IaC templates
+- Prefer async/await over Promises for better error handling
+- Use descriptive variable names and avoid abbreviations
+- Implement consistent error handling patterns across all AWS integrations
+- Write self-documenting code with clear function and variable names
+- Use TypeScript strict mode and avoid 'any' type
+- Implement proper loading and error states for all async operations

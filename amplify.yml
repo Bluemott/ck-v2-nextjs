@@ -4,28 +4,18 @@ frontend:
     preBuild:
       commands:
         - echo "Starting preBuild phase"
-        - which node || echo "Node not found in PATH"
-        - which npm || echo "npm not found in PATH"
+        - echo "Node version: $(node --version)"
+        - echo "npm version: $(npm --version)"
         - echo "Current directory: $(pwd)"
-        - echo "Directory contents:"
-        - ls -la
-        - echo "Environment variables:"
-        - env | grep -E "(NODE|PATH)" || echo "No NODE or PATH variables found"
-        - echo "Trying to find Node.js..."
-        - find /usr -name "node" 2>/dev/null | head -5 || echo "Node not found in /usr"
-        - find /opt -name "node" 2>/dev/null | head -5 || echo "Node not found in /opt"
-        - echo "Checking if we can run node directly..."
-        - /usr/bin/node --version || echo "Node not available at /usr/bin/node"
-        - echo "Checking npm availability..."
-        - /usr/bin/npm --version || echo "npm not available at /usr/bin/npm"
         - echo "Installing dependencies..."
-        - npm install --legacy-peer-deps --no-optional || echo "npm install failed"
+        - npm ci --legacy-peer-deps --no-optional || npm install --legacy-peer-deps --no-optional
         - echo "Dependencies installed successfully"
     build:
       commands:
         - echo "Starting build phase"
-        - npm run build || echo "Build failed"
-        - echo "Build completed"
+        - echo "Building application..."
+        - npm run build
+        - echo "Build completed successfully"
   artifacts:
     baseDirectory: .next
     files:

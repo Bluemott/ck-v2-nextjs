@@ -112,21 +112,12 @@ export async function submitToIndexNow(
   };
 
   // Submit to each search engine
-  console.log('IndexNow submission:', { submission, searchEngines });
-  console.log('Valid URLs being submitted:', validUrls);
-  console.log('Host validation:', { 
-    submissionHost: new URL(host).hostname,
-    urlHosts: validUrls.map(url => new URL(url).hostname)
-  });
-  
   const results = await Promise.allSettled(
     searchEngines.map(async (engine) => {
       const endpoint = INDEXNOW_ENDPOINTS[engine];
       if (!endpoint) {
         throw new Error(`Unsupported search engine: ${engine}`);
       }
-
-      console.log(`Submitting to ${engine} at ${endpoint}`);
       
       try {
         const response = await fetch(endpoint, {
@@ -139,12 +130,9 @@ export async function submitToIndexNow(
           // Add timeout to prevent hanging requests
           signal: AbortSignal.timeout(15000), // 15 second timeout
         });
-
-        console.log(`${engine} response:`, { status: response.status, statusText: response.statusText });
         
         if (!response.ok) {
           const errorText = await response.text().catch(() => 'Unknown error');
-          console.error(`${engine} error response:`, errorText);
           
           // Handle specific error cases
           if (engine === 'google' && response.status === 404) {
@@ -165,10 +153,8 @@ Error details: ${errorDetails}`);
           throw new Error(`${engine} returned status ${response.status}: ${errorText}`);
         }
 
-        console.log(`${engine} submission successful`);
         return { engine, success: true };
       } catch (error) {
-        console.error(`${engine} submission error:`, error);
         if (error instanceof Error && error.name === 'AbortError') {
           throw new Error(`${engine} submission timed out after 15 seconds`);
         }

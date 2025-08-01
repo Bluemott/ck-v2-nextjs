@@ -82,6 +82,29 @@ export function getRedirectsForNextConfig(): RedirectEntry[] {
 /**
  * Export redirects for use in Next.js config
  */
-export function createRedirectsConfig() {
-  return getRedirectsForNextConfig();
+export async function createRedirectsConfig() {
+  try {
+    return getRedirectsForNextConfig();
+  } catch (error) {
+    // Log error only in development
+    if (process.env.NODE_ENV === 'development') {
+      console.error('Error creating redirects config:', error);
+    }
+    return [];
+  }
+}
+
+/**
+ * Get redirects for Next.js config
+ */
+export async function getRedirects() {
+  try {
+    return getRedirectsForNextConfig();
+  } catch (error) {
+    // Log error only in development
+    if (process.env.NODE_ENV === 'development') {
+      console.error('Error fetching redirects:', error);
+    }
+    return [];
+  }
 } 

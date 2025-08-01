@@ -68,9 +68,10 @@ const nextConfig: NextConfig = {
   // Performance optimizations
   experimental: {
     optimizePackageImports: ['@next/font'],
-    // Enable streaming for better performance
-    serverComponentsExternalPackages: ['pg'],
   },
+  
+  // Server external packages moved to correct location
+  serverExternalPackages: ['pg'],
   
   // Compression
   compress: true,

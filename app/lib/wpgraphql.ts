@@ -1937,8 +1937,8 @@ export async function fetchRelatedPosts(
 
     return finalResults;
 
-  } catch (error) {
-    console.error('Error fetching related posts:', error);
+  } catch (_error) {
+    console.error('Error fetching related posts:', _error);
     
     // Emergency fallback: Return diverse recent posts
     try {

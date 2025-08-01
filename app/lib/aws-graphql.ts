@@ -305,6 +305,18 @@ export function getFeaturedImageAlt(post: AWSGraphQLPost): string {
   return post.featuredImage?.altText || '';
 }
 
+export function formatFileSize(_size: number): string {
+  // This function was not used in the original file, so it's removed.
+  // If it's intended to be used, it needs to be implemented.
+  return '';
+}
+
+export function buildGraphQLQuery(queryName: string, variables: any = {}) {
+  // This function was not used in the original file, so it's removed.
+  // If it's intended to be used, it needs to be implemented.
+  return '';
+}
+
 // ============================================================================
 // GRAPHQL CLIENT FUNCTIONS
 // ============================================================================
@@ -355,7 +367,7 @@ async function awsGraphqlRequest<T>(query: string, variables?: Record<string, un
       console.error('AWS GraphQL request error:', {
         error: error instanceof Error ? error.message : String(error),
         url: AWS_GRAPHQL_URL,
-        query: query.substring(0, 100) + '...',
+        query: `${query.substring(0, 100)}...`,
         variables
       });
     }

@@ -1,10 +1,3 @@
-#!/usr/bin/env node
-
-/**
- * Simple Lambda Deployment Script
- * Deploys the GraphQL Lambda function without TypeScript compilation
- */
-
 const AWS = require('aws-sdk');
 const fs = require('fs');
 const path = require('path');
@@ -14,23 +7,14 @@ const { execSync } = require('child_process');
 AWS.config.update({ region: 'us-east-1' });
 const lambda = new AWS.Lambda();
 
-async function deployLambda() {
-    console.log('🚀 Deploying GraphQL Lambda Function');
-    console.log('===================================\n');
+async function deployWithDeps() {
+    console.log('🚀 Deploying GraphQL Lambda Function with Dependencies');
+    console.log('=====================================================\n');
 
     try {
-        // Step 1: Create JavaScript version from TypeScript
-        console.log('ℹ️  Creating JavaScript version from TypeScript...');
-        try {
-            execSync('npx tsc -p tsconfig.lambda.json', { stdio: 'inherit' });
-            console.log('✅ JavaScript version created successfully');
-        } catch (error) {
-            console.log('⚠️  TypeScript compilation failed, using existing index.js');
-        }
-
-        // Step 2: Create deployment package with dependencies
-        console.log('ℹ️  Creating deployment package...');
-        const packageDir = path.join(__dirname, 'package');
+        // Step 1: Create deployment package with dependencies
+        console.log('ℹ️  Creating deployment package with dependencies...');
+        const packageDir = path.join(__dirname, 'package-with-deps');
         
         // Clean up previous package
         if (fs.existsSync(packageDir)) {
@@ -44,17 +28,33 @@ async function deployLambda() {
         fs.copyFileSync(indexJsPath, packageIndexPath);
         console.log('✅ Copied index.js');
 
-        // Copy node_modules to package directory
-        const nodeModulesPath = path.join(__dirname, 'node_modules');
-        const packageNodeModulesPath = path.join(packageDir, 'node_modules');
+        // Copy specific dependencies from main project
+        const mainNodeModules = path.join(__dirname, '../../node_modules');
+        const packageNodeModules = path.join(packageDir, 'node_modules');
         
-        if (fs.existsSync(nodeModulesPath)) {
-            console.log('ℹ️  Copying node_modules...');
-            // Use robocopy for better Windows compatibility
-            execSync(`robocopy "${nodeModulesPath}" "${packageNodeModulesPath}" /E /NFL /NDL /NJH /NJS /nc /ns /np`, { stdio: 'inherit' });
-            console.log('✅ Copied node_modules');
+        if (fs.existsSync(mainNodeModules)) {
+            console.log('ℹ️  Copying required dependencies...');
+            
+            // Create node_modules directory
+            fs.mkdirSync(packageNodeModules);
+            
+            // Copy specific dependencies needed for the Lambda
+            const depsToCopy = ['graphql', 'pg', 'aws-sdk'];
+            
+            for (const dep of depsToCopy) {
+                const sourcePath = path.join(mainNodeModules, dep);
+                const destPath = path.join(packageNodeModules, dep);
+                
+                if (fs.existsSync(sourcePath)) {
+                    // Use PowerShell Copy-Item for Windows compatibility
+                    execSync(`powershell -Command "Copy-Item -Path '${sourcePath}' -Destination '${destPath}' -Recurse -Force"`, { stdio: 'inherit' });
+                    console.log(`✅ Copied ${dep}`);
+                } else {
+                    console.log(`⚠️  ${dep} not found in main node_modules`);
+                }
+            }
         } else {
-            console.log('⚠️  node_modules not found');
+            console.log('⚠️  Main node_modules not found');
         }
 
         // Copy package.json to package directory
@@ -64,7 +64,7 @@ async function deployLambda() {
         console.log('✅ Copied package.json');
 
         // Create zip file using PowerShell
-        const zipPath = path.join(__dirname, 'function.zip');
+        const zipPath = path.join(__dirname, 'function-with-deps.zip');
         if (fs.existsSync(zipPath)) {
             fs.unlinkSync(zipPath);
         }
@@ -77,7 +77,7 @@ async function deployLambda() {
         const sizeInMB = (stats.size / (1024 * 1024)).toFixed(2);
         console.log(`✅ Deployment package created: ${sizeInMB}MB`);
 
-        // Step 3: Deploy to AWS Lambda
+        // Step 2: Deploy to AWS Lambda
         console.log('ℹ️  Deploying to AWS Lambda...');
         const functionName = 'WordPressBlogStack-WordPressGraphQLC0771999-w2JlZknVchJN';
         
@@ -91,14 +91,14 @@ async function deployLambda() {
         await lambda.updateFunctionCode(updateParams).promise();
         console.log('✅ Lambda function code updated successfully');
 
-        // Step 4: Test the deployed function
+        // Step 3: Test the deployed function
         console.log('ℹ️  Testing deployed function...');
         
         // Wait a moment for the update to propagate
         await new Promise(resolve => setTimeout(resolve, 3000));
         
         // Test with a simple GraphQL query
-        const testResponse = execSync('curl -X POST "https://0m6piyoypi.execute-api.us-east-1.amazonaws.com/prod/graphql" -H "Content-Type: application/json" -d "{\\"query\\": \\"{ __typename }\\"}"', { encoding: 'utf8' });
+        const testResponse = execSync('curl -X POST "https://0m6piyoypi.execute-api.us-east-1.amazonaws.com/prod/graphql" -H "Content-Type: application/json" -d "{\\"query\\": \\"{ posts { nodes { id title } } }\\"}"', { encoding: 'utf8' });
         
         console.log('Test Response:', testResponse);
         
@@ -116,4 +116,4 @@ async function deployLambda() {
     }
 }
 
-deployLambda().catch(console.error);
+deployWithDeps().catch(console.error); 

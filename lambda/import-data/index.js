@@ -185,6 +185,21 @@ exports.handler = async (event) => {
   try {
     console.log('🔍 DEBUG: Full event received:', JSON.stringify(event, null, 2));
     
+    // Parse the request body - API Gateway sends it in different formats
+    let body;
+    if (event.body) {
+      try {
+        body = JSON.parse(event.body);
+      } catch (e) {
+        console.log('❌ Failed to parse event.body as JSON:', event.body);
+        body = event.body;
+      }
+    } else {
+      body = event;
+    }
+    
+    console.log('📦 Parsed body:', JSON.stringify(body, null, 2));
+    
     // Aurora database configuration from environment variables
     const dbConfig = {
       host: process.env.DB_HOST,
@@ -203,10 +218,10 @@ exports.handler = async (event) => {
     await client.connect();
     console.log('✅ Connected to wordpress database');
     
-    // Parse the WordPress data from the event
-    const posts = event.posts || [];
-    const categories = event.categories || [];
-    const tags = event.tags || [];
+    // Parse the WordPress data from the body
+    const posts = body.posts || [];
+    const categories = body.categories || [];
+    const tags = body.tags || [];
     
     console.log(`📊 Processing data:`);
     console.log(`   Posts: ${posts.length}`);

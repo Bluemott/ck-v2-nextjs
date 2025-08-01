@@ -1,10 +1,3 @@
-#!/usr/bin/env node
-
-/**
- * Simple Lambda Deployment Script
- * Deploys the GraphQL Lambda function without TypeScript compilation
- */
-
 const AWS = require('aws-sdk');
 const fs = require('fs');
 const path = require('path');
@@ -14,23 +7,14 @@ const { execSync } = require('child_process');
 AWS.config.update({ region: 'us-east-1' });
 const lambda = new AWS.Lambda();
 
-async function deployLambda() {
-    console.log('🚀 Deploying GraphQL Lambda Function');
-    console.log('===================================\n');
+async function deploySimple() {
+    console.log('🚀 Deploying Simple Test Lambda Function');
+    console.log('========================================\n');
 
     try {
-        // Step 1: Create JavaScript version from TypeScript
-        console.log('ℹ️  Creating JavaScript version from TypeScript...');
-        try {
-            execSync('npx tsc -p tsconfig.lambda.json', { stdio: 'inherit' });
-            console.log('✅ JavaScript version created successfully');
-        } catch (error) {
-            console.log('⚠️  TypeScript compilation failed, using existing index.js');
-        }
-
-        // Step 2: Create deployment package with dependencies
-        console.log('ℹ️  Creating deployment package...');
-        const packageDir = path.join(__dirname, 'package');
+        // Step 1: Create simple deployment package
+        console.log('ℹ️  Creating simple deployment package...');
+        const packageDir = path.join(__dirname, 'simple-package');
         
         // Clean up previous package
         if (fs.existsSync(packageDir)) {
@@ -44,27 +28,8 @@ async function deployLambda() {
         fs.copyFileSync(indexJsPath, packageIndexPath);
         console.log('✅ Copied index.js');
 
-        // Copy node_modules to package directory
-        const nodeModulesPath = path.join(__dirname, 'node_modules');
-        const packageNodeModulesPath = path.join(packageDir, 'node_modules');
-        
-        if (fs.existsSync(nodeModulesPath)) {
-            console.log('ℹ️  Copying node_modules...');
-            // Use robocopy for better Windows compatibility
-            execSync(`robocopy "${nodeModulesPath}" "${packageNodeModulesPath}" /E /NFL /NDL /NJH /NJS /nc /ns /np`, { stdio: 'inherit' });
-            console.log('✅ Copied node_modules');
-        } else {
-            console.log('⚠️  node_modules not found');
-        }
-
-        // Copy package.json to package directory
-        const packageJsonPath = path.join(__dirname, 'package.json');
-        const packagePackageJsonPath = path.join(packageDir, 'package.json');
-        fs.copyFileSync(packageJsonPath, packagePackageJsonPath);
-        console.log('✅ Copied package.json');
-
         // Create zip file using PowerShell
-        const zipPath = path.join(__dirname, 'function.zip');
+        const zipPath = path.join(__dirname, 'simple-function.zip');
         if (fs.existsSync(zipPath)) {
             fs.unlinkSync(zipPath);
         }
@@ -77,7 +42,7 @@ async function deployLambda() {
         const sizeInMB = (stats.size / (1024 * 1024)).toFixed(2);
         console.log(`✅ Deployment package created: ${sizeInMB}MB`);
 
-        // Step 3: Deploy to AWS Lambda
+        // Step 2: Deploy to AWS Lambda
         console.log('ℹ️  Deploying to AWS Lambda...');
         const functionName = 'WordPressBlogStack-WordPressGraphQLC0771999-w2JlZknVchJN';
         
@@ -91,13 +56,13 @@ async function deployLambda() {
         await lambda.updateFunctionCode(updateParams).promise();
         console.log('✅ Lambda function code updated successfully');
 
-        // Step 4: Test the deployed function
+        // Step 3: Test the deployed function
         console.log('ℹ️  Testing deployed function...');
         
         // Wait a moment for the update to propagate
         await new Promise(resolve => setTimeout(resolve, 3000));
         
-        // Test with a simple GraphQL query
+        // Test with a simple request
         const testResponse = execSync('curl -X POST "https://0m6piyoypi.execute-api.us-east-1.amazonaws.com/prod/graphql" -H "Content-Type: application/json" -d "{\\"query\\": \\"{ __typename }\\"}"', { encoding: 'utf8' });
         
         console.log('Test Response:', testResponse);
@@ -116,4 +81,4 @@ async function deployLambda() {
     }
 }
 
-deployLambda().catch(console.error);
+deploySimple().catch(console.error); 

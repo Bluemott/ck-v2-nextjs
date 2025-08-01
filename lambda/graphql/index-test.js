@@ -1,4 +1,3 @@
-
 exports.handler = async (event) => {
     console.log('Test Lambda function started');
     console.log('Event:', JSON.stringify(event, null, 2));
@@ -14,7 +13,7 @@ exports.handler = async (event) => {
                 'Access-Control-Allow-Methods': 'GET,POST,OPTIONS'
             },
             body: JSON.stringify({
-                message: 'Test function working!',
+                message: 'Lambda function is working!',
                 timestamp: new Date().toISOString(),
                 event: event
             })
@@ -34,4 +33,4 @@ exports.handler = async (event) => {
             })
         };
     }
-};
+}; 

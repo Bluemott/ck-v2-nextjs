@@ -72,9 +72,9 @@ Create a `.env.local` file with the following variables:
 # WordPress API
 NEXT_PUBLIC_WPGRAPHQL_URL=https://api.cowboykimono.com/graphql
 
-# AWS GraphQL API (optional - for enhanced performance)
-NEXT_PUBLIC_AWS_GRAPHQL_URL=https://your-api-gateway-url/prod/graphql
-NEXT_PUBLIC_USE_AWS_GRAPHQL=false
+# AWS GraphQL API (✅ WORKING - enhanced performance)
+NEXT_PUBLIC_AWS_GRAPHQL_URL=https://0m6piyoypi.execute-api.us-east-1.amazonaws.com/prod/graphql
+NEXT_PUBLIC_USE_AWS_GRAPHQL=true
 
 # Site Configuration
 NEXT_PUBLIC_SITE_URL=https://cowboykimono.com

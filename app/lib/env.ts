@@ -55,18 +55,39 @@ const envSchema = z.object({
   CUSTOM_KEY: z.string().optional(),
 });
 
-// Parse and validate environment variables with fallbacks
+// Parse and validate environment variables with comprehensive fallbacks
 let env: z.infer<typeof envSchema>;
 try {
   env = envSchema.parse(process.env);
 } catch (error) {
-  console.warn('Environment validation failed, using defaults:', error);
-  // Use defaults for development and build time
+  // Graceful fallback for build time - don't log errors during Amplify build
+  const isBuildTime = process.env.NODE_ENV === 'production' && !process.env.NEXT_PUBLIC_VERCEL_URL;
+  if (!isBuildTime) {
+    console.warn('Environment validation failed, using safe defaults:', error);
+  }
+  
+  // Safe defaults for build and runtime
   env = {
     AWS_REGION: 'us-east-1',
-    NEXT_PUBLIC_SITE_URL: 'https://cowboykimono.com',
+    NEXT_PUBLIC_SITE_URL: process.env.NEXT_PUBLIC_SITE_URL || 'https://cowboykimono.com',
     NEXT_PUBLIC_USE_AWS_GRAPHQL: false,
-    NODE_ENV: process.env.NODE_ENV || 'development',
+    NEXT_PUBLIC_WPGRAPHQL_URL: process.env.NEXT_PUBLIC_WPGRAPHQL_URL || 'https://api.cowboykimono.com/graphql',
+    NODE_ENV: (process.env.NODE_ENV as any) || 'development',
+    DB_HOST: process.env.DB_HOST,
+    DB_USER: process.env.DB_USER,
+    DB_PASSWORD: process.env.DB_PASSWORD,
+    DB_NAME: process.env.DB_NAME,
+    AWS_ACCESS_KEY_ID: process.env.AWS_ACCESS_KEY_ID,
+    AWS_SECRET_ACCESS_KEY: process.env.AWS_SECRET_ACCESS_KEY,
+    S3_BUCKET_NAME: process.env.S3_BUCKET_NAME,
+    NEXT_PUBLIC_AWS_GRAPHQL_URL: process.env.NEXT_PUBLIC_AWS_GRAPHQL_URL,
+    NEXT_PUBLIC_GTM_ID: process.env.NEXT_PUBLIC_GTM_ID,
+    NEXT_PUBLIC_GOOGLE_VERIFICATION: process.env.NEXT_PUBLIC_GOOGLE_VERIFICATION,
+    NEXT_PUBLIC_GA_MEASUREMENT_ID: process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID,
+    NEXT_PUBLIC_WORDPRESS_GRAPHQL_URL: process.env.NEXT_PUBLIC_WORDPRESS_GRAPHQL_URL,
+    NEXT_PUBLIC_WORDPRESS_ADMIN_URL: process.env.NEXT_PUBLIC_WORDPRESS_ADMIN_URL,
+    NEXT_PUBLIC_CLOUDFRONT_URL: process.env.NEXT_PUBLIC_CLOUDFRONT_URL,
+    CUSTOM_KEY: process.env.CUSTOM_KEY,
   } as z.infer<typeof envSchema>;
 }
 

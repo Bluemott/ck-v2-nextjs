@@ -7,9 +7,15 @@ export class GraphQLAdapter {
   private wpEndpoint: string;
 
   constructor() {
-    this.isAWS = isAWSGraphQLEnabled;
+    // Use safer fallbacks during build time and when environment vars are missing
+    this.isAWS = isAWSGraphQLEnabled && typeof window !== 'undefined';
     this.awsEndpoint = env.NEXT_PUBLIC_AWS_GRAPHQL_URL || 'https://0m6piyoypi.execute-api.us-east-1.amazonaws.com/prod/graphql';
     this.wpEndpoint = env.NEXT_PUBLIC_WPGRAPHQL_URL || 'https://api.cowboykimono.com/graphql';
+    
+    // During build time, always prefer WordPress endpoint for safety
+    if (typeof window === 'undefined' && process.env.NODE_ENV === 'production') {
+      this.isAWS = false;
+    }
   }
 
   private get endpoint(): string {

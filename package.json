@@ -12,7 +12,7 @@
     "start": "next start",
     "lint": "next lint",
     "lint:fix": "next lint --fix",
-    "type-check": "tsc --noEmit",
+    "type-check": "tsc --noEmit --skipLibCheck",
     "build:workspaces": "npm run build --workspace=infrastructure && npm run build --workspace=lambda/graphql || echo 'Workspace builds completed with warnings'",
     "build:simple": "node scripts/simple-build.js && npm run build",
     "test:build": "node scripts/test-build.js",

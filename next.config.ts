@@ -2,8 +2,9 @@ import type { NextConfig } from "next";
 import { createRedirectsConfig } from "./app/lib/redirect-manager";
 
 const nextConfig: NextConfig = {
-  // Remove output: 'standalone' for Amplify hosting to enable dynamic routes
-  // output: 'standalone', // Commented out for Amplify compatibility
+  // Amplify SSR configuration - no output setting needed
+  // output: 'export', // Use only for static export
+  // output: 'standalone', // Use only for containerized deployment
   
   images: {
     // Enable optimization for better performance
@@ -81,7 +82,7 @@ const nextConfig: NextConfig = {
     ignoreDuringBuilds: true,
   },
   
-  // TypeScript configuration for build
+  // TypeScript configuration for build - more lenient for Amplify
   typescript: {
     ignoreBuildErrors: true,
   },

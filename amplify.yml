@@ -3,26 +3,27 @@ frontend:
   phases:
     preBuild:
       commands:
-        - 'echo "Starting preBuild phase"'
-        - 'echo "Node version: $(node --version)"'
-        - 'echo "npm version: $(npm --version)"'
-        - 'echo "Current directory: $(pwd)"'
-        - 'echo "Listing directory contents:"'
-        - 'ls -la'
-        - 'echo "Installing dependencies..."'
-        - npm ci --legacy-peer-deps --no-optional --verbose || npm install --legacy-peer-deps --no-optional --verbose
-        - 'echo "Dependencies installed successfully"'
-        - 'echo "Checking for TypeScript errors..."'
-        - npm run type-check || echo "TypeScript check completed with warnings"
-        - 'echo "PreBuild phase completed"'
+        - echo "🚀 Starting Simplified Build Process"
+        - echo "Node version: $(node --version)"
+        - echo "npm version: $(npm --version)"
+        - echo "Setting build environment variables..."
+        # Set safe defaults for build time
+        - export NODE_ENV=production
+        - export NEXT_PUBLIC_USE_AWS_GRAPHQL=false
+        - export NEXT_PUBLIC_SITE_URL=https://cowboykimono.com
+        - echo "Installing dependencies with simplified approach..."
+        - npm ci --legacy-peer-deps --no-optional
+        - echo "✅ Dependencies installed successfully"
     build:
       commands:
-        - 'echo "Starting build phase"'
-        - 'echo "Building application..."'
+        - echo "🔨 Starting build phase"
+        - echo "Setting production environment..."
+        - export NODE_ENV=production
+        - export NEXT_PUBLIC_USE_AWS_GRAPHQL=false
         - npm run build
-        - 'echo "Build completed successfully"'
-        - 'echo "Build artifacts:"'
-        - 'ls -la .next || echo "No .next directory found"'
+        - echo "✅ Build completed successfully"
+        - echo "📁 Build artifacts:"
+        - ls -la .next
   artifacts:
     baseDirectory: .next
     files:

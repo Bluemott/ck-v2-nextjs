@@ -3,19 +3,19 @@ frontend:
   phases:
     preBuild:
       commands:
-        - echo "Starting preBuild phase"
-        - echo "Node version: $(node --version)"
-        - echo "npm version: $(npm --version)"
-        - echo "Current directory: $(pwd)"
-        - echo "Installing dependencies..."
+        - 'echo "Starting preBuild phase"'
+        - 'echo "Node version: $(node --version)"'
+        - 'echo "npm version: $(npm --version)"'
+        - 'echo "Current directory: $(pwd)"'
+        - 'echo "Installing dependencies..."'
         - npm ci --legacy-peer-deps --no-optional || npm install --legacy-peer-deps --no-optional
-        - echo "Dependencies installed successfully"
+        - 'echo "Dependencies installed successfully"'
     build:
       commands:
-        - echo "Starting build phase"
-        - echo "Building application..."
+        - 'echo "Starting build phase"'
+        - 'echo "Building application..."'
         - npm run build
-        - echo "Build completed successfully"
+        - 'echo "Build completed successfully"'
   artifacts:
     baseDirectory: .next
     files:

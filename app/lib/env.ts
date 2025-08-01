@@ -108,5 +108,5 @@ export const isDevelopment = env.NODE_ENV === 'development';
 // Helper function to check if we're in production
 export const isProduction = env.NODE_ENV === 'production';
 
-// Helper function to check if REST API is enabled (always true now)
-export const isRestAPIEnabled = true; 
+// Helper function to check if REST API is enabled
+export const isRestAPIEnabled = env.NEXT_PUBLIC_USE_REST_API; 

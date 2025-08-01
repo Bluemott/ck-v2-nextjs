@@ -1,0 +1,12 @@
+{
+  "recommendations": [
+    "amazonwebservices.aws-toolkit-vscode",
+    "ms-vscode.vscode-typescript-next",
+    "bradlc.vscode-tailwindcss",
+    "esbenp.prettier-vscode",
+    "ms-vscode.vscode-eslint",
+    "redhat.vscode-yaml",
+    "ms-vscode.vscode-json",
+    "github.copilot"
+  ]
+}

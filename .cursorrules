@@ -1,67 +1,32 @@
----
-name: nextjs-amplify-optimization
-description: Next.js best practices for AWS Amplify deployment
-globs: **/*.{ts,tsx,js,jsx}
----
-- Use App Router with generateStaticParams for optimal Amplify SSG
-- Configure output: 'export' or 'standalone' based on Amplify hosting needs
-- Implement ISR sparingly; prefer static generation for Amplify's CDN caching
-- Use next/image with unoptimized={true} for Amplify compatibility
-- Leverage dynamic imports for code splitting and faster cold starts
+# Cursor AI Rules for Cowboy Kimono v2 - AWS Integration
 
----
-name: aws-amplify-integration
-description: AWS Amplify and serverless optimization
-globs: **/*.{ts,tsx,js,jsx}
----
-- Use AWS SDK v3 with modular imports to minimize bundle size
-- Implement proper error handling for AWS service timeouts and retries
-- Use environment variables through Amplify's env configuration
-- Leverage Amplify's built-in GraphQL with proper TypeScript codegen
-- Configure appropriate memory/timeout settings in amplify.yml
-- Use connection pooling for database connections in serverless functions
+## Project Context
+This is a Next.js 15.3.4 TypeScript project with AWS serverless architecture:
+- WordPress REST API integration (migrated FROM GraphQL - no GraphQL code remains)
+- AWS Lambda functions for recommendations and data processing
+- Tailwind CSS 4.0 for styling
+- AWS Amplify for deployment
+- Full TypeScript implementation
 
----
-name: typescript-aws-patterns
-description: TypeScript best practices for AWS services
-globs: **/*.{ts,tsx}
----
-- Define strict types for AWS SDK responses and Amplify GraphQL operations
-- Use zod or similar for runtime environment variable validation
-- Create reusable type definitions for common AWS service patterns
-- Implement proper error types extending AWS service exceptions
-- Use utility types for consistent API response shapes
+## AWS Architecture
+- **Frontend**: Next.js on Amplify with CloudFront CDN
+- **Backend**: WordPress on EC2 (headless CMS via REST API)
+- **Serverless**: Lambda functions with API Gateway
+- **Database**: Aurora Serverless for enhanced features
+- **Storage**: S3 for static assets, images optimized via CloudFront
 
----
-name: react-performance-amplify
-description: React optimization for Amplify hosting
-globs: **/*.{tsx,ts}
----
-- Use React.lazy with Suspense for component-level code splitting
-- Implement proper memoization (useMemo, useCallback) for expensive operations
-- Use React Query/TanStack Query for client-side caching and background updates
-- Implement loading states compatible with Amplify's SSG/SSR hybrid approach
-- Use React Server Components where supported by Amplify
+## Key Migration Notes
+- **CRITICAL**: We completely removed GraphQL/AppSync - only use REST endpoints
+- WordPress serves content via REST API at api.cowboykimono.com
+- All GraphQL queries converted to REST API calls
+- Lambda functions handle recommendations, not GraphQL resolvers
 
----
-name: security-monitoring
-description: Security and monitoring for Amplify deployments
-globs: **/*.{ts,tsx,js,jsx}
----
-- Use Amplify's built-in authentication patterns (Cognito integration)
-- Implement input validation and sanitization for all user inputs
-- Use structured logging with correlation IDs for CloudWatch integration
-- Configure CSP headers through Amplify's custom headers
-- Implement rate limiting for API routes using Amplify's built-in protections
-
----
-name: code-quality-standards
-description: Code quality and consistency rules
-globs: **/*.{ts,tsx,js,jsx}
----
-- Prefer async/await over Promises for better error handling
-- Use descriptive variable names and avoid abbreviations
-- Implement consistent error handling patterns across all AWS integrations
-- Write self-documenting code with clear function and variable names
-- Use TypeScript strict mode and avoid 'any' type
-- Implement proper loading and error states for all async operations
+## AWS Services Integration
+```typescript
+// Current AWS services in use:
+- AWS Amplify (hosting & CI/CD)
+- AWS Lambda (serverless functions)  
+- API Gateway (REST API endpoints)
+- CloudFront (CDN & image optimization)
+- Aurora Serverless (enhanced data features)
+- S3 (static asset storage)

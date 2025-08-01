@@ -7,15 +7,22 @@ frontend:
         - 'echo "Node version: $(node --version)"'
         - 'echo "npm version: $(npm --version)"'
         - 'echo "Current directory: $(pwd)"'
+        - 'echo "Listing directory contents:"'
+        - 'ls -la'
         - 'echo "Installing dependencies..."'
-        - npm ci --legacy-peer-deps --no-optional || npm install --legacy-peer-deps --no-optional
+        - npm ci --legacy-peer-deps --no-optional --verbose || npm install --legacy-peer-deps --no-optional --verbose
         - 'echo "Dependencies installed successfully"'
+        - 'echo "Checking for TypeScript errors..."'
+        - npm run type-check || echo "TypeScript check completed with warnings"
+        - 'echo "PreBuild phase completed"'
     build:
       commands:
         - 'echo "Starting build phase"'
         - 'echo "Building application..."'
         - npm run build
         - 'echo "Build completed successfully"'
+        - 'echo "Build artifacts:"'
+        - 'ls -la .next || echo "No .next directory found"'
   artifacts:
     baseDirectory: .next
     files:

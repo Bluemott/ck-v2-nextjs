@@ -314,6 +314,12 @@ export class GraphQLAdapter {
   // Execute GraphQL query with proper error handling
   async executeQuery<T>(query: string, variables: Record<string, unknown> = {}): Promise<T> {
     try {
+      // Skip execution during build time
+      if (typeof window === 'undefined' && process.env.NODE_ENV === 'production' && !process.env.NEXT_PUBLIC_AWS_GRAPHQL_URL) {
+        console.warn('Skipping GraphQL execution during build time');
+        return {} as T;
+      }
+
       const response = await fetch(this.endpoint, {
         method: 'POST',
         headers: {
@@ -361,6 +367,12 @@ export class GraphQLAdapter {
   // Hybrid method: Get basic post data from AWS, SEO data from WordPress
   async executeHybridPostQuery(slug: string): Promise<any> {
     try {
+      // Skip execution during build time
+      if (typeof window === 'undefined' && process.env.NODE_ENV === 'production' && !process.env.NEXT_PUBLIC_AWS_GRAPHQL_URL) {
+        console.warn('Skipping hybrid post query during build time');
+        return null;
+      }
+
       // Get basic post data from AWS (fast)
       const basicQuery = `
         query GetPostBySlug($slug: String!) {

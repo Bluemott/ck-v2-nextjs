@@ -4,9 +4,11 @@ frontend:
     preBuild:
       commands:
         - echo "Starting build process"
+        - echo "Installing dependencies"
         - npm ci --legacy-peer-deps --no-optional
     build:
       commands:
+        - echo "Building Next.js application"
         - npm run build
   artifacts:
     baseDirectory: .next

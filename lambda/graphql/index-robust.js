@@ -8,6 +8,8 @@ const schema = buildSchema(`
     dbStatus: String!
     posts(first: Int = 10): [Post!]!
     post(slug: String!): Post
+    categories(first: Int = 100): [Category!]!
+    tags(first: Int = 100): [Tag!]!
   }
   
   type Post {
@@ -17,6 +19,22 @@ const schema = buildSchema(`
     content: String!
     excerpt: String!
     date: String!
+  }
+  
+  type Category {
+    id: ID!
+    name: String!
+    slug: String!
+    description: String
+    count: Int!
+  }
+  
+  type Tag {
+    id: ID!
+    name: String!
+    slug: String!
+    description: String
+    count: Int!
   }
 `);
 
@@ -180,6 +198,110 @@ const root = {
     } catch (error) {
       console.error('❌ Error fetching post:', error);
       return null;
+    } finally {
+      if (client) {
+        try {
+          await client.end();
+        } catch (e) {
+          console.error('Error closing client:', e);
+        }
+      }
+    }
+  },
+  
+  categories: async ({ first = 100 }) => {
+    console.log(`🔍 Fetching ${first} categories...`);
+    let client;
+    
+    try {
+      client = await createDbClient();
+      
+      // Query to get categories from WordPress term taxonomy
+      const query = `
+        SELECT 
+          t.term_id as id,
+          t.name,
+          t.slug,
+          t.description,
+          tt.count
+        FROM wp_terms t
+        INNER JOIN wp_term_taxonomy tt ON t.term_id = tt.term_id
+        WHERE tt.taxonomy = 'category'
+        AND tt.count > 0
+        ORDER BY t.name
+        LIMIT $1
+      `;
+      
+      console.log('📝 Executing categories query with limit:', first);
+      const result = await client.query(query, [first]);
+      
+      console.log(`📈 Found ${result.rows.length} categories`);
+      
+      const categories = result.rows.map(row => ({
+        id: `category-${row.id}`,
+        name: row.name || 'Untitled Category',
+        slug: row.slug || '',
+        description: row.description || null,
+        count: parseInt(row.count) || 0
+      }));
+      
+      return categories;
+      
+    } catch (error) {
+      console.error('❌ Error fetching categories:', error);
+      return [];
+    } finally {
+      if (client) {
+        try {
+          await client.end();
+        } catch (e) {
+          console.error('Error closing client:', e);
+        }
+      }
+    }
+  },
+  
+  tags: async ({ first = 100 }) => {
+    console.log(`🔍 Fetching ${first} tags...`);
+    let client;
+    
+    try {
+      client = await createDbClient();
+      
+      // Query to get tags from WordPress term taxonomy
+      const query = `
+        SELECT 
+          t.term_id as id,
+          t.name,
+          t.slug,
+          t.description,
+          tt.count
+        FROM wp_terms t
+        INNER JOIN wp_term_taxonomy tt ON t.term_id = tt.term_id
+        WHERE tt.taxonomy = 'post_tag'
+        AND tt.count > 0
+        ORDER BY t.name
+        LIMIT $1
+      `;
+      
+      console.log('📝 Executing tags query with limit:', first);
+      const result = await client.query(query, [first]);
+      
+      console.log(`📈 Found ${result.rows.length} tags`);
+      
+      const tags = result.rows.map(row => ({
+        id: `tag-${row.id}`,
+        name: row.name || 'Untitled Tag',
+        slug: row.slug || '',
+        description: row.description || null,
+        count: parseInt(row.count) || 0
+      }));
+      
+      return tags;
+      
+    } catch (error) {
+      console.error('❌ Error fetching tags:', error);
+      return [];
     } finally {
       if (client) {
         try {

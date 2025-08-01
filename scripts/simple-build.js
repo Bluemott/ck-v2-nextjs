@@ -1,5 +1,6 @@
 const { execSync } = require('child_process');
 const fs = require('fs');
+const path = require('path');
 
 console.log('🚀 Starting simplified build process...');
 
@@ -16,17 +17,31 @@ try {
   console.log('🧹 Cleaning npm cache...');
   execSync('npm cache clean --force', { stdio: 'inherit' });
   
-  // Remove existing node_modules and lock files
+  // Remove existing node_modules and lock files with better error handling
   console.log('🗑️ Removing existing files...');
-  const filesToRemove = ['node_modules', 'package-lock.json', 'yarn.lock', 'pnpm-lock.yaml'];
+  const filesToRemove = ['package-lock.json', 'yarn.lock', 'pnpm-lock.yaml'];
+  
+  // Handle node_modules removal more carefully
+  const nodeModulesPath = path.join(process.cwd(), 'node_modules');
+  if (fs.existsSync(nodeModulesPath)) {
+    try {
+      // Try to remove node_modules directory
+      execSync(`rm -rf "${nodeModulesPath}"`, { stdio: 'inherit' });
+      console.log('✅ Removed node_modules');
+    } catch (error) {
+      console.log('⚠️ Could not remove node_modules, continuing anyway...');
+    }
+  }
+  
+  // Remove lock files
   for (const file of filesToRemove) {
     if (fs.existsSync(file)) {
-      if (fs.lstatSync(file).isDirectory()) {
-        execSync(`rm -rf ${file}`, { stdio: 'inherit' });
-      } else {
+      try {
         fs.unlinkSync(file);
+        console.log(`✅ Removed ${file}`);
+      } catch (error) {
+        console.log(`⚠️ Could not remove ${file}: ${error.message}`);
       }
-      console.log(`✅ Removed ${file}`);
     }
   }
   

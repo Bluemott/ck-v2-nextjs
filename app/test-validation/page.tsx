@@ -3,7 +3,6 @@
 import { useState } from 'react';
 import { env, isDevelopment, isProduction, isRestAPIEnabled } from '../lib/env';
 import { 
-  validateGraphQLQuery, 
   validateSearchParams, 
   validateBlogPost,
   validateMediaUpload,
@@ -12,7 +11,6 @@ import {
   validateSEOMetadata,
   validateDatabaseConfig,
   validateS3Upload,
-  graphqlQuerySchema,
   searchParamsSchema,
   blogPostSchema,
   mediaUploadSchema,
@@ -44,16 +42,7 @@ export default function TestValidationPage() {
         }
       };
 
-      // Test 2: GraphQL Query Validation
-      try {
-        const validQuery = validateGraphQLQuery({
-          query: '{ posts { id title } }',
-          variables: { first: 10 }
-        });
-        results.graphqlQuery = { success: true, data: validQuery };
-      } catch (error) {
-        results.graphqlQuery = { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
-      }
+
 
       // Test 3: Search Parameters Validation
       try {
@@ -149,7 +138,7 @@ export default function TestValidationPage() {
 
       // Test 10: Schema Validation
       results.schemas = {
-        graphqlQuery: graphqlQuerySchema.description || 'GraphQL Query Schema',
+
         searchParams: searchParamsSchema.description || 'Search Parameters Schema',
         blogPost: blogPostSchema.description || 'Blog Post Schema',
         mediaUpload: mediaUploadSchema.description || 'Media Upload Schema',

@@ -38,7 +38,7 @@ console.log('\n3️⃣ Removing node_modules directories...');
 const dirsToRemove = [
   'node_modules',
   'infrastructure/node_modules',
-  'lambda/graphql/node_modules'
+
 ];
 
 dirsToRemove.forEach(dir => {
@@ -58,7 +58,7 @@ console.log('\n4️⃣ Removing lock files...');
 const lockFiles = [
   'package-lock.json',
   'infrastructure/package-lock.json',
-  'lambda/graphql/package-lock.json'
+
 ];
 
 lockFiles.forEach(file => {

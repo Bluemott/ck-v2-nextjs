@@ -31,7 +31,7 @@ const envSchema = z.object({
 
   // WordPress Configuration - REST API only
   NEXT_PUBLIC_WORDPRESS_ADMIN_URL: z.string().optional(),
-  NEXT_PUBLIC_WPGRAPHQL_URL: z.string().optional(),
+  NEXT_PUBLIC_WORDPRESS_REST_URL: z.string().optional(),
 
   // Feature Flags - REST API is now the default and only option
   NEXT_PUBLIC_USE_REST_API: z.string()
@@ -69,7 +69,7 @@ try {
     AWS_REGION: 'us-east-1',
     NEXT_PUBLIC_SITE_URL: process.env.NEXT_PUBLIC_SITE_URL || 'https://cowboykimono.com',
     NEXT_PUBLIC_USE_REST_API: true,
-    NEXT_PUBLIC_WPGRAPHQL_URL: process.env.NEXT_PUBLIC_WPGRAPHQL_URL || 'https://api.cowboykimono.com',
+    NEXT_PUBLIC_WORDPRESS_REST_URL: process.env.NEXT_PUBLIC_WORDPRESS_REST_URL || 'https://api.cowboykimono.com',
     NODE_ENV: (process.env.NODE_ENV as any) || 'development',
     DB_HOST: process.env.DB_HOST,
     DB_USER: process.env.DB_USER,

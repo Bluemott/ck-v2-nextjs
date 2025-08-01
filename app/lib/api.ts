@@ -4,7 +4,7 @@ import { z } from 'zod';
 
 // API Configuration with validated environment variables
 const API_CONFIG = {
-  WORDPRESS_REST_URL: env.NEXT_PUBLIC_WPGRAPHQL_URL || 'https://api.cowboykimono.com',
+  WORDPRESS_REST_URL: env.NEXT_PUBLIC_WORDPRESS_REST_URL || 'https://api.cowboykimono.com',
   WORDPRESS_ADMIN_URL: env.NEXT_PUBLIC_WORDPRESS_ADMIN_URL || 'https://admin.cowboykimono.com',
 };
 

@@ -1,14 +1,5 @@
 import { z } from 'zod';
 
-// GraphQL Query Validation Schema
-export const graphqlQuerySchema = z.object({
-  query: z.string().min(1, 'GraphQL query is required'),
-  variables: z.record(z.any()).optional(),
-  operationName: z.string().optional(),
-});
-
-export type GraphQLQuery = z.infer<typeof graphqlQuerySchema>;
-
 // Media Upload Validation Schema
 export const mediaUploadSchema = z.object({
   file: z.instanceof(File, { message: 'File is required' }),
@@ -295,9 +286,7 @@ export const s3UploadSchema = z.object({
 export type S3Upload = z.infer<typeof s3UploadSchema>;
 
 // Validation helper functions
-export function validateGraphQLQuery(query: unknown): GraphQLQuery {
-  return graphqlQuerySchema.parse(query);
-}
+
 
 export function validateMediaUpload(data: unknown): MediaUpload {
   return mediaUploadSchema.parse(data);

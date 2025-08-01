@@ -157,9 +157,9 @@ async function manualInsert() {
     if (response.statusCode === 200) {
       console.log('✅ Manual insert successful!');
       
-      // Test the GraphQL API to see if the data is accessible
-      console.log('\n🧪 Testing GraphQL API with new data...');
-      await testGraphQLWithNewData();
+          // Test the REST API to see if the data is accessible
+    console.log('\n🧪 Testing REST API with new data...');
+    await testRestAPIWithNewData();
     } else {
       console.log('❌ Manual insert failed!');
     }
@@ -169,8 +169,8 @@ async function manualInsert() {
   }
 }
 
-async function testGraphQLWithNewData() {
-  const graphqlEndpoint = 'https://0m6piyoypi.execute-api.us-east-1.amazonaws.com/prod/graphql';
+async function testRestAPIWithNewData() {
+  const restEndpoint = 'https://0m6piyoypi.execute-api.us-east-1.amazonaws.com/prod/';
   
   const testQuery = {
     query: `
@@ -187,26 +187,25 @@ async function testGraphQLWithNewData() {
   };
 
   try {
-    const response = await makeRequest(graphqlEndpoint, {
-      method: 'POST',
-      body: JSON.stringify(testQuery)
+    const response = await makeRequest(`${restEndpoint}posts`, {
+      method: 'GET'
     });
 
-    console.log(`📊 GraphQL Response Status: ${response.statusCode}`);
-    console.log('📋 GraphQL Response Body:', response.body);
+    console.log(`📊 REST API Response Status: ${response.statusCode}`);
+    console.log('📋 REST API Response Body:', response.body);
     
     if (response.statusCode === 200) {
       const data = JSON.parse(response.body);
-      if (data.data?.posts?.nodes) {
-        console.log(`✅ Found ${data.data.posts.nodes.length} posts in GraphQL API`);
-        data.data.posts.nodes.forEach((post, index) => {
-          console.log(`   ${index + 1}. ${post.title} (${post.slug})`);
+      if (data.posts && data.posts.length > 0) {
+        console.log(`✅ Found ${data.posts.length} posts in REST API`);
+        data.posts.forEach((post, index) => {
+          console.log(`   ${index + 1}. ${post.title?.rendered || post.title} (${post.slug})`);
         });
       }
     }
     
   } catch (error) {
-    console.error('❌ Error testing GraphQL API:', error.message);
+    console.error('❌ Error testing REST API:', error.message);
   }
 }
 

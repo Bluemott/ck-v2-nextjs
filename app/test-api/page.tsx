@@ -21,7 +21,7 @@ export default async function TestAPIPage() {
             <strong>Active API:</strong> WordPress REST API
           </div>
           <div>
-            <strong>API URL:</strong> {process.env.NEXT_PUBLIC_WPGRAPHQL_URL?.replace('/graphql', '') || 'https://api.cowboykimono.com'}
+            <strong>API URL:</strong> {process.env.NEXT_PUBLIC_WORDPRESS_REST_URL || 'https://api.cowboykimono.com'}
           </div>
           <div>
             <strong>Feature Flag:</strong> {process.env.NEXT_PUBLIC_USE_REST_API === 'true' ? 'Enabled (REST)' : 'Disabled'}

@@ -94,7 +94,7 @@ ck-v2-nextjs/
 ### Required Environment Variables
 ```env
 # WordPress REST API
-NEXT_PUBLIC_WPGRAPHQL_URL=https://api.cowboykimono.com
+NEXT_PUBLIC_WORDPRESS_REST_URL=https://api.cowboykimono.com
 
 # Site Configuration
 NEXT_PUBLIC_SITE_URL=https://cowboykimono.com

@@ -37,7 +37,7 @@ export default async function TestMediaUrlsPage() {
             <h2 className="text-lg font-semibold text-red-800 mb-2">Error</h2>
             <p className="text-red-600">{error}</p>
             <p className="text-sm text-red-500 mt-2">
-              This is expected if the AWS GraphQL API is not available. The test will continue with sample URLs.
+              This is expected if the AWS REST API is not available. The test will continue with sample URLs.
             </p>
           </div>
         )}

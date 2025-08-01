@@ -37,7 +37,7 @@ try {
     NEXT_TELEMETRY_DISABLED: '1',
     // Set defaults for missing environment variables
     NEXT_PUBLIC_SITE_URL: process.env.NEXT_PUBLIC_SITE_URL || 'https://cowboykimono.com',
-    NEXT_PUBLIC_USE_AWS_GRAPHQL: process.env.NEXT_PUBLIC_USE_AWS_GRAPHQL || 'false',
+
     AWS_REGION: process.env.AWS_REGION || 'us-east-1'
   };
 

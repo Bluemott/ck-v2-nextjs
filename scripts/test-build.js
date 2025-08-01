@@ -64,9 +64,7 @@ console.log('\n🔧 Environment Variables:');
 const envVars = [
   'NODE_ENV',
   'NEXT_PUBLIC_SITE_URL',
-  'NEXT_PUBLIC_USE_AWS_GRAPHQL',
-  'NEXT_PUBLIC_AWS_GRAPHQL_URL',
-  'NEXT_PUBLIC_WPGRAPHQL_URL',
+  'NEXT_PUBLIC_WORDPRESS_REST_URL',
   'AWS_REGION'
 ];
 

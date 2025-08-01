@@ -16,7 +16,7 @@ try {
   }
 
   // Check each workspace
-  const workspaces = ['infrastructure', 'lambda/graphql'];
+  const workspaces = ['infrastructure'];
   
   for (const workspace of workspaces) {
     const workspacePath = path.join(workspace, 'package.json');

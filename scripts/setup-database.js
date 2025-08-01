@@ -75,7 +75,7 @@ async function importData() {
       method: 'POST',
       body: JSON.stringify({
         action: 'import',
-        wordpressUrl: 'https://api.cowboykimono.com/graphql'
+        wordpressUrl: 'https://api.cowboykimono.com'
       })
     });
 
@@ -119,7 +119,7 @@ async function runSetup() {
   
   console.log('\n✅ Setup process completed!');
   console.log('\n🔧 Next Steps:');
-  console.log('1. Test the GraphQL API again');
+      console.log('1. Test the REST API again');
   console.log('2. Check if data was imported successfully');
   console.log('3. Verify the Lambda function is working');
 }

@@ -45,7 +45,7 @@ git push origin dev
 - Environment: Production
 
 #### **Development Branch (dev)**
-- Uses: `amplify-dev.yml` (if needed)
+- Uses: `amplify.yml` (same as production)
 - URL: `https://dev-amplify-deployment.d1crrnsi5h4ht1.amplifyapp.com/`
 - Environment: Development
 
@@ -56,7 +56,7 @@ git push origin dev
 NODE_ENV=production
 NEXT_PUBLIC_USE_REST_API=true
 NEXT_PUBLIC_SITE_URL=https://cowboykimono.com
-NEXT_PUBLIC_WPGRAPHQL_URL=https://api.cowboykimono.com
+NEXT_PUBLIC_WORDPRESS_REST_URL=https://api.cowboykimono.com
 NEXT_PUBLIC_WORDPRESS_ADMIN_URL=https://admin.cowboykimono.com
 ```
 
@@ -185,5 +185,5 @@ git push origin main
 
 ---
 
-**Last Updated**: August 1, 2025  
+**Last Updated**: January 25, 2025  
 **Status**: ✅ REST API Complete, Dev Branch Ready 

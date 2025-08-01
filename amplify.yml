@@ -10,7 +10,7 @@ frontend:
         - 'export NODE_ENV="production"'
         - 'export NEXT_PUBLIC_USE_REST_API="true"'
         - 'export NEXT_PUBLIC_SITE_URL="https://cowboykimono.com"'
-        - 'export NEXT_PUBLIC_WPGRAPHQL_URL="https://api.cowboykimono.com"'
+        - 'export NEXT_PUBLIC_WORDPRESS_REST_URL="https://api.cowboykimono.com"'
         - 'export NEXT_PUBLIC_WORDPRESS_ADMIN_URL="https://admin.cowboykimono.com"'
         - echo "Installing dependencies"
         - npm ci --legacy-peer-deps --no-optional
@@ -21,7 +21,7 @@ frontend:
         - 'export NODE_ENV="production"'
         - 'export NEXT_PUBLIC_USE_REST_API="true"'
         - 'export NEXT_PUBLIC_SITE_URL="https://cowboykimono.com"'
-        - 'export NEXT_PUBLIC_WPGRAPHQL_URL="https://api.cowboykimono.com"'
+        - 'export NEXT_PUBLIC_WORDPRESS_REST_URL="https://api.cowboykimono.com"'
         - echo "Building Next.js application"
         - npm run build
         - echo "Build completed successfully"

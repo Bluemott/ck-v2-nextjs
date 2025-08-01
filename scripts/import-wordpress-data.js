@@ -2,82 +2,90 @@ const https = require('https');
 
 // Configuration
 const CONFIG = {
-  wordpressGraphQL: 'https://api.cowboykimono.com/graphql',
+  wordpressRest: 'https://api.cowboykimono.com',
   importEndpoint: 'https://0m6piyoypi.execute-api.us-east-1.amazonaws.com/prod/import-data'
 };
 
-// GraphQL queries
-const QUERIES = {
-  posts: `
-    query {
-      posts(first: 100) {
-        nodes {
-          id
-          databaseId
-          date
-          modified
-          slug
-          status
-          title
-          content
-          excerpt
-          author {
-            node {
-              id
-              name
-              slug
-            }
-          }
-          categories {
-            nodes {
-              id
-              name
-              slug
-            }
-          }
-          tags {
-            nodes {
-              id
-              name
-              slug
-            }
-          }
-        }
-      }
-    }
-  `,
-  categories: `
-    query {
-      categories(first: 50) {
-        nodes {
-          id
-          name
-          slug
-          description
-          count
-        }
-      }
-    }
-  `,
-  tags: `
-    query {
-      tags(first: 50) {
-        nodes {
-          id
-          name
-          slug
-          description
-          count
-        }
-      }
-    }
-  `
+// REST API endpoints
+const ENDPOINTS = {
+  posts: '/wp-json/wp/v2/posts',
+  categories: '/wp-json/wp/v2/categories',
+  tags: '/wp-json/wp/v2/tags'
 };
 
-// Utility function to make HTTPS requests
-function makeRequest(url, options = {}) {
+// Transform REST API post data to database format
+function transformPostData(restPost) {
+  return {
+    id: restPost.id,
+    date: restPost.date,
+    date_gmt: restPost.date_gmt,
+    modified: restPost.modified,
+    modified_gmt: restPost.modified_gmt,
+    slug: restPost.slug,
+    status: restPost.status || 'publish',
+    type: 'post',
+    link: restPost.link,
+    title: restPost.title,
+    content: restPost.content,
+    excerpt: restPost.excerpt,
+    author: restPost.author,
+    comment_status: restPost.comment_status || 'open',
+    ping_status: restPost.ping_status || 'open',
+    sticky: restPost.sticky || false,
+    template: restPost.template || '',
+    format: restPost.format || 'standard',
+    meta: restPost.meta || [],
+    _links: restPost._links || {},
+    guid: restPost.guid,
+    parent: restPost.parent || 0,
+    menu_order: restPost.menu_order || 0,
+    comment_count: restPost.comment_count || 0,
+    password: restPost.password || '',
+    to_ping: restPost.to_ping || '',
+    pinged: restPost.pinged || '',
+    post_content_filtered: restPost.post_content_filtered || '',
+    post_mime_type: restPost.post_mime_type || '',
+    wordpress_data: restPost
+  };
+}
+
+// Transform REST API category data to database format
+function transformCategoryData(restCategory) {
+  return {
+    id: restCategory.id,
+    count: restCategory.count || 0,
+    description: restCategory.description || '',
+    link: restCategory.link,
+    name: restCategory.name,
+    slug: restCategory.slug,
+    taxonomy: 'category',
+    parent: restCategory.parent || 0,
+    meta: restCategory.meta || [],
+    _links: restCategory._links || {},
+    wordpress_data: restCategory
+  };
+}
+
+// Transform REST API tag data to database format
+function transformTagData(restTag) {
+  return {
+    id: restTag.id,
+    count: restTag.count || 0,
+    description: restTag.description || '',
+    link: restTag.link,
+    name: restTag.name,
+    slug: restTag.slug,
+    taxonomy: 'post_tag',
+    meta: restTag.meta || [],
+    _links: restTag._links || {},
+    wordpress_data: restTag
+  };
+}
+
+async function makeRequest(url, options = {}) {
   return new Promise((resolve, reject) => {
     const urlObj = new URL(url);
+    
     const requestOptions = {
       hostname: urlObj.hostname,
       port: urlObj.port || 443,
@@ -85,20 +93,23 @@ function makeRequest(url, options = {}) {
       method: options.method || 'GET',
       headers: {
         'Content-Type': 'application/json',
+        'User-Agent': 'CowboyKimono-Import/1.0',
         ...options.headers
       }
     };
 
     const req = https.request(requestOptions, (res) => {
       let data = '';
+      
       res.on('data', (chunk) => {
         data += chunk;
       });
+      
       res.on('end', () => {
         resolve({
           statusCode: res.statusCode,
-          body: data,
-          headers: res.headers
+          headers: res.headers,
+          body: data
         });
       });
     });
@@ -110,90 +121,13 @@ function makeRequest(url, options = {}) {
     if (options.body) {
       req.write(options.body);
     }
-
+    
     req.end();
   });
 }
 
-// Transform GraphQL post data to REST API format
-function transformPostData(graphqlPost) {
-  return {
-    id: parseInt(graphqlPost.id.replace('post-', '')),
-    date: graphqlPost.date,
-    date_gmt: graphqlPost.date,
-    modified: graphqlPost.modified,
-    modified_gmt: graphqlPost.modified,
-    slug: graphqlPost.slug,
-    status: graphqlPost.status || 'publish',
-    type: 'post',
-    link: `https://cowboykimono.com/${graphqlPost.slug}/`,
-    title: {
-      rendered: graphqlPost.title
-    },
-    content: {
-      rendered: graphqlPost.content || ''
-    },
-    excerpt: {
-      rendered: graphqlPost.excerpt || ''
-    },
-    author: graphqlPost.author?.node?.id ? parseInt(graphqlPost.author.node.id.replace('user-', '')) : 1,
-    comment_status: 'open',
-    ping_status: 'open',
-    sticky: false,
-    template: '',
-    format: 'standard',
-    meta: [],
-    _links: {},
-    guid: {
-      rendered: `https://cowboykimono.com/?p=${graphqlPost.id.replace('post-', '')}`
-    },
-    parent: 0,
-    menu_order: 0,
-    comment_count: 0,
-    password: '',
-    to_ping: '',
-    pinged: '',
-    post_content_filtered: '',
-    post_mime_type: '',
-    wordpress_data: graphqlPost
-  };
-}
-
-// Transform GraphQL category data to REST API format
-function transformCategoryData(graphqlCategory) {
-  return {
-    id: parseInt(graphqlCategory.id.replace('category-', '')),
-    count: graphqlCategory.count || 0,
-    description: graphqlCategory.description || '',
-    link: `https://cowboykimono.com/category/${graphqlCategory.slug}/`,
-    name: graphqlCategory.name,
-    slug: graphqlCategory.slug,
-    taxonomy: 'category',
-    parent: 0,
-    meta: [],
-    _links: {},
-    wordpress_data: graphqlCategory
-  };
-}
-
-// Transform GraphQL tag data to REST API format
-function transformTagData(graphqlTag) {
-  return {
-    id: parseInt(graphqlTag.id.replace('tag-', '')),
-    count: graphqlTag.count || 0,
-    description: graphqlTag.description || '',
-    link: `https://cowboykimono.com/tag/${graphqlTag.slug}/`,
-    name: graphqlTag.name,
-    slug: graphqlTag.slug,
-    taxonomy: 'post_tag',
-    meta: [],
-    _links: {},
-    wordpress_data: graphqlTag
-  };
-}
-
 async function fetchWordPressData() {
-  console.log('🔍 Fetching WordPress data...');
+  console.log('🔍 Fetching WordPress data via REST API...');
   
   const data = {
     posts: [],
@@ -204,111 +138,122 @@ async function fetchWordPressData() {
   try {
     // Fetch posts
     console.log('📝 Fetching posts...');
-    const postsResponse = await makeRequest(CONFIG.wordpressGraphQL, {
-      method: 'POST',
-      body: JSON.stringify({ query: QUERIES.posts })
-    });
+    const postsResponse = await makeRequest(`${CONFIG.wordpressRest}${ENDPOINTS.posts}?per_page=100&_embed`);
 
     if (postsResponse.statusCode === 200) {
       const postsData = JSON.parse(postsResponse.body);
-      if (postsData.data?.posts?.nodes) {
-        // Transform GraphQL data to REST API format
-        data.posts = postsData.data.posts.nodes.map(transformPostData);
-        console.log(`✅ Found ${data.posts.length} posts`);
-      }
+      console.log(`✅ Found ${postsData.length} posts`);
+      
+      // Transform REST API data to database format
+      data.posts = postsData.map(transformPostData);
+    } else {
+      console.error(`❌ Failed to fetch posts: ${postsResponse.statusCode}`);
     }
 
     // Fetch categories
     console.log('📂 Fetching categories...');
-    const categoriesResponse = await makeRequest(CONFIG.wordpressGraphQL, {
-      method: 'POST',
-      body: JSON.stringify({ query: QUERIES.categories })
-    });
+    const categoriesResponse = await makeRequest(`${CONFIG.wordpressRest}${ENDPOINTS.categories}?per_page=100`);
 
     if (categoriesResponse.statusCode === 200) {
       const categoriesData = JSON.parse(categoriesResponse.body);
-      if (categoriesData.data?.categories?.nodes) {
-        // Transform GraphQL data to REST API format
-        data.categories = categoriesData.data.categories.nodes.map(transformCategoryData);
-        console.log(`✅ Found ${data.categories.length} categories`);
-      }
+      console.log(`✅ Found ${categoriesData.length} categories`);
+      
+      // Transform REST API data to database format
+      data.categories = categoriesData.map(transformCategoryData);
+    } else {
+      console.error(`❌ Failed to fetch categories: ${categoriesResponse.statusCode}`);
     }
 
     // Fetch tags
     console.log('🏷️ Fetching tags...');
-    const tagsResponse = await makeRequest(CONFIG.wordpressGraphQL, {
-      method: 'POST',
-      body: JSON.stringify({ query: QUERIES.tags })
-    });
+    const tagsResponse = await makeRequest(`${CONFIG.wordpressRest}${ENDPOINTS.tags}?per_page=100`);
 
     if (tagsResponse.statusCode === 200) {
       const tagsData = JSON.parse(tagsResponse.body);
-      if (tagsData.data?.tags?.nodes) {
-        // Transform GraphQL data to REST API format
-        data.tags = tagsData.data.tags.nodes.map(transformTagData);
-        console.log(`✅ Found ${data.tags.length} tags`);
-      }
+      console.log(`✅ Found ${tagsData.length} tags`);
+      
+      // Transform REST API data to database format
+      data.tags = tagsData.map(transformTagData);
+    } else {
+      console.error(`❌ Failed to fetch tags: ${tagsResponse.statusCode}`);
     }
 
-    return data;
   } catch (error) {
     console.error('❌ Error fetching WordPress data:', error.message);
     throw error;
   }
+
+  return data;
 }
 
 async function importDataToAWS(wordpressData) {
-  console.log('📤 Importing data to AWS...');
+  console.log('🚀 Importing data to AWS...');
   
   try {
     const response = await makeRequest(CONFIG.importEndpoint, {
       method: 'POST',
-      body: JSON.stringify(wordpressData)
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        action: 'import',
+        wordpressUrl: CONFIG.wordpressRest,
+        data: wordpressData
+      })
     });
 
-    console.log(`📊 Import Status: ${response.statusCode}`);
-    console.log('📋 Import Response:', response.body);
-    
-    return response.statusCode === 200;
+    console.log(`📊 Import response status: ${response.statusCode}`);
+    console.log('📋 Import response body:', response.body);
+
+    if (response.statusCode === 200) {
+      console.log('✅ Data imported successfully!');
+    } else {
+      console.error('❌ Failed to import data');
+    }
+
+    return response;
   } catch (error) {
     console.error('❌ Error importing data:', error.message);
-    return false;
+    throw error;
   }
 }
 
 async function main() {
   try {
-    console.log('🚀 Starting WordPress data import process...\n');
+    console.log('🚀 Starting WordPress data import...');
     
-    // Step 1: Fetch WordPress data
+    // Fetch data from WordPress REST API
     const wordpressData = await fetchWordPressData();
     
-    console.log('\n📊 WordPress Data Summary:');
+    if (wordpressData.posts.length === 0) {
+      console.log('❌ No posts found - check WordPress REST API');
+      console.log(`🔍 Test URL: ${CONFIG.wordpressRest}${ENDPOINTS.posts}`);
+      return;
+    }
+    
+    console.log(`📊 Summary:`);
     console.log(`   Posts: ${wordpressData.posts.length}`);
     console.log(`   Categories: ${wordpressData.categories.length}`);
     console.log(`   Tags: ${wordpressData.tags.length}`);
     
-    if (wordpressData.posts.length === 0) {
-      console.log('❌ No posts found - check WordPress GraphQL API');
-      return;
-    }
+    // Import to AWS
+    await importDataToAWS(wordpressData);
     
-    // Step 2: Import to AWS
-    const importSuccess = await importDataToAWS(wordpressData);
-    
-    if (importSuccess) {
-      console.log('\n✅ WordPress data imported successfully!');
-      console.log('\n🎯 Next Steps:');
-      console.log('1. Test the AWS GraphQL API');
-      console.log('2. Set NEXT_PUBLIC_USE_AWS_GRAPHQL=true in .env.local');
-      console.log('3. Test your frontend: npm run dev');
-    } else {
-      console.log('\n❌ Import failed - check AWS Lambda logs');
-    }
+    console.log('\n✅ Import process completed!');
+    console.log('\n🔧 Next Steps:');
+    console.log('1. Test the REST API endpoints');
+    console.log('2. Check if data was imported successfully');
+    console.log('3. Verify the Lambda function is working');
     
   } catch (error) {
-    console.error('❌ Import process failed:', error.message);
+    console.error('❌ Import failed:', error.message);
+    process.exit(1);
   }
 }
 
-main(); 
+// Run the script
+if (require.main === module) {
+  main();
+}
+
+module.exports = { fetchWordPressData, importDataToAWS }; 

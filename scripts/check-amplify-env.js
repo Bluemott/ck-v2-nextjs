@@ -1,47 +1,86 @@
 #!/usr/bin/env node
 
 /**
- * Script to check for potential YAML issues in environment variables
- * Run this locally to identify problematic environment variables
+ * Amplify Environment Check Script
+ * Debugs environment variables and AWS configuration for Amplify builds
  */
 
-console.log('🔍 Checking for potential YAML issues in environment variables...\n');
+console.log('🔍 Checking Amplify build environment...\n');
 
-// Check for common problematic characters in env vars
-const problematicChars = [':', '|', '>', '[', ']', '{', '}', '&', '*', '#', '?', '-', '!', '%', '@', '`'];
+// Check required environment variables
+const requiredVars = [
+  'NODE_ENV',
+  'AWS_REGION',
+  'CODEBUILD_BUILD_ID',
+  'CODEBUILD_RESOLVED_SOURCE_VERSION'
+];
 
-console.log('Environment variables that might cause YAML issues:');
-console.log('================================================');
-
-const envVars = process.env;
-let foundIssues = false;
-
-for (const [key, value] of Object.entries(envVars)) {
-  if (key.startsWith('NEXT_PUBLIC_') || key.startsWith('AMPLIFY_')) {
-    const hasProblematicChars = problematicChars.some(char => value && value.includes(char));
-    
-    if (hasProblematicChars) {
-      console.log(`⚠️  ${key}: "${value}"`);
-      console.log(`   Contains problematic characters: ${problematicChars.filter(char => value.includes(char)).join(', ')}`);
-      console.log('');
-      foundIssues = true;
-    }
+console.log('📋 Required Environment Variables:');
+requiredVars.forEach(varName => {
+  const value = process.env[varName];
+  if (value) {
+    console.log(`✅ ${varName}: ${value}`);
+  } else {
+    console.log(`❌ ${varName}: NOT SET`);
   }
+});
+
+// Check optional but important variables
+const optionalVars = [
+  'NEXT_PUBLIC_WORDPRESS_REST_URL',
+  'NEXT_PUBLIC_CLOUDFRONT_URL',
+  'AWS_DATABASE_SETUP_ENDPOINT',
+  'AWS_DATA_IMPORT_ENDPOINT'
+];
+
+console.log('\n🔧 Optional Environment Variables:');
+optionalVars.forEach(varName => {
+  const value = process.env[varName];
+  if (value) {
+    console.log(`✅ ${varName}: ${value}`);
+  } else {
+    console.log(`⚠️  ${varName}: NOT SET (optional)`);
+  }
+});
+
+// Check AWS credentials (if available)
+console.log('\n🔐 AWS Configuration:');
+if (process.env.AWS_ACCESS_KEY_ID) {
+  console.log('✅ AWS Access Key ID: SET');
+} else {
+  console.log('⚠️  AWS Access Key ID: NOT SET (using IAM role)');
 }
 
-if (!foundIssues) {
-  console.log('✅ No obvious YAML issues found in environment variables');
+if (process.env.AWS_SECRET_ACCESS_KEY) {
+  console.log('✅ AWS Secret Access Key: SET');
+} else {
+  console.log('⚠️  AWS Secret Access Key: NOT SET (using IAM role)');
 }
 
-console.log('\n📋 Recommendations:');
-console.log('1. Check your Amplify Console environment variables');
-console.log('2. Ensure all URLs and values are properly quoted');
-console.log('3. Avoid special characters in environment variable values');
-console.log('4. Use simple alphanumeric characters when possible');
+console.log(`✅ AWS Region: ${process.env.AWS_REGION || 'us-east-1'}`);
 
-console.log('\n🔧 To fix in Amplify Console:');
-console.log('1. Go to your Amplify app settings');
-console.log('2. Navigate to Environment Variables');
-console.log('3. Check each variable for special characters');
-console.log('4. Wrap values in quotes if needed');
-console.log('5. Consider using base64 encoding for complex values'); 
+// Check build environment
+console.log('\n🏗️  Build Environment:');
+console.log(`✅ NODE_ENV: ${process.env.NODE_ENV || 'production'}`);
+console.log(`✅ NEXT_TELEMETRY_DISABLED: ${process.env.NEXT_TELEMETRY_DISABLED || '1'}`);
+
+// Check file system
+const fs = require('fs');
+console.log('\n📁 File System Check:');
+const criticalFiles = [
+  'package.json',
+  'next.config.ts',
+  'tsconfig.json',
+  'tailwind.config.js',
+  'amplify.yml'
+];
+
+criticalFiles.forEach(file => {
+  if (fs.existsSync(file)) {
+    console.log(`✅ ${file}: EXISTS`);
+  } else {
+    console.log(`❌ ${file}: MISSING`);
+  }
+});
+
+console.log('\n🎯 Environment check complete!'); 

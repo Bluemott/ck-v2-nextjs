@@ -3,41 +3,38 @@ frontend:
   phases:
     preBuild:
       commands:
-        - echo "🚀 Starting Amplify build process..."
-        - 'echo "📋 Build environment info:"'
-        - 'echo "   - AWS_REGION: ${AWS_REGION:-us-east-1}"'
+        - echo "Starting Amplify build process..."
+        - echo "Build environment info:"
         - echo "   - NODE_ENV: production"
-        - 'echo "   - Build ID: $CODEBUILD_BUILD_ID"'
         - echo ""
-        - 'echo "🔧 Setting up build environment..."'
+        - echo "Setting up build environment..."
         - export NODE_ENV=production
         - export NEXT_TELEMETRY_DISABLED=1
-        - 'export AWS_REGION=${AWS_REGION:-us-east-1}'
-        - echo "✅ Environment variables set"
+        - echo "Environment variables set"
         - echo ""
-        - 'echo "📦 Installing dependencies..."'
+        - echo "Installing dependencies..."
         - npm ci --legacy-peer-deps --no-optional --silent
-        - echo "✅ Dependencies installed successfully"
+        - echo "Dependencies installed successfully"
     build:
       commands:
-        - 'echo "🏗️  Building Next.js application..."'
-        - 'echo "📊 Build configuration:"'
-        - 'echo "   - TypeScript: ignoreBuildErrors=true"'
-        - 'echo "   - ESLint: ignoreDuringBuilds=true"'
-        - 'echo "   - Output: .next directory"'
+        - echo "Building Next.js application..."
+        - echo "Build configuration:"
+        - echo "   - TypeScript: ignoreBuildErrors=true"
+        - echo "   - ESLint: ignoreDuringBuilds=true"
+        - echo "   - Output: .next directory"
         - echo ""
         - npm run build
-        - echo "✅ Build completed successfully"
+        - echo "Build completed successfully"
         - echo ""
-        - 'echo "🧹 Cleaning up build artifacts..."'
+        - echo "Cleaning up build artifacts..."
         - rm -f node_modules/@swc/core-linux-x64-gnu/swc.linux-x64-gnu.node
         - rm -f node_modules/@swc/core-linux-x64-musl/swc.linux-x64-musl.node
-        - echo "✅ Build cleanup completed"
+        - echo "Build cleanup completed"
         - echo ""
-        - 'echo "📁 Build artifacts:"'
+        - echo "Build artifacts:"
         - ls -la .next/
         - echo ""
-        - 'echo "🎉 Build process completed!"'
+        - echo "Build process completed!"
   artifacts:
     baseDirectory: .next
     files:

@@ -1,0 +1,159 @@
+0
+
+2025-08-04T03:25:31.874Z [INFO]: # Build environment configured with Standard build compute type: 8GiB Memory, 4vCPUs, 128GB Disk Space
+
+1
+
+2025-08-04T03:25:32.266Z [INFO]: # Cloning repository: git@github.com:Bluemott/ck-v2-nextjs.git
+
+2
+
+2025-08-04T03:25:33.666Z [INFO]: 
+
+3
+
+2025-08-04T03:25:33.666Z [INFO]: Cloning into 'ck-v2-nextjs'...
+
+4
+
+2025-08-04T03:25:33.667Z [INFO]: # Switching to commit: 71d5c7988621716734d10bc654bd11f2ab5f0fb2
+
+5
+
+2025-08-04T03:25:33.775Z [INFO]: Note: switching to '71d5c7988621716734d10bc654bd11f2ab5f0fb2'.
+
+6
+
+                                 You are in 'detached HEAD' state. You can look around, make experimental
+
+7
+
+                                 changes and commit them, and you can discard any commits you make in this
+
+8
+
+                                 state without impacting any branches by switching back to a branch.
+
+9
+
+                                 If you want to create a new branch to retain commits you create, you may
+
+10
+
+                                 do so (now or later) by using -c with the switch command. Example:
+
+11
+
+                                 git switch -c <new-branch-name>
+
+12
+
+                                 Or undo this operation with:
+
+13
+
+                                 git switch -
+
+14
+
+                                 Turn off this advice by setting config variable advice.detachedHead to false
+
+15
+
+                                 HEAD is now at 71d5c79 build process
+
+16
+
+2025-08-04T03:25:33.818Z [INFO]: Successfully cleaned up Git credentials
+
+17
+
+2025-08-04T03:25:33.819Z [INFO]: # Checking for Git submodules at: /codebuild/output/src4263499173/src/ck-v2-nextjs/.gitmodules
+
+18
+
+2025-08-04T03:25:33.827Z [INFO]: # Retrieving environment cache...
+
+19
+
+2025-08-04T03:25:33.879Z [WARNING]: ! Unable to write cache: {"code":"ERR_BAD_REQUEST","message":"Request failed with status code 404"})}
+
+20
+
+2025-08-04T03:25:33.879Z [INFO]: ---- Setting Up SSM Secrets ----
+
+21
+
+2025-08-04T03:25:33.879Z [INFO]: SSM params {"Path":"/amplify/d1crrnsi5h4ht1/dev-amplify-deployment/","WithDecryption":true}
+
+22
+
+2025-08-04T03:25:33.926Z [WARNING]: !Failed to set up process.env.secrets
+
+23
+
+2025-08-04T03:25:34.813Z [INFO]: # No package override configuration found.
+
+24
+
+2025-08-04T03:25:34.817Z [INFO]: # Retrieving cache...
+
+25
+
+2025-08-04T03:25:46.195Z [INFO]: # Extracting cache...
+
+26
+
+2025-08-04T03:25:56.241Z [INFO]: # Extraction completed
+
+27
+
+2025-08-04T03:25:56.424Z [INFO]: # Retrieved cache
+
+28
+
+2025-08-04T03:25:57.812Z [INFO]: BackendEnvironment name dev-amplify-deployment for app d1crrnsi5h4ht1 is invalid
+
+29
+
+2025-08-04T03:25:57.860Z [INFO]: Random environment name margaux generated
+
+30
+
+2025-08-04T03:26:00.929Z [INFO]: ## Starting Backend Build
+
+31
+
+                                 ## Checking for associated backend environment...
+
+32
+
+                                 ## No backend environment association found, continuing...
+
+33
+
+                                 ## Completed Backend Build
+
+34
+
+2025-08-04T03:26:00.934Z [INFO]: {"backendDuration": 0}
+
+35
+
+                                 ## Starting Frontend Build
+
+36
+
+                                 # Starting phase: preBuild
+
+37
+
+                                 # Executing command: echo "Starting Amplify build process"
+
+38
+
+                                 Starting Amplify build process
+
+39
+
+                                 # Executing command: echo "Build environment info"

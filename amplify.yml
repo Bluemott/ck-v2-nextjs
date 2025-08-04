@@ -4,37 +4,12 @@ frontend:
     preBuild:
       commands:
         - echo "Starting Amplify build process"
-        - echo "Build environment info"
-        - echo "   - NODE_ENV production"
-        - echo ""
-        - echo "Setting up build environment"
         - export NODE_ENV=production
         - export NEXT_TELEMETRY_DISABLED=1
-        - echo "Environment variables set"
-        - echo ""
-        - echo "Installing dependencies"
-        - npm ci --legacy-peer-deps --no-optional --silent
-        - echo "Dependencies installed successfully"
+        - npm ci --legacy-peer-deps --no-optional
     build:
       commands:
-        - echo "Building Next.js application"
-        - echo "Build configuration"
-        - echo "   - TypeScript ignoreBuildErrors=true"
-        - echo "   - ESLint ignoreDuringBuilds=true"
-        - echo "   - Output .next directory"
-        - echo ""
         - npm run build
-        - echo "Build completed successfully"
-        - echo ""
-        - echo "Cleaning up build artifacts"
-        - rm -f node_modules/@swc/core-linux-x64-gnu/swc.linux-x64-gnu.node
-        - rm -f node_modules/@swc/core-linux-x64-musl/swc.linux-x64-musl.node
-        - echo "Build cleanup completed"
-        - echo ""
-        - echo "Build artifacts"
-        - ls -la .next/
-        - echo ""
-        - echo "Build process completed"
   artifacts:
     baseDirectory: .next
     files:

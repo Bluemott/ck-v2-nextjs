@@ -1,83 +1,97 @@
-34
+2025-08-04T03:42:22.957Z [WARNING]: <w> [webpack.cache.PackFileCacheStrategy] Serializing big strings (135kiB) impacts deserialization performance (consider using Buffer instead and decode when needed)
 
-2025-08-04T03:37:32.293Z [INFO]: ## Starting Frontend Build
+57
 
-35
+2025-08-04T03:42:27.326Z [WARNING]: ⚠ Compiled with warnings in 17.0s
 
-2025-08-04T03:37:32.293Z [INFO]: # Starting phase: preBuild
+58
 
-36
+2025-08-04T03:42:27.332Z [WARNING]: ./node_modules/@aws-sdk/core/dist-es/submodules/client/emitWarningIfUnsupportedVersion.js
 
-                                 # Executing command: echo "Starting Amplify build process"
+59
 
-37
+                                    A Node.js API is used (process.emitWarning at line: 7) which is not supported in the Edge Runtime.
 
-                                 Starting Amplify build process
+60
 
-38
+                                    Learn more: https://nextjs.org/docs/api-reference/edge-runtime
 
-                                 # Executing command: export NODE_ENV=production
+61
 
-39
+                                    Import trace for requested module:
 
-                                 # Executing command: export NEXT_TELEMETRY_DISABLED=1
+62
 
-40
+                                    ./node_modules/@aws-sdk/core/dist-es/submodules/client/emitWarningIfUnsupportedVersion.js
 
-                                 # Executing command: npm ci --legacy-peer-deps --no-optional --prefer-offline
+63
 
-41
+                                    ./node_modules/@aws-sdk/core/dist-es/submodules/client/index.js
 
-2025-08-04T03:37:36.218Z [WARNING]: npm warn config optional Use `--omit=optional` to exclude optional dependencies, or
+64
 
-42
+                                    ./node_modules/@aws-sdk/core/dist-es/index.js
 
-                                    npm warn config `--include=optional` to include them.
+65
 
-43
+                                    ./node_modules/@aws-sdk/client-cloudwatch/dist-es/auth/httpAuthSchemeProvider.js
 
-                                    npm warn config
+66
 
-44
+                                    ./node_modules/@aws-sdk/client-cloudwatch/dist-es/CloudWatchClient.js
 
-                                    npm warn config       Default value does install optional deps unless otherwise omitted.
+67
 
-45
+                                    ./node_modules/@aws-sdk/client-cloudwatch/dist-es/index.js
 
-2025-08-04T03:38:07.446Z [WARNING]: npm error code ETARGET
+68
 
-46
+                                    ./app/lib/monitoring.ts
 
-2025-08-04T03:38:07.451Z [WARNING]: npm error notarget No matching version found for semver@7.7.2.
+69
 
-47
+2025-08-04T03:42:27.333Z [INFO]: Skipping validation of types
 
-                                    npm error notarget In most cases you or one of your dependencies are requesting
+70
 
-48
+                                 Skipping linting
 
-                                    npm error notarget a package version that doesn't exist.
+71
 
-49
+2025-08-04T03:42:27.402Z [WARNING]: It looks like you're trying to use TypeScript but do not have the required package(s) installed.
 
-                                    npm error A complete log of this run can be found in: /root/.npm/_logs/2025-08-04T03_37_35_796Z-debug-0.log
+72
 
-50
+                                    Please install typescript, @types/react, and @types/node by running:
 
-2025-08-04T03:38:07.539Z [ERROR]: !!! Build failed
+73
 
-51
+                                    npm install --save-dev typescript @types/react @types/node
 
-2025-08-04T03:38:07.539Z [INFO]: Please read more about Amplify Hosting's support for SSR frameworks to find if your build failure is related to an unsupported feature: https://docs.aws.amazon.com/amplify/latest/userguide/amplify-ssr-framework-support.html. You may also find this troubleshooting guide useful: https://docs.aws.amazon.com/amplify/latest/userguide/troubleshooting-ssr-deployment.html
+74
 
-52
+                                    If you are not trying to use TypeScript, please remove the tsconfig.json file from your package root (and any TypeScript files in your app and pages directories).
 
-2025-08-04T03:38:07.539Z [ERROR]: !!! Error: Command failed with exit code 1
+75
 
-53
+2025-08-04T03:42:27.414Z [WARNING]: Next.js build worker exited with code: 1 and signal: null
 
-2025-08-04T03:38:07.539Z [INFO]: # Starting environment caching...
+76
 
-54
+2025-08-04T03:42:27.458Z [ERROR]: !!! Build failed
 
-2025-08-04T03:38:07.539Z [INFO]: # Environment caching completed
+77
+
+2025-08-04T03:42:27.458Z [INFO]: Please read more about Amplify Hosting's support for SSR frameworks to find if your build failure is related to an unsupported feature: https://docs.aws.amazon.com/amplify/latest/userguide/amplify-ssr-framework-support.html. You may also find this troubleshooting guide useful: https://docs.aws.amazon.com/amplify/latest/userguide/troubleshooting-ssr-deployment.html
+
+78
+
+2025-08-04T03:42:27.458Z [ERROR]: !!! Error: Command failed with exit code 1
+
+79
+
+2025-08-04T03:42:27.458Z [INFO]: # Starting environment caching...
+
+80
+
+2025-08-04T03:42:27.459Z [INFO]: # Environment caching completed

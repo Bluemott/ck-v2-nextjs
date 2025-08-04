@@ -66,9 +66,10 @@ const nextConfig: NextConfig = {
   poweredByHeader: false,
   reactStrictMode: true,
   
-  // Performance optimizations
+  // Performance optimizations and AWS SDK configuration
   experimental: {
     optimizePackageImports: ['@next/font'],
+    serverComponentsExternalPackages: ['@aws-sdk/client-cloudwatch', '@aws-sdk/client-cloudwatch-logs', '@aws-sdk/client-cloudfront', '@aws-sdk/client-lambda', '@aws-sdk/client-s3', '@aws-sdk/client-secrets-manager', '@aws-sdk/client-xray'],
   },
   
   // Server external packages moved to correct location

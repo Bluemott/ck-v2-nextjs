@@ -3,6 +3,7 @@ import { Playfair_Display } from 'next/font/google';
 import './globals.css';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
+import FloatingSocialMedia from './components/FloatingSocialMedia';
 import GoogleTagManager from './components/GoogleTagManager';
 import GoogleAnalytics from './components/GoogleAnalytics';
 import { env, isDevelopment } from './lib/env';
@@ -173,6 +174,9 @@ export default function RootLayout({
           </main>
           <Footer />
         </div>
+        
+        {/* Floating Social Media */}
+        <FloatingSocialMedia />
         
         {/* Development mode indicator */}
         {isDevelopment && (

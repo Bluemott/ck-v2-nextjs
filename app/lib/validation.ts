@@ -4,8 +4,8 @@ import { z } from 'zod';
 export const mediaUploadSchema = z.object({
   file: z.any().refine((val) => {
     // Check if we're in a browser environment where File is available
-    if (typeof window !== 'undefined' && typeof File !== 'undefined') {
-      return val instanceof File;
+    if (typeof window !== 'undefined' && typeof (globalThis as any).File !== 'undefined') {
+      return val instanceof (globalThis as any).File;
     }
     // In server environment, accept any object with required properties
     return val && typeof val === 'object' && 'name' in val && 'size' in val && 'type' in val;

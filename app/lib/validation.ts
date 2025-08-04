@@ -2,7 +2,14 @@ import { z } from 'zod';
 
 // Media Upload Validation Schema
 export const mediaUploadSchema = z.object({
-  file: z.instanceof(File, { message: 'File is required' }),
+  file: z.any().refine((val) => {
+    // Check if we're in a browser environment where File is available
+    if (typeof File !== 'undefined') {
+      return val instanceof File;
+    }
+    // In server environment, accept any object with required properties
+    return val && typeof val === 'object' && 'name' in val && 'size' in val && 'type' in val;
+  }, { message: 'File is required' }),
   title: z.string().optional(),
   altText: z.string().optional(),
   caption: z.string().optional(),

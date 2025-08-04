@@ -173,7 +173,7 @@ const ShopClient = () => {
                 
                 {/* Product Info */}
                 <div className="p-6">
-                  <h2 className="text-xl font-semibold mb-3 text-gray-900 line-clamp-2 leading-tight">
+                  <h2 className="text-xl font-semibold mb-3 text-gray-900 line-clamp-2 leading-tight serif">
                     {decodeHTMLEntities(product.title)}
                   </h2>
                   
@@ -184,7 +184,12 @@ const ShopClient = () => {
                   )}
                   
                   <p className="text-gray-600 mb-4 line-clamp-3 text-sm leading-relaxed">
-                    {decodeHTMLEntities(product.description.substring(0, 150))}...
+                    {product.description && typeof product.description === 'string' 
+                      ? `${decodeHTMLEntities(product.description.substring(0, 150))}...`
+                      : product.description && typeof product.description === 'object' && product.description.rendered
+                      ? `${decodeHTMLEntities(String(product.description.rendered).substring(0, 150))}...`
+                      : ''
+                    }
                   </p>
                   
                   <div className="flex justify-between items-center">

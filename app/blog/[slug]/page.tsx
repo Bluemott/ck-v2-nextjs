@@ -2,11 +2,13 @@ import { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import BlogSidebar from '../../components/BlogSidebar';
+import BlogPostFooter from '../../components/BlogPostFooter';
 import StructuredData, { generateArticleStructuredData } from '../../components/StructuredData';
-import { fetchPostBySlug, decodeHtmlEntities, getFeaturedImageUrl, getPostCategories, getPostTags } from '../../lib/api';
+import { fetchPostBySlug, fetchPosts, decodeHtmlEntities, getFeaturedImageUrl, getPostCategories, getPostTags, processExcerpt } from '../../lib/api';
 import WordPressImage from '../../components/WordPressImage';
 import { generateSEOMetadata } from '../../lib/seo';
 import Breadcrumbs from '../../components/Breadcrumbs';
+import { env } from '../../lib/env';
 
 interface BlogPostPageProps {
   params: Promise<{ slug: string }>;
@@ -28,7 +30,7 @@ export async function generateMetadata({ params }: BlogPostPageProps): Promise<M
   }
 
   const title = decodeHtmlEntities(post.title.rendered);
-  const description = post.excerpt.rendered.replace(/<[^>]+>/g, '').slice(0, 160);
+  const description = processExcerpt(post.excerpt, 160);
   const image = getFeaturedImageUrl(post);
   
   return generateSEOMetadata({
@@ -71,6 +73,12 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
   const categories = getPostCategories(post);
   const tags = getPostTags(post);
 
+  // Fetch related posts for navigation
+  const allPosts = await fetchPosts({ per_page: 100 });
+  const currentPostIndex = allPosts.findIndex(p => p.id === post.id);
+  const previousPost = currentPostIndex > 0 ? allPosts[currentPostIndex - 1] : null;
+  const nextPost = currentPostIndex < allPosts.length - 1 ? allPosts[currentPostIndex + 1] : null;
+
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', {
       year: 'numeric',
@@ -87,24 +95,24 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
         data={generateArticleStructuredData({
           title: decodeHtmlEntities(post.title.rendered),
           description: post.content.rendered.replace(/<[^>]+>/g, '').slice(0, 160),
-          url: `${process.env.NEXT_PUBLIC_SITE_URL || 'https://www.cowboykimono.com'}/blog/${post.slug}`,
+          url: `${env.NEXT_PUBLIC_SITE_URL}/blog/${post.slug}`,
           image: getFeaturedImageUrl(post) || undefined,
           datePublished: post.date,
           author: 'Cowboy Kimono',
         })}
       />
       
-      {/* Main Article Content */}
-      <article className="min-h-screen bg-[#f0f8ff] py-12">
+             {/* Main Article Content */}
+       <article className="min-h-screen bg-[#f0f8ff] pt-24 pb-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           {/* Breadcrumbs */}
-                        <Breadcrumbs
-                items={[
-                  { label: 'Home', href: '/' },
-                  { label: 'Blog', href: '/blog' },
-                  { label: decodeHtmlEntities(post.title.rendered) }
-                ]}
-              />
+          <Breadcrumbs
+            items={[
+              { label: 'Home', href: '/' },
+              { label: 'Blog', href: '/blog' },
+              { label: decodeHtmlEntities(post.title.rendered) }
+            ]}
+          />
 
           {/* Main Content with Sidebar */}
           <div className="flex flex-col lg:flex-row gap-8 lg:gap-12 mt-8">
@@ -122,55 +130,55 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
                 />
               </div>
 
-                             {/* Post Header */}
-               <header className="mb-10">
-                 <h1 
-                   className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6 text-gray-900 serif leading-tight"
-                   dangerouslySetInnerHTML={{ __html: decodeHtmlEntities(post.title.rendered) }}
-                 />
-                 <div className="flex items-center space-x-4 text-gray-600 font-medium mb-6">
-                   <span>Published on {formatDate(post.date)}</span>
-                 </div>
-                 
-                 {/* Post Categories and Tags */}
-                 {(categories.length > 0 || tags.length > 0) && (
-                   <div className="flex flex-col sm:flex-row gap-4">
-                     {categories.length > 0 && (
-                       <div className="flex items-center gap-2">
-                         <span className="text-sm font-medium text-gray-500">In:</span>
-                         <div className="flex flex-wrap gap-2">
-                           {categories.filter(Boolean).map((category) => (
-                             <Link
-                               key={category!.id}
-                               href={`/blog/category/${category!.slug}`}
-                               className="px-3 py-1 bg-[#1e2939] text-white rounded-full text-xs font-medium hover:bg-[#2a3441] transition-all duration-300 hover:shadow-md"
-                             >
-                               {decodeHtmlEntities(category!.name)}
-                             </Link>
-                           ))}
-                         </div>
-                       </div>
-                     )}
-                     
-                     {tags.length > 0 && (
-                       <div className="flex items-center gap-2">
-                         <span className="text-sm font-medium text-gray-500">Tagged:</span>
-                         <div className="flex flex-wrap gap-2">
-                           {tags.filter(Boolean).map((tag) => (
-                             <Link
-                               key={tag!.id}
-                               href={`/blog/tag/${tag!.slug}`}
-                               className="px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-xs font-medium hover:bg-gray-200 hover:text-gray-900 transition-all duration-300 hover:shadow-md"
-                             >
-                               {decodeHtmlEntities(tag!.name)}
-                             </Link>
-                           ))}
-                         </div>
-                       </div>
-                     )}
-                   </div>
-                 )}
-               </header>
+              {/* Post Header */}
+              <header className="mb-10">
+                <h1 
+                  className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6 text-gray-900 serif leading-tight"
+                  dangerouslySetInnerHTML={{ __html: decodeHtmlEntities(post.title.rendered) }}
+                />
+                <div className="flex items-center space-x-4 text-gray-600 font-medium mb-6">
+                  <span>Published on {formatDate(post.date)}</span>
+                </div>
+                
+                {/* Post Categories and Tags */}
+                {(categories.length > 0 || tags.length > 0) && (
+                  <div className="flex flex-col sm:flex-row gap-4">
+                    {categories.length > 0 && (
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm font-medium text-gray-500">In:</span>
+                        <div className="flex flex-wrap gap-2">
+                          {categories.filter(Boolean).map((category) => (
+                            <Link
+                              key={category!.id}
+                              href={`/blog/category/${category!.slug}`}
+                              className="px-3 py-1 bg-[#1e2939] text-white rounded-full text-xs font-medium hover:bg-[#2a3441] transition-all duration-300 hover:shadow-md"
+                            >
+                              {decodeHtmlEntities(category!.name)}
+                            </Link>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                    
+                    {tags.length > 0 && (
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm font-medium text-gray-500">Tagged:</span>
+                        <div className="flex flex-wrap gap-2">
+                          {tags.filter(Boolean).map((tag) => (
+                            <Link
+                              key={tag!.id}
+                              href={`/blog/tag/${tag!.slug}`}
+                              className="px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-xs font-medium hover:bg-gray-200 hover:text-gray-900 transition-all duration-300 hover:shadow-md"
+                            >
+                              {decodeHtmlEntities(tag!.name)}
+                            </Link>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </header>
 
               {/* Post Content */}
               <div 
@@ -187,18 +195,25 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
                 suppressHydrationWarning={true}
               />
 
+              {/* Blog Post Footer */}
+              <BlogPostFooter
+                postTitle={decodeHtmlEntities(post.title.rendered)}
+                postUrl={`${env.NEXT_PUBLIC_SITE_URL}/blog/${post.slug}`}
+                currentPostSlug={post.slug}
+                previousPost={previousPost}
+                nextPost={nextPost}
+              />
+            </div>
 
-             </div>
-
-            {/* Sidebar - Simplified */}
-            <div className="w-full lg:w-80 lg:sticky lg:top-8 lg:self-start">
+            {/* Sidebar */}
+            <div className="w-full lg:w-80 lg:sticky lg:top-24 lg:self-start">
               <BlogSidebar 
                 currentPost={post}
                 currentPostCategories={categories.map(cat => cat.id)}
                 currentPostTags={tags.map(tag => tag.id)}
                 showRecentPosts={false}
-                showCategories={false}
-                showTags={false}
+                showCategories={true}
+                showTags={true}
               />
             </div>
           </div>

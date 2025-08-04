@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { fetchCategories } from '../../lib/api-rest';
+import { fetchCategories } from '../../lib/api';
 import { z } from 'zod';
 
 // Query parameter schema for validation
@@ -69,7 +69,7 @@ export async function GET(request: NextRequest) {
   }
 }
 
-export async function POST(request: NextRequest) {
+export async function POST(_request: NextRequest) {
   return NextResponse.json({
     success: false,
     error: 'Method not allowed',

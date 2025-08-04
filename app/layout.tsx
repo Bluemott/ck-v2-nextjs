@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { Inter } from 'next/font/google';
+import { Playfair_Display } from 'next/font/google';
 import './globals.css';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
@@ -7,7 +7,11 @@ import GoogleTagManager from './components/GoogleTagManager';
 import GoogleAnalytics from './components/GoogleAnalytics';
 import { env, isDevelopment } from './lib/env';
 
-const inter = Inter({ subsets: ['latin'] });
+const playfair = Playfair_Display({ 
+  subsets: ['latin'],
+  variable: '--font-playfair',
+  display: 'swap',
+});
 
 export const metadata: Metadata = {
   title: {
@@ -84,7 +88,7 @@ export default function RootLayout({
   const gtmId = env.NEXT_PUBLIC_GTM_ID || 'GTM-PNZTN4S4';
 
   return (
-    <html lang="en">
+    <html lang="en" className={playfair.variable}>
       <head>
         {/* Google Tag Manager */}
         <GoogleTagManager gtmId={gtmId} />
@@ -151,7 +155,7 @@ export default function RootLayout({
           }}
         />
       </head>
-      <body className={inter.className}>
+      <body className={playfair.className}>
         {/* Google Tag Manager (noscript) */}
         <noscript>
           <iframe

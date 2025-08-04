@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef } from 'react';
 import Image from 'next/image';
 
 interface MediaFile {
@@ -28,10 +28,10 @@ interface MediaFile {
 }
 
 interface MediaManagerProps {
-  onSelect?: (media: MediaFile) => void;
+  onSelect?: (_media: MediaFile) => void;
   multiple?: boolean;
   selectedMedia?: MediaFile[];
-  onSelectionChange?: (media: MediaFile[]) => void;
+  onSelectionChange?: (_media: MediaFile[]) => void;
 }
 
 const MediaManager = ({ 
@@ -48,11 +48,11 @@ const MediaManager = ({
   const [selectedCategory, setSelectedCategory] = useState('');
   const [showUploadForm, setShowUploadForm] = useState(false);
   
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  // const fileInputRef = useRef<HTMLInputElement>(null); // Currently unused
   const formRef = useRef<HTMLFormElement>(null);
 
   // Upload configuration
-  const [uploadConfig, setUploadConfig] = useState({
+  const [uploadConfig] = useState({
     allowedTypes: [],
     maxFileSize: 0,
     maxFileSizeMB: 0,
@@ -60,18 +60,18 @@ const MediaManager = ({
     s3Bucket: ''
   });
 
-  // Fetch upload configuration
-  const fetchUploadConfig = useCallback(async () => {
-    try {
-      const response = await fetch('/api/media/upload');
-      if (response.ok) {
-        const config = await response.json();
-        setUploadConfig(config);
-      }
-    } catch (error) {
-      console.error('Failed to fetch upload config:', error);
-    }
-  }, []);
+  // Fetch upload configuration - currently unused
+  // const fetchUploadConfig = useCallback(async () => {
+  //   try {
+  //     const response = await fetch('/api/media/upload');
+  //     if (response.ok) {
+  //       const config = await response.json();
+  //       setUploadConfig(config);
+  //     }
+  //   } catch (error) {
+  //     console.error('Failed to fetch upload config:', error);
+  //   }
+  // }, []);
 
   // Handle file upload
   const handleFileUpload = async (event: React.FormEvent<HTMLFormElement>) => {
@@ -153,23 +153,23 @@ const MediaManager = ({
   };
 
   // Handle file selection
-  const handleFileSelect = (_media: MediaFile) => {
+  const handleFileSelect = (media: MediaFile) => {
     if (multiple && onSelectionChange) {
-      const isSelected = selectedMedia.some(m => m.id === _media.id);
+      const isSelected = selectedMedia.some(m => m.id === media.id);
       if (isSelected) {
-        onSelectionChange(selectedMedia.filter(m => m.id !== _media.id));
+        onSelectionChange(selectedMedia.filter(m => m.id !== media.id));
       } else {
-        onSelectionChange([...selectedMedia, _media]);
+        onSelectionChange([...selectedMedia, media]);
       }
     } else if (!multiple && onSelect) {
-      onSelect(_media);
+      onSelect(media);
     }
   };
 
-  // Handle drag over
-  const handleDragOver = (_media: React.DragEvent) => {
-    // Handle drag over logic here
-  };
+  // Handle drag over - currently unused
+  // const handleDragOver = (_media: React.DragEvent) => {
+  //   // Handle drag over logic here
+  // };
 
   // Check if file is selected
   const isFileSelected = (media: MediaFile) => {
@@ -215,7 +215,7 @@ const MediaManager = ({
     <div className="bg-white rounded-lg shadow-lg p-6">
       {/* Header */}
       <div className="flex justify-between items-center mb-6">
-        <h2 className="text-2xl font-bold text-gray-900">Media Manager</h2>
+        <h2 className="text-2xl font-bold text-gray-900 serif">Media Manager</h2>
         <button
           onClick={() => setShowUploadForm(!showUploadForm)}
           className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors"
@@ -227,7 +227,7 @@ const MediaManager = ({
       {/* Upload Form */}
       {showUploadForm && (
         <div className="mb-6 p-4 bg-gray-50 rounded-lg">
-          <h3 className="text-lg font-semibold mb-4">Upload New Media</h3>
+                      <h3 className="text-lg font-semibold mb-4 serif">Upload New Media</h3>
           
           <form ref={formRef} onSubmit={handleFileUpload} className="space-y-4">
             <div>
@@ -467,7 +467,7 @@ const MediaManager = ({
       {filteredMedia.length === 0 && (
         <div className="text-center py-12">
           <div className="text-6xl mb-4">📁</div>
-          <h3 className="text-lg font-medium text-gray-900 mb-2">No media found</h3>
+                          <h3 className="text-lg font-medium text-gray-900 mb-2 serif">No media found</h3>
           <p className="text-gray-500">
             {searchTerm || selectedCategory 
               ? 'Try adjusting your search or filters'

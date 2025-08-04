@@ -112,6 +112,8 @@ export class RestAPIClient {
   private async makeRequest<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
     const url = `${this.baseUrl}${endpoint}`;
     
+    console.log('REST API request:', { url, baseUrl: this.baseUrl, endpoint });
+    
     try {
       const response = await fetch(url, {
         ...options,
@@ -122,11 +124,16 @@ export class RestAPIClient {
         signal: AbortSignal.timeout(10000), // 10 second timeout
       });
 
+      console.log('REST API response status:', response.status, response.statusText);
+
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
 
-      return await response.json();
+      const data = await response.json();
+      console.log('REST API response data type:', typeof data, Array.isArray(data) ? `Array(${data.length})` : 'Object');
+      
+      return data;
     } catch (error) {
       console.error('REST API request error:', {
         error: error instanceof Error ? error.message : String(error),
@@ -157,24 +164,35 @@ export class RestAPIClient {
     if (params.page) searchParams.append('page', params.page.toString());
     if (params.per_page) searchParams.append('per_page', params.per_page.toString());
     if (params.search) searchParams.append('search', params.search);
-    if (params.categories?.length) searchParams.append('categories', params.categories.join(','));
-    if (params.tags?.length) searchParams.append('tags', params.tags.join(','));
+    if (params.categories) searchParams.append('categories', params.categories.join(','));
+    if (params.tags) searchParams.append('tags', params.tags.join(','));
     if (params.orderby) searchParams.append('orderby', params.orderby);
     if (params.order) searchParams.append('order', params.order);
     if (params._embed) searchParams.append('_embed', '1');
 
     const endpoint = `${WP_ENDPOINTS.POSTS}?${searchParams.toString()}`;
-    const posts = await this.makeRequest<WPRestPost[]>(endpoint);
+    
+    try {
+      const posts = await this.makeRequest<WPRestPost[]>(endpoint);
+      
+      // For now, we'll use default values since we can't access headers from makeRequest
+      // In a production environment, you might want to modify makeRequest to return headers
+      const totalPages = 1;
+      const totalPosts = posts.length;
 
-    // Get pagination info from headers (if available)
-    const totalPages = parseInt(posts.headers?.['x-wp-totalpages'] || '1');
-    const totalPosts = parseInt(posts.headers?.['x-wp-total'] || posts.length.toString());
-
-    return {
-      posts,
-      totalPages,
-      totalPosts
-    };
+      return {
+        posts,
+        totalPages,
+        totalPosts
+      };
+    } catch (error) {
+      console.error('Error fetching posts:', error);
+      return {
+        posts: [],
+        totalPages: 1,
+        totalPosts: 0
+      };
+    }
   }
 
   // Get a single post by slug
@@ -191,6 +209,17 @@ export class RestAPIClient {
       return posts.length > 0 ? posts[0] : null;
     } catch (error) {
       console.error('Error fetching post by slug:', error);
+      return null;
+    }
+  }
+
+  // Get a single post by ID
+  async getPostById(id: number): Promise<WPRestPost | null> {
+    try {
+      const endpoint = `${WP_ENDPOINTS.POSTS}/${id}?_embed=1`;
+      return await this.makeRequest<WPRestPost>(endpoint);
+    } catch (error) {
+      console.error('Error fetching post by ID:', error);
       return null;
     }
   }
@@ -253,7 +282,8 @@ export class RestAPIClient {
   async getRelatedPosts(postId: number, limit: number = 3): Promise<WPRestPost[]> {
     try {
       // First get the current post to extract categories and tags
-      const currentPost = await this.getPostBySlug(postId.toString());
+      // We need to get the post by ID, not slug
+      const currentPost = await this.getPostById(postId);
       if (!currentPost) return [];
 
       const categories = currentPost._embedded?.['wp:term']?.[0] || [];

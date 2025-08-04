@@ -13,20 +13,20 @@ const Footer = () => {
               alt="Cowboy Kimono Logo" 
               width={200} 
               height={80}
-              className="mx-auto transition-transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 rounded"
+              className="mx-auto transition-transform hover:scale-105 focus:outline-none rounded"
             />
           </Link>
         </div>
         
         {/* Navigation Links */}
         <nav className="flex flex-col sm:flex-row justify-center items-center space-y-4 sm:space-y-0 sm:space-x-8 mb-6" role="navigation" aria-label="Footer navigation">
-          <Link href="/" className="hover:text-gray-300 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 rounded px-2 py-1">
+          <Link href="/" className="hover:text-gray-300 transition-colors focus:outline-none rounded px-2 py-1">
             Home
           </Link>
-          <Link href="/shop" className="hover:text-gray-300 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 rounded px-2 py-1">
+          <Link href="/shop" className="hover:text-gray-300 transition-colors focus:outline-none rounded px-2 py-1">
             Shop
           </Link>
-          <Link href="/blog" className="hover:text-gray-300 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 rounded px-2 py-1">
+          <Link href="/blog" className="hover:text-gray-300 transition-colors focus:outline-none rounded px-2 py-1">
             Blog
           </Link>
         </nav>

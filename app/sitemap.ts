@@ -1,8 +1,9 @@
 import { MetadataRoute } from 'next'
 import { fetchPosts, fetchCategories, fetchTags } from './lib/api'
+import { env } from './lib/env';
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.cowboykimono.com';
+  const baseUrl = env.NEXT_PUBLIC_SITE_URL;
 
   // Fetch blog post slugs from WordPress REST API
   let blogUrls: MetadataRoute.Sitemap = [];

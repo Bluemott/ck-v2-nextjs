@@ -88,10 +88,10 @@ export function generateArticleStructuredData({
     '@context': 'https://schema.org',
     '@type': 'BlogPosting',
     headline: title,
-    description: description,
-    url: url,
+    description,
+    url,
     image: image || 'https://www.cowboykimono.com/images/CK_New_Hero_Red_Head-1.webp',
-    datePublished: datePublished,
+    datePublished,
     dateModified: dateModified || datePublished,
     author: {
       '@type': 'Organization',

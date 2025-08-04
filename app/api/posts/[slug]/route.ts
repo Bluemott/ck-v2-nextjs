@@ -1,96 +1,75 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { fetchPostBySlug, fetchRelatedPosts } from '../../../lib/api-rest';
-import { z } from 'zod';
+import { fetchPostBySlug, fetchRelatedPosts } from '../../../lib/api';
 
-// Path parameter schema for validation
-const pathSchema = z.object({
-  slug: z.string().min(1, 'Slug is required')
-});
+// Path parameter schema for validation - currently unused but kept for future validation
+// const pathSchema = z.object({
+//   slug: z.string().min(1, 'Slug is required')
+// });
+
+interface RouteParams {
+  params: Promise<{ slug: string }>;
+}
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: Promise<{ slug: string }> }
+  { params }: RouteParams
 ) {
   try {
-    // Parse and validate path parameters
-    const pathParams = await params;
-    const validatedParams = pathSchema.parse(pathParams);
-    
-    // Get query parameters for related posts
-    const { searchParams } = new URL(request.url);
-    const includeRelated = searchParams.get('include_related') === 'true';
-    const relatedLimit = parseInt(searchParams.get('related_limit') || '3', 10);
-    
+    const { slug } = await params;
+    const searchParams = request.nextUrl.searchParams;
+    const debug = searchParams.get('debug') === 'true';
+    const relatedLimit = parseInt(searchParams.get('related_limit') || '3');
+
     // Fetch the main post
-    const post = await fetchPostBySlug(validatedParams.slug);
+    const post = await fetchPostBySlug(slug);
     
     if (!post) {
-      return NextResponse.json({
-        success: false,
-        error: 'Post not found',
-        message: `No post found with slug: ${validatedParams.slug}`
-      }, { status: 404 });
+      return NextResponse.json(
+        { error: 'Post not found' },
+        { status: 404 }
+      );
     }
-    
-    // Prepare response data
-    const responseData: any = {
+
+    // Fetch related posts
+    const relatedPosts = await fetchRelatedPosts(post.id, relatedLimit);
+
+    // Prepare response
+    const response: Record<string, unknown> = {
       post,
+      relatedPosts,
       meta: {
-        timestamp: new Date().toISOString(),
-        endpoint: `/api/posts/${validatedParams.slug}`,
-        method: 'GET'
+        totalRelated: relatedPosts.length,
+        requestedLimit: relatedLimit,
+        postId: post.id,
+        postSlug: post.slug
       }
     };
-    
-    // Include related posts if requested
-    if (includeRelated) {
-      try {
-        const relatedPosts = await fetchRelatedPosts(post.id, relatedLimit);
-        responseData.relatedPosts = relatedPosts;
-      } catch (relatedError) {
-        console.error('Error fetching related posts:', relatedError);
-        responseData.relatedPosts = [];
-      }
-    }
-    
-    // Return successful response with proper headers
-    return NextResponse.json({
-      success: true,
-      data: responseData
-    }, {
-      headers: {
-        'Content-Type': 'application/json',
-        'Cache-Control': 'public, s-maxage=600, stale-while-revalidate=1200' // 10 min cache, 20 min stale
-      }
-    });
 
-  } catch (error) {
-    console.error('API Error:', error);
-    
-    // Handle validation errors
-    if (error instanceof z.ZodError) {
-      return NextResponse.json({
-        success: false,
-        error: 'Invalid request parameters',
-        details: error.errors.map(err => ({
-          field: err.path.join('.'),
-          message: err.message
-        }))
-      }, { status: 400 });
+    // Add debug information if requested
+    if (debug) {
+      response.debug = {
+        postCategories: post._embedded?.['wp:term']?.[0] || [],
+        postTags: post._embedded?.['wp:term']?.[1] || [],
+        apiConfig: {
+          wordpressRestUrl: process.env.NEXT_PUBLIC_WORDPRESS_REST_URL || 'https://api.cowboykimono.com',
+          useRestApi: process.env.NEXT_PUBLIC_USE_REST_API || 'true'
+        }
+      };
     }
-    
-    // Handle other errors
-    return NextResponse.json({
-      success: false,
-      error: 'Internal server error',
-      message: error instanceof Error ? error.message : 'Unknown error occurred'
-    }, { status: 500 });
+
+    return NextResponse.json(response);
+  } catch (error) {
+    console.error('Error in posts/[slug] API:', error);
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    );
   }
 }
 
 export async function POST(
-  request: NextRequest,
-  { params }: { params: Promise<{ slug: string }> }
+  _request: NextRequest,
+  _params: { params: Promise<{ slug: string }> }
 ) {
   return NextResponse.json({
     success: false,

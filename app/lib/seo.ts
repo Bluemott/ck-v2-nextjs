@@ -1,4 +1,5 @@
 import { Metadata } from 'next';
+import { env } from './env';
 
 interface SEOProps {
   title?: string;
@@ -55,7 +56,7 @@ const defaultSEO = {
   ogImage: '/images/CK_New_Hero_Red_Head-1.webp',
   ogType: 'website' as const,
   author: 'Cowboy Kimono',
-  siteUrl: process.env.NEXT_PUBLIC_SITE_URL || 'https://www.cowboykimono.com'
+      siteUrl: env.NEXT_PUBLIC_SITE_URL
 };
 
 // Helper function to truncate titles to reasonable length

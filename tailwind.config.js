@@ -46,9 +46,12 @@ module.exports = {
         }
       },
       fontFamily: {
-        sans: ['var(--font-geist-sans)', 'system-ui', 'sans-serif'],
-        mono: ['var(--font-geist-mono)', 'monospace'],
+        // Make serif the default
+        sans: ['var(--font-playfair)', 'serif'],
         serif: ['var(--font-playfair)', 'serif'],
+        // Use sans-serif for specific needs
+        'sans-alt': ['var(--font-geist-sans)', 'system-ui', 'sans-serif'],
+        mono: ['var(--font-geist-mono)', 'monospace'],
       },
       spacing: {
         '18': '4.5rem',

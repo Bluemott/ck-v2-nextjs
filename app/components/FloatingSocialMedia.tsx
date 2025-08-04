@@ -60,7 +60,7 @@ const FloatingSocialMedia = memo(() => {
             href={social.url}
             target="_blank"
             rel="noopener noreferrer"
-            className="w-12 h-12 rounded-full bg-white/80 backdrop-blur-sm flex items-center justify-center shadow-lg transition-all duration-200 transform hover:scale-110 hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+            className="w-12 h-12 rounded-full bg-white/80 backdrop-blur-sm flex items-center justify-center shadow-lg transition-all duration-200 transform hover:scale-110 hover:shadow-xl focus:outline-none"
             style={{
               transitionDelay: isExpanded ? `${index * 50}ms` : '0ms'
             }}
@@ -87,7 +87,7 @@ const FloatingSocialMedia = memo(() => {
         onClick={toggleExpanded}
         className={`w-14 h-14 rounded-full bg-white hover:bg-gray-100 flex items-center justify-center shadow-lg transition-all duration-300 transform ${
           isExpanded ? 'rotate-45' : 'rotate-0'
-        } hover:scale-110 border-2 border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2`}
+        } hover:scale-110 border-2 border-gray-300 focus:outline-none`}
         aria-label={isExpanded ? "Close social media links" : "Open social media links"}
         aria-expanded={isExpanded}
         aria-controls="social-media-menu"

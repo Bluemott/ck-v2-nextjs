@@ -19,7 +19,7 @@ interface WordPressImageProps {
 
 const WordPressImage = ({ 
   post, 
-  size = 'medium', 
+  // size = 'medium', // Currently unused
   className = '', 
   fill = false,
   width,
@@ -32,8 +32,18 @@ const WordPressImage = ({
   const [imageError, setImageError] = useState(false);
   const [imageLoading, setImageLoading] = useState(true);
 
-  const imageUrl = getFeaturedImageUrl(post);
-  const imageAlt = alt || getFeaturedImageAlt(post);
+  // Safe extraction of image data with error handling
+  let imageUrl: string | null = null;
+  let imageAlt: string = '';
+
+  try {
+    imageUrl = post ? getFeaturedImageUrl(post) : null;
+    imageAlt = alt || (post ? getFeaturedImageAlt(post) : '');
+  } catch (error) {
+    console.error('WordPressImage - Error extracting image data:', error);
+    setImageError(true);
+    setImageLoading(false);
+  }
 
   // If no image URL or error occurred, show placeholder
   if (!imageUrl || imageError) {
@@ -58,6 +68,7 @@ const WordPressImage = ({
   }
 
   const handleError = () => {
+    console.warn('WordPressImage - Image failed to load:', imageUrl);
     setImageError(true);
     setImageLoading(false);
   };
@@ -100,7 +111,6 @@ const WordPressImage = ({
             onError={handleError}
             onLoad={handleLoad}
           />
-          
           {/* Loading indicator */}
           {imageLoading && (
             <div className="absolute inset-0 flex items-center justify-center">

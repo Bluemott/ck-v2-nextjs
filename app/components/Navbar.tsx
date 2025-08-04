@@ -19,7 +19,7 @@ const Navbar = () => {
             priority
             sizes="200px"
             quality={85}
-            className="transition-transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 rounded"
+            className="transition-transform hover:scale-105 focus:outline-none rounded"
           />
         </Link>
       </div>
@@ -28,7 +28,7 @@ const Navbar = () => {
       <div className="flex space-x-4" role="menubar">
         <Link 
           href="/shop" 
-          className="hover:underline serif font-bold text-lg transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 rounded px-2 py-1"
+          className="hover:underline serif font-bold text-lg transition-colors focus:outline-none rounded px-2 py-1"
           role="menuitem"
           aria-label="Visit our shop"
         >
@@ -36,7 +36,7 @@ const Navbar = () => {
         </Link>
         <Link 
           href="/blog" 
-          className="hover:underline serif font-bold text-lg transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 rounded px-2 py-1"
+          className="hover:underline serif font-bold text-lg transition-colors focus:outline-none rounded px-2 py-1"
           role="menuitem"
           aria-label="Read our blog"
         >
@@ -44,7 +44,7 @@ const Navbar = () => {
         </Link>
         <Link 
           href="/downloads" 
-          className="hover:underline serif font-bold text-lg transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 rounded px-2 py-1"
+          className="hover:underline serif font-bold text-lg transition-colors focus:outline-none rounded px-2 py-1"
           role="menuitem"
           aria-label="Download free resources"
         >

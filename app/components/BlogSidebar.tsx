@@ -41,7 +41,7 @@ const BlogSidebar = ({
         
         // Fetch recent posts
         const recentData = await fetchPosts({ 
-          first: 3,
+          per_page: 3,
         });
         setRecentPosts(recentData);
 
@@ -75,7 +75,7 @@ const BlogSidebar = ({
       try {
         const data = await fetchPosts({ 
           search: searchTerm,
-          first: 5,
+          per_page: 5,
         });
         setSearchResults(data);
       } catch {
@@ -127,7 +127,7 @@ const BlogSidebar = ({
             placeholder="Search posts..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1e2939] focus:border-transparent placeholder:text-gray-600"
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1e2939] focus:border-transparent placeholder:text-gray-800"
           />
           {isSearching && (
             <div className="absolute right-3 top-2">
@@ -147,7 +147,7 @@ const BlogSidebar = ({
                 className="block p-2 rounded hover:bg-gray-50 transition-colors"
               >
                 <h5 className="text-sm font-medium text-gray-900 line-clamp-2">
-                  {decodeHtmlEntities(post.title)}
+                  {decodeHtmlEntities(post.title?.rendered || 'Untitled')}
                 </h5>
                 <p className="text-xs text-gray-500 mt-1">
                   {formatDate(post.date)}
@@ -159,12 +159,12 @@ const BlogSidebar = ({
       </div>
 
       {/* Related Posts Section */}
-      {currentPost && (currentPostCategories.length > 0 || currentPostTags.length > 0) && (
+      {currentPost && (
         <RelatedPosts
           currentPost={currentPost}
           categories={currentPostCategories}
           tags={currentPostTags}
-          limit={6}
+          limit={4}
         />
       )}
 
@@ -217,7 +217,7 @@ const BlogSidebar = ({
                 className="block group"
               >
                 <div className="flex items-start space-x-3">
-                  {post.featuredImage?.node && (
+                  {post._embedded?.['wp:featuredmedia']?.[0] && (
                     <div className="relative w-16 h-16 flex-shrink-0 rounded overflow-hidden">
                       <WordPressImage
                         post={post}
@@ -229,7 +229,7 @@ const BlogSidebar = ({
                   )}
                   <div className="flex-1 min-w-0">
                     <h4 className="text-sm font-medium text-gray-900 group-hover:text-[#1e2939] line-clamp-2 transition-colors">
-                      {decodeHtmlEntities(post.title)}
+                      {decodeHtmlEntities(post.title?.rendered || 'Untitled')}
                     </h4>
                     <p className="text-xs text-gray-500 mt-1">
                       {formatDate(post.date)}

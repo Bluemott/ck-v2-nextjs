@@ -5,7 +5,9 @@ interface YoastSchemaProps {
 }
 
 export default function YoastSchema({ post }: YoastSchemaProps) {
-  if (!post.seo?.schema?.raw) {
+  // Check if post has SEO data in _embedded
+  const seoData = post._embedded?.['yoast-seo']?.[0];
+  if (!seoData?.schema?.raw) {
     return null;
   }
 
@@ -13,7 +15,7 @@ export default function YoastSchema({ post }: YoastSchemaProps) {
     <script
       type="application/ld+json"
       dangerouslySetInnerHTML={{
-        __html: post.seo.schema.raw,
+        __html: seoData.schema.raw,
       }}
     />
   );

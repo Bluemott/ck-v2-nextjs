@@ -54,7 +54,7 @@ export default function SocialShare({ postTitle, postUrl }: SocialShareProps) {
 
   return (
     <div>
-      <h3 className="text-lg font-bold mb-4 text-gray-800">Share this post</h3>
+                      <h3 className="text-lg font-bold mb-4 text-gray-800 serif">Share this post</h3>
       <div className="grid grid-cols-2 gap-3">
         {socialLinks.map((social) => (
           <Link

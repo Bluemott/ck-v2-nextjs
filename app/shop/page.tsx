@@ -28,7 +28,9 @@ export default function ShopPage() {
           }
         }}
       />
-      <ShopClient />
+      <div className="pt-16">
+        <ShopClient />
+      </div>
     </>
   );
 }

@@ -143,11 +143,11 @@ export default function IndexNowSubmitter() {
 
   return (
     <div className="max-w-4xl mx-auto p-6 bg-white rounded-lg shadow-lg">
-      <h2 className="text-2xl font-bold mb-6 text-gray-800">IndexNow URL Submission</h2>
+              <h2 className="text-2xl font-bold mb-6 text-gray-800 serif">IndexNow URL Submission</h2>
       
       {/* Configuration Status */}
       <div className="mb-6 p-4 bg-gray-50 rounded-lg">
-        <h3 className="text-lg font-semibold mb-2">Configuration Status</h3>
+                    <h3 className="text-lg font-semibold mb-2 serif">Configuration Status</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
           <div>
             <span className="font-medium">Status: </span>
@@ -193,7 +193,7 @@ export default function IndexNowSubmitter() {
 
       {/* Search Engine Selection */}
       <div className="mb-6">
-        <h3 className="text-lg font-semibold mb-2">Search Engines</h3>
+                    <h3 className="text-lg font-semibold mb-2 serif">Search Engines</h3>
         <div className="flex flex-wrap gap-3">
           {config?.endpoints.map(engine => (
             <label key={engine} className="flex items-center space-x-2">
@@ -211,7 +211,7 @@ export default function IndexNowSubmitter() {
 
       {/* URL Submission */}
       <div className="mb-8">
-        <h3 className="text-lg font-semibold mb-2">Submit URLs</h3>
+                    <h3 className="text-lg font-semibold mb-2 serif">Submit URLs</h3>
         <div className="space-y-4">
           <div>
             <label className="block text-sm font-medium mb-2">
@@ -236,7 +236,7 @@ export default function IndexNowSubmitter() {
 
       {/* WordPress Submission */}
       <div className="mb-8">
-        <h3 className="text-lg font-semibold mb-2">Submit WordPress Content</h3>
+                    <h3 className="text-lg font-semibold mb-2 serif">Submit WordPress Content</h3>
         <div className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
@@ -277,7 +277,7 @@ export default function IndexNowSubmitter() {
         <div className={`p-4 rounded-lg ${
           result.success ? 'bg-green-50 border border-green-200' : 'bg-red-50 border border-red-200'
         }`}>
-          <h3 className={`text-lg font-semibold mb-2 ${
+                      <h3 className={`text-lg font-semibold mb-2 serif ${
             result.success ? 'text-green-800' : 'text-red-800'
           }`}>
             {result.success ? 'Success' : 'Error'}
@@ -295,7 +295,7 @@ export default function IndexNowSubmitter() {
 
       {/* Instructions */}
       <div className="mt-8 p-4 bg-blue-50 rounded-lg">
-        <h3 className="text-lg font-semibold mb-2 text-blue-800">Instructions</h3>
+                    <h3 className="text-lg font-semibold mb-2 text-blue-800 serif">Instructions</h3>
         <ul className="text-sm text-blue-700 space-y-1">
           <li>• Set NEXT_PUBLIC_INDEXNOW_KEY in your environment variables</li>
           <li>• Create a {config?.key?.replace('...', '') || 'your-key'}.txt file at your domain root with your IndexNow key</li>

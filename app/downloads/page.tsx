@@ -10,5 +10,9 @@ export const metadata: Metadata = generateSEOMetadata({
 });
 
 export default function DownloadsPage() {
-  return <DownloadsClient />;
+  return (
+    <div className="pt-16">
+      <DownloadsClient />
+    </div>
+  );
 }

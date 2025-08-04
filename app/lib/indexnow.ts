@@ -1,3 +1,5 @@
+import { env } from './env';
+
 /**
  * IndexNow Integration for Cowboy Kimono v2
  * 
@@ -71,7 +73,7 @@ export async function submitToIndexNow(
   searchEngines: (keyof typeof INDEXNOW_ENDPOINTS)[] = ['bing']
 ): Promise<IndexNowResponse> {
   const key = process.env.NEXT_PUBLIC_INDEXNOW_KEY || process.env.INDEXNOW_KEY;
-  const host = process.env.NEXT_PUBLIC_SITE_URL || process.env.SITE_URL || 'https://www.cowboykimono.com';
+  const host = env.NEXT_PUBLIC_SITE_URL;
   
   if (!key) {
     return {
@@ -207,7 +209,7 @@ export async function submitWordPressPostToIndexNow(
   slug: string,
   searchEngines: (keyof typeof INDEXNOW_ENDPOINTS)[] = ['bing']
 ): Promise<IndexNowResponse> {
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || process.env.SITE_URL || 'https://www.cowboykimono.com';
+  const baseUrl = env.NEXT_PUBLIC_SITE_URL;
   const url = `${baseUrl}/blog/${slug}`;
   return submitUrlToIndexNow(url, searchEngines);
 }
@@ -222,7 +224,7 @@ export async function submitWordPressCategoryToIndexNow(
   slug: string,
   searchEngines: (keyof typeof INDEXNOW_ENDPOINTS)[] = ['bing']
 ): Promise<IndexNowResponse> {
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || process.env.SITE_URL || 'https://www.cowboykimono.com';
+  const baseUrl = env.NEXT_PUBLIC_SITE_URL;
   const url = `${baseUrl}/blog/category/${slug}`;
   return submitUrlToIndexNow(url, searchEngines);
 }
@@ -237,7 +239,7 @@ export async function submitWordPressTagToIndexNow(
   slug: string,
   searchEngines: (keyof typeof INDEXNOW_ENDPOINTS)[] = ['bing']
 ): Promise<IndexNowResponse> {
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || process.env.SITE_URL || 'https://www.cowboykimono.com';
+  const baseUrl = env.NEXT_PUBLIC_SITE_URL;
   const url = `${baseUrl}/blog/tag/${slug}`;
   return submitUrlToIndexNow(url, searchEngines);
 }
@@ -252,7 +254,7 @@ export async function submitWordPressUrlsToIndexNow(
   urls: string[],
   searchEngines: (keyof typeof INDEXNOW_ENDPOINTS)[] = ['bing']
 ): Promise<IndexNowResponse> {
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || process.env.SITE_URL || 'https://www.cowboykimono.com';
+  const baseUrl = env.NEXT_PUBLIC_SITE_URL;
   
   // Ensure URLs are absolute
   const absoluteUrls = urls.map(url => {
@@ -271,7 +273,7 @@ export async function submitWordPressUrlsToIndexNow(
  */
 export async function getIndexNowConfig(): Promise<IndexNowConfig> {
   const key = process.env.NEXT_PUBLIC_INDEXNOW_KEY || process.env.INDEXNOW_KEY;
-  const host = process.env.NEXT_PUBLIC_SITE_URL || process.env.SITE_URL || 'https://www.cowboykimono.com';
+  const host = env.NEXT_PUBLIC_SITE_URL;
   
   const config: IndexNowConfig = {
     isConfigured: !!key,

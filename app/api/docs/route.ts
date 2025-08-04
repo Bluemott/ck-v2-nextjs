@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getApiConfig } from '../../lib/api-rest';
+import { getApiConfig } from '../../lib/api';
 import { env } from '../../lib/env';
 
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   try {
     const apiConfig = getApiConfig();
     
@@ -10,7 +10,7 @@ export async function GET(request: NextRequest) {
       title: 'Cowboy Kimono REST API Documentation',
       version: '2.0.0',
       description: 'REST API for Cowboy Kimono website with WordPress integration',
-      baseUrl: env.NEXT_PUBLIC_SITE_URL,
+      baseUrl: env.NEXT_PUBLIC_APP_URL,
       endpoints: {
         posts: {
           url: '/api/posts',
@@ -99,7 +99,7 @@ export async function GET(request: NextRequest) {
       },
       configuration: {
         wordpressUrl: apiConfig.restAPIClient.baseUrl,
-        siteUrl: env.NEXT_PUBLIC_SITE_URL,
+        siteUrl: env.NEXT_PUBLIC_APP_URL,
         environment: env.NODE_ENV,
         restApiEnabled: true
       },
@@ -155,7 +155,7 @@ export async function GET(request: NextRequest) {
   }
 }
 
-export async function POST(request: NextRequest) {
+export async function POST(_request: NextRequest) {
   return NextResponse.json({
     success: false,
     error: 'Method not allowed',

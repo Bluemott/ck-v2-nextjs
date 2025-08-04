@@ -1,112 +1,161 @@
 import { z } from 'zod';
 
-// Environment variable schema with comprehensive validation
+// Environment variable schema for validation
 const envSchema = z.object({
-  // Database Configuration - Optional in development
-  DB_HOST: z.string().optional(),
-  DB_USER: z.string().optional(),
-  DB_PASSWORD: z.string().optional(),
-  DB_NAME: z.string().optional(),
-  DB_PORT: z.string()
-    .transform((val) => {
-      if (!val) return undefined;
-      const parsed = parseInt(val, 10);
-      if (isNaN(parsed)) return undefined;
-      return parsed;
-    })
-    .pipe(z.number().int().positive().max(65535).optional())
-    .optional(),
-
-  // AWS Configuration
+  // WordPress Configuration (Lightsail-based)
+  NEXT_PUBLIC_WORDPRESS_REST_URL: z.string().url().default('https://api.cowboykimono.com'),
+  NEXT_PUBLIC_WORDPRESS_ADMIN_URL: z.string().url().default('https://admin.cowboykimono.com'),
+  
+  // Application Configuration
+  NEXT_PUBLIC_APP_URL: z.string().url().default('https://cowboykimono.com'),
+  NEXT_PUBLIC_SITE_URL: z.string().url().default('https://cowboykimono.com'),
+  NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
+  
+  // AWS Configuration (for Lambda functions only)
   AWS_REGION: z.string().default('us-east-1'),
   AWS_ACCESS_KEY_ID: z.string().optional(),
   AWS_SECRET_ACCESS_KEY: z.string().optional(),
+  
+  // CloudFront Configuration (for media delivery)
+  NEXT_PUBLIC_CLOUDFRONT_URL: z.string().url().optional(),
+  CLOUDFRONT_DISTRIBUTION_ID: z.string().optional(),
+  
+  // Legacy Aurora/S3 Configuration (deprecated - kept for backward compatibility)
+  AWS_DATABASE_SETUP_ENDPOINT: z.string().url().optional(),
+  AWS_DATA_IMPORT_ENDPOINT: z.string().url().optional(),
+  AWS_AURORA_ENDPOINT: z.string().optional(),
   S3_BUCKET_NAME: z.string().optional(),
-
-  // Site Configuration
-  NEXT_PUBLIC_SITE_URL: z.string().default('https://cowboykimono.com'),
-  NEXT_PUBLIC_GTM_ID: z.string().optional(),
-  NEXT_PUBLIC_GOOGLE_VERIFICATION: z.string().optional(),
+  
+  // WordPress URLs (Lightsail-based)
+  WORDPRESS_URL: z.string().url().default('https://cowboykimono.com'),
+  WORDPRESS_API_URL: z.string().url().default('https://api.cowboykimono.com'),
+  
+  // Analytics and Monitoring
   NEXT_PUBLIC_GA_MEASUREMENT_ID: z.string().optional(),
-
-  // WordPress Configuration - REST API only
-  NEXT_PUBLIC_WORDPRESS_ADMIN_URL: z.string().optional(),
-  NEXT_PUBLIC_WORDPRESS_REST_URL: z.string().optional(),
-
-  // Feature Flags - REST API is now the default and only option
-  NEXT_PUBLIC_USE_REST_API: z.string()
-    .transform((val) => {
-      if (val === 'true' || val === '1' || val === 'yes') return true;
-      if (val === 'false' || val === '0' || val === 'no' || val === '') return false;
-      return true; // Default to true for REST API
-    })
-    .pipe(z.boolean())
-    .default('true'),
-
-  // CloudFront Configuration
-  NEXT_PUBLIC_CLOUDFRONT_URL: z.string().optional(),
-
-  // Node Environment
-  NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
-
-  // Custom Configuration
-  CUSTOM_KEY: z.string().optional(),
+  NEXT_PUBLIC_GTM_ID: z.string().optional(),
+  
+  // Security
+  NEXT_PUBLIC_SITE_VERIFICATION: z.string().optional(),
+  
+  // API Configuration
+  API_RATE_LIMIT: z.string().transform(val => parseInt(val, 10)).default('100'),
+  API_TIMEOUT: z.string().transform(val => parseInt(val, 10)).default('10000'),
 });
 
-// Parse and validate environment variables with comprehensive fallbacks
-let env: z.infer<typeof envSchema>;
-try {
-  env = envSchema.parse(process.env);
-} catch (error) {
-  // Graceful fallback for build time - don't log errors during Amplify build
-  const isBuildTime = process.env.NODE_ENV === 'production' && !process.env.NEXT_PUBLIC_VERCEL_URL;
-  if (!isBuildTime) {
-    console.warn('Environment validation failed, using safe defaults:', error);
+// Parse and validate environment variables
+const envParseResult = envSchema.safeParse(process.env);
+
+if (!envParseResult.success) {
+  console.error('❌ Invalid environment variables:', envParseResult.error.format());
+  throw new Error('Invalid environment variables');
+}
+
+export const env = envParseResult.data;
+
+// Development check
+export const isDevelopment = env.NODE_ENV === 'development';
+export const isProduction = env.NODE_ENV === 'production';
+export const isTest = env.NODE_ENV === 'test';
+
+// Environment-specific configurations
+export const config = {
+  // WordPress Configuration (Lightsail-based)
+  wordpress: {
+    restUrl: env.NEXT_PUBLIC_WORDPRESS_REST_URL,
+    adminUrl: env.NEXT_PUBLIC_WORDPRESS_ADMIN_URL,
+    siteUrl: env.WORDPRESS_URL,
+    apiUrl: env.WORDPRESS_API_URL,
+  },
+  
+  // API Configuration
+  api: {
+    baseUrl: env.NEXT_PUBLIC_WORDPRESS_REST_URL,
+    adminUrl: env.NEXT_PUBLIC_WORDPRESS_ADMIN_URL,
+    timeout: env.API_TIMEOUT,
+    rateLimit: env.API_RATE_LIMIT,
+  },
+  
+  // Application Configuration
+  app: {
+    url: env.NEXT_PUBLIC_APP_URL,
+    siteUrl: env.NEXT_PUBLIC_SITE_URL,
+    environment: env.NODE_ENV,
+    isDevelopment,
+    isProduction,
+    isTest,
+  },
+  
+  // AWS Configuration (for Lambda functions only)
+  aws: {
+    region: env.AWS_REGION,
+    hasCredentials: !!(env.AWS_ACCESS_KEY_ID && env.AWS_SECRET_ACCESS_KEY),
+    // Legacy endpoints (deprecated)
+    databaseSetupEndpoint: env.AWS_DATABASE_SETUP_ENDPOINT,
+    dataImportEndpoint: env.AWS_DATA_IMPORT_ENDPOINT,
+    auroraEndpoint: env.AWS_AURORA_ENDPOINT,
+    s3BucketName: env.S3_BUCKET_NAME,
+  },
+  
+  // CloudFront Configuration (for media delivery)
+  cloudfront: {
+    distributionUrl: env.NEXT_PUBLIC_CLOUDFRONT_URL,
+    distributionId: env.CLOUDFRONT_DISTRIBUTION_ID,
+    hasCloudFront: !!(env.NEXT_PUBLIC_CLOUDFRONT_URL && env.CLOUDFRONT_DISTRIBUTION_ID),
+  },
+  
+  // Analytics Configuration
+  analytics: {
+    gaMeasurementId: env.NEXT_PUBLIC_GA_MEASUREMENT_ID,
+    gtmId: env.NEXT_PUBLIC_GTM_ID,
+    hasAnalytics: !!(env.NEXT_PUBLIC_GA_MEASUREMENT_ID || env.NEXT_PUBLIC_GTM_ID),
+  },
+  
+  // Security Configuration
+  security: {
+    siteVerification: env.NEXT_PUBLIC_SITE_VERIFICATION,
+  },
+  
+  // Architecture Information
+  architecture: {
+    type: 'lightsail-wordpress',
+    description: 'WordPress on Lightsail with Next.js frontend',
+    database: 'WordPress MySQL on Lightsail',
+    media: 'WordPress media on Lightsail',
+    cdn: 'CloudFront for media delivery',
+  },
+};
+
+// Validation helpers
+export function validateEnvironment() {
+  const errors: string[] = [];
+  
+  // Check required production variables
+  if (isProduction) {
+    if (!env.NEXT_PUBLIC_WORDPRESS_REST_URL) {
+      errors.push('NEXT_PUBLIC_WORDPRESS_REST_URL is required in production');
+    }
+    if (!env.NEXT_PUBLIC_APP_URL) {
+      errors.push('NEXT_PUBLIC_APP_URL is required in production');
+    }
+    if (!env.NEXT_PUBLIC_SITE_URL) {
+      errors.push('NEXT_PUBLIC_SITE_URL is required in production');
+    }
+    if (!env.WORDPRESS_URL) {
+      errors.push('WORDPRESS_URL is required in production');
+    }
   }
   
-  // Safe defaults for build and runtime
-  env = {
-    AWS_REGION: 'us-east-1',
-    NEXT_PUBLIC_SITE_URL: process.env.NEXT_PUBLIC_SITE_URL || 'https://cowboykimono.com',
-    NEXT_PUBLIC_USE_REST_API: true,
-    NEXT_PUBLIC_WORDPRESS_REST_URL: process.env.NEXT_PUBLIC_WORDPRESS_REST_URL || 'https://api.cowboykimono.com',
-    NODE_ENV: (process.env.NODE_ENV as any) || 'development',
-    DB_HOST: process.env.DB_HOST,
-    DB_USER: process.env.DB_USER,
-    DB_PASSWORD: process.env.DB_PASSWORD,
-    DB_NAME: process.env.DB_NAME,
-    AWS_ACCESS_KEY_ID: process.env.AWS_ACCESS_KEY_ID,
-    AWS_SECRET_ACCESS_KEY: process.env.AWS_SECRET_ACCESS_KEY,
-    S3_BUCKET_NAME: process.env.S3_BUCKET_NAME,
-    NEXT_PUBLIC_GTM_ID: process.env.NEXT_PUBLIC_GTM_ID,
-    NEXT_PUBLIC_GOOGLE_VERIFICATION: process.env.NEXT_PUBLIC_GOOGLE_VERIFICATION,
-    NEXT_PUBLIC_GA_MEASUREMENT_ID: process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID,
-    NEXT_PUBLIC_WORDPRESS_ADMIN_URL: process.env.NEXT_PUBLIC_WORDPRESS_ADMIN_URL,
-    NEXT_PUBLIC_CLOUDFRONT_URL: process.env.NEXT_PUBLIC_CLOUDFRONT_URL,
-    CUSTOM_KEY: process.env.CUSTOM_KEY,
-  } as z.infer<typeof envSchema>;
-}
-
-// Type export for use throughout the application
-export type Env = z.infer<typeof envSchema>;
-
-// Export validated environment
-export { env };
-
-// Helper function to get environment variables with validation
-export function getEnvVar(key: keyof Env): string {
-  const value = env[key];
-  if (typeof value === 'string' && value.length === 0) {
-    throw new Error(`Environment variable ${key} is empty`);
+  // Check for deprecated Aurora/S3 configuration
+  if (env.AWS_AURORA_ENDPOINT || env.S3_BUCKET_NAME) {
+    console.warn('⚠️  Deprecated Aurora/S3 configuration detected. WordPress is now hosted on Lightsail.');
   }
-  return value as string;
+  
+  if (errors.length > 0) {
+    throw new Error(`Environment validation failed:\n${errors.join('\n')}`);
+  }
+  
+  return true;
 }
 
-// Helper function to check if we're in development
-export const isDevelopment = env.NODE_ENV === 'development';
-
-// Helper function to check if we're in production
-export const isProduction = env.NODE_ENV === 'production';
-
-// Helper function to check if REST API is enabled
-export const isRestAPIEnabled = env.NEXT_PUBLIC_USE_REST_API; 
+// Export for use in other modules
+export default env; 

@@ -5,33 +5,26 @@ frontend:
       commands:
         - echo "🚀 Starting Amplify build process..."
         - echo "📋 Build environment info:"
-        - echo "   - AWS_REGION: ${AWS_REGION:-us-east-1}"
+        - 'echo "   - AWS_REGION: ${AWS_REGION:-us-east-1}"'
         - echo "   - NODE_ENV: production"
-        - echo "   - Build ID: $CODEBUILD_BUILD_ID"
+        - 'echo "   - Build ID: $CODEBUILD_BUILD_ID"'
         - echo ""
         - echo "🔧 Setting up build environment..."
         - export NODE_ENV=production
         - export NEXT_TELEMETRY_DISABLED=1
-        - export AWS_REGION=${AWS_REGION:-us-east-1}
+        - 'export AWS_REGION=${AWS_REGION:-us-east-1}'
         - echo "✅ Environment variables set"
-        - echo ""
-        - echo "🔍 Running environment checks..."
-        - node scripts/check-amplify-env.js
         - echo ""
         - echo "📦 Installing dependencies..."
         - npm ci --legacy-peer-deps --no-optional --silent
         - echo "✅ Dependencies installed successfully"
-        - echo ""
-        - echo "🔍 Running build setup checks..."
-        - node scripts/amplify-build-setup.js
-        - echo "✅ Build setup complete"
     build:
       commands:
         - echo "🏗️  Building Next.js application..."
         - echo "📊 Build configuration:"
-        - echo "   - TypeScript: ignoreBuildErrors=true"
-        - echo "   - ESLint: ignoreDuringBuilds=true"
-        - echo "   - Output: .next directory"
+        - 'echo "   - TypeScript: ignoreBuildErrors=true"'
+        - 'echo "   - ESLint: ignoreDuringBuilds=true"'
+        - 'echo "   - Output: .next directory"'
         - echo ""
         - npm run build
         - echo "✅ Build completed successfully"

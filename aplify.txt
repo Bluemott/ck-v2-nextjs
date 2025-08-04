@@ -1,129 +1,83 @@
-2025-08-04T03:33:22.565Z [INFO]: Creating an optimized production build ...
+34
 
-60
+2025-08-04T03:37:32.293Z [INFO]: ## Starting Frontend Build
 
-2025-08-04T03:33:35.931Z [WARNING]: <w> [webpack.cache.PackFileCacheStrategy] Serializing big strings (135kiB) impacts deserialization performance (consider using Buffer instead and decode when needed)
+35
 
-61
+2025-08-04T03:37:32.293Z [INFO]: # Starting phase: preBuild
 
-2025-08-04T03:33:36.329Z [WARNING]: Failed to compile.
+36
 
-62
+                                 # Executing command: echo "Starting Amplify build process"
 
-                                    app/layout.tsx
+37
 
-63
+                                 Starting Amplify build process
 
-                                    An error occurred in `next/font`.
+38
 
-64
+                                 # Executing command: export NODE_ENV=production
 
-                                    Error: Cannot find module 'autoprefixer'
+39
 
-65
+                                 # Executing command: export NEXT_TELEMETRY_DISABLED=1
 
-                                    Require stack:
+40
 
-66
+                                 # Executing command: npm ci --legacy-peer-deps --no-optional --prefer-offline
 
-                                    - /codebuild/output/src107228605/src/ck-v2-nextjs/node_modules/next/dist/build/webpack/config/blocks/css/plugins.js
+41
 
-67
+2025-08-04T03:37:36.218Z [WARNING]: npm warn config optional Use `--omit=optional` to exclude optional dependencies, or
 
-                                    - /codebuild/output/src107228605/src/ck-v2-nextjs/node_modules/next/dist/build/webpack/config/blocks/css/index.js
+42
 
-68
+                                    npm warn config `--include=optional` to include them.
 
-                                    - /codebuild/output/src107228605/src/ck-v2-nextjs/node_modules/next/dist/build/webpack/config/index.js
+43
 
-69
+                                    npm warn config
 
-                                    - /codebuild/output/src107228605/src/ck-v2-nextjs/node_modules/next/dist/build/webpack-config.js
+44
 
-70
+                                    npm warn config       Default value does install optional deps unless otherwise omitted.
 
-                                    - /codebuild/output/src107228605/src/ck-v2-nextjs/node_modules/next/dist/build/webpack/plugins/next-trace-entrypoints-plugin.js
+45
 
-71
+2025-08-04T03:38:07.446Z [WARNING]: npm error code ETARGET
 
-                                    - /codebuild/output/src107228605/src/ck-v2-nextjs/node_modules/next/dist/build/collect-build-traces.js
+46
 
-72
+2025-08-04T03:38:07.451Z [WARNING]: npm error notarget No matching version found for semver@7.7.2.
 
-                                    - /codebuild/output/src107228605/src/ck-v2-nextjs/node_modules/next/dist/build/index.js
+47
 
-73
+                                    npm error notarget In most cases you or one of your dependencies are requesting
 
-                                    - /codebuild/output/src107228605/src/ck-v2-nextjs/node_modules/next/dist/cli/next-build.js
+48
 
-74
+                                    npm error notarget a package version that doesn't exist.
 
-                                    at Module._resolveFilename (node:internal/modules/cjs/loader:1140:15)
+49
 
-75
+                                    npm error A complete log of this run can be found in: /root/.npm/_logs/2025-08-04T03_37_35_796Z-debug-0.log
 
-                                    at /codebuild/output/src107228605/src/ck-v2-nextjs/node_modules/next/dist/server/require-hook.js:55:36
+50
 
-76
+2025-08-04T03:38:07.539Z [ERROR]: !!! Build failed
 
-                                    at Function.resolve (node:internal/modules/helpers:188:19)
+51
 
-77
+2025-08-04T03:38:07.539Z [INFO]: Please read more about Amplify Hosting's support for SSR frameworks to find if your build failure is related to an unsupported feature: https://docs.aws.amazon.com/amplify/latest/userguide/amplify-ssr-framework-support.html. You may also find this troubleshooting guide useful: https://docs.aws.amazon.com/amplify/latest/userguide/troubleshooting-ssr-deployment.html
 
-                                    at loadPlugin (/codebuild/output/src107228605/src/ck-v2-nextjs/node_modules/next/dist/build/webpack/config/blocks/css/plugins.js:53:32)
+52
 
-78
+2025-08-04T03:38:07.539Z [ERROR]: !!! Error: Command failed with exit code 1
 
-                                    at /codebuild/output/src107228605/src/ck-v2-nextjs/node_modules/next/dist/build/webpack/config/blocks/css/plugins.js:185:56
+53
 
-79
+2025-08-04T03:38:07.539Z [INFO]: # Starting environment caching...
 
-                                    at Array.map (<anonymous>)
+54
 
-80
-
-                                    at getPostCssPlugins (/codebuild/output/src107228605/src/ck-v2-nextjs/node_modules/next/dist/build/webpack/config/blocks/css/plugins.js:185:47)
-
-81
-
-                                    at async /codebuild/output/src107228605/src/ck-v2-nextjs/node_modules/next/dist/build/webpack/config/blocks/css/index.js:125:36
-
-82
-
-                                    at async /codebuild/output/src107228605/src/ck-v2-nextjs/node_modules/next/dist/build/webpack/loaders/next-font-loader/index.js:94:33
-
-83
-
-                                    at async Span.traceAsyncFn (/codebuild/output/src107228605/src/ck-v2-nextjs/node_modules/next/dist/trace/trace.js:157:20)
-
-84
-
-2025-08-04T03:33:36.329Z [WARNING]: 
-
-85
-
-2025-08-04T03:33:36.330Z [WARNING]: 
-
-86
-
-2025-08-04T03:33:36.330Z [WARNING]: > Build failed because of webpack errors
-
-87
-
-2025-08-04T03:33:36.373Z [ERROR]: !!! Build failed
-
-88
-
-2025-08-04T03:33:36.373Z [INFO]: Please read more about Amplify Hosting's support for SSR frameworks to find if your build failure is related to an unsupported feature: https://docs.aws.amazon.com/amplify/latest/userguide/amplify-ssr-framework-support.html. You may also find this troubleshooting guide useful: https://docs.aws.amazon.com/amplify/latest/userguide/troubleshooting-ssr-deployment.html
-
-89
-
-2025-08-04T03:33:36.373Z [ERROR]: !!! Error: Command failed with exit code 1
-
-90
-
-2025-08-04T03:33:36.373Z [INFO]: # Starting environment caching...
-
-91
-
-2025-08-04T03:33:36.373Z [INFO]: # Environment caching completed
+2025-08-04T03:38:07.539Z [INFO]: # Environment caching completed

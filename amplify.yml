@@ -6,7 +6,8 @@ frontend:
         - echo "Starting Amplify build process"
         - export NODE_ENV=production
         - export NEXT_TELEMETRY_DISABLED=1
-        - npm ci --legacy-peer-deps --no-optional --prefer-offline
+        - rm -rf node_modules package-lock.json
+        - npm install --legacy-peer-deps
     build:
       commands:
         - echo "Building Next.js application"

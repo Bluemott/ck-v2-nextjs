@@ -47,5 +47,8 @@
   },
   "workspaces": [
     "infrastructure"
-  ]
+  ],
+  "overrides": {
+    "semver": "^7.7.1"
+  }
 }

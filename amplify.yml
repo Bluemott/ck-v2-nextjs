@@ -6,10 +6,12 @@ frontend:
         - echo "Starting Amplify build process"
         - export NODE_ENV=production
         - export NEXT_TELEMETRY_DISABLED=1
-        - npm ci --legacy-peer-deps --no-optional
+        - npm ci --legacy-peer-deps --no-optional --prefer-offline
     build:
       commands:
+        - echo "Building Next.js application"
         - npm run build
+        - echo "Build completed"
   artifacts:
     baseDirectory: .next
     files:

@@ -1,159 +1,129 @@
-0
+2025-08-04T03:33:22.565Z [INFO]: Creating an optimized production build ...
 
-2025-08-04T03:25:31.874Z [INFO]: # Build environment configured with Standard build compute type: 8GiB Memory, 4vCPUs, 128GB Disk Space
+60
 
-1
+2025-08-04T03:33:35.931Z [WARNING]: <w> [webpack.cache.PackFileCacheStrategy] Serializing big strings (135kiB) impacts deserialization performance (consider using Buffer instead and decode when needed)
 
-2025-08-04T03:25:32.266Z [INFO]: # Cloning repository: git@github.com:Bluemott/ck-v2-nextjs.git
+61
 
-2
+2025-08-04T03:33:36.329Z [WARNING]: Failed to compile.
 
-2025-08-04T03:25:33.666Z [INFO]: 
+62
 
-3
+                                    app/layout.tsx
 
-2025-08-04T03:25:33.666Z [INFO]: Cloning into 'ck-v2-nextjs'...
+63
 
-4
+                                    An error occurred in `next/font`.
 
-2025-08-04T03:25:33.667Z [INFO]: # Switching to commit: 71d5c7988621716734d10bc654bd11f2ab5f0fb2
+64
 
-5
+                                    Error: Cannot find module 'autoprefixer'
 
-2025-08-04T03:25:33.775Z [INFO]: Note: switching to '71d5c7988621716734d10bc654bd11f2ab5f0fb2'.
+65
 
-6
+                                    Require stack:
 
-                                 You are in 'detached HEAD' state. You can look around, make experimental
+66
 
-7
+                                    - /codebuild/output/src107228605/src/ck-v2-nextjs/node_modules/next/dist/build/webpack/config/blocks/css/plugins.js
 
-                                 changes and commit them, and you can discard any commits you make in this
+67
 
-8
+                                    - /codebuild/output/src107228605/src/ck-v2-nextjs/node_modules/next/dist/build/webpack/config/blocks/css/index.js
 
-                                 state without impacting any branches by switching back to a branch.
+68
 
-9
+                                    - /codebuild/output/src107228605/src/ck-v2-nextjs/node_modules/next/dist/build/webpack/config/index.js
 
-                                 If you want to create a new branch to retain commits you create, you may
+69
 
-10
+                                    - /codebuild/output/src107228605/src/ck-v2-nextjs/node_modules/next/dist/build/webpack-config.js
 
-                                 do so (now or later) by using -c with the switch command. Example:
+70
 
-11
+                                    - /codebuild/output/src107228605/src/ck-v2-nextjs/node_modules/next/dist/build/webpack/plugins/next-trace-entrypoints-plugin.js
 
-                                 git switch -c <new-branch-name>
+71
 
-12
+                                    - /codebuild/output/src107228605/src/ck-v2-nextjs/node_modules/next/dist/build/collect-build-traces.js
 
-                                 Or undo this operation with:
+72
 
-13
+                                    - /codebuild/output/src107228605/src/ck-v2-nextjs/node_modules/next/dist/build/index.js
 
-                                 git switch -
+73
 
-14
+                                    - /codebuild/output/src107228605/src/ck-v2-nextjs/node_modules/next/dist/cli/next-build.js
 
-                                 Turn off this advice by setting config variable advice.detachedHead to false
+74
 
-15
+                                    at Module._resolveFilename (node:internal/modules/cjs/loader:1140:15)
 
-                                 HEAD is now at 71d5c79 build process
+75
 
-16
+                                    at /codebuild/output/src107228605/src/ck-v2-nextjs/node_modules/next/dist/server/require-hook.js:55:36
 
-2025-08-04T03:25:33.818Z [INFO]: Successfully cleaned up Git credentials
+76
 
-17
+                                    at Function.resolve (node:internal/modules/helpers:188:19)
 
-2025-08-04T03:25:33.819Z [INFO]: # Checking for Git submodules at: /codebuild/output/src4263499173/src/ck-v2-nextjs/.gitmodules
+77
 
-18
+                                    at loadPlugin (/codebuild/output/src107228605/src/ck-v2-nextjs/node_modules/next/dist/build/webpack/config/blocks/css/plugins.js:53:32)
 
-2025-08-04T03:25:33.827Z [INFO]: # Retrieving environment cache...
+78
 
-19
+                                    at /codebuild/output/src107228605/src/ck-v2-nextjs/node_modules/next/dist/build/webpack/config/blocks/css/plugins.js:185:56
 
-2025-08-04T03:25:33.879Z [WARNING]: ! Unable to write cache: {"code":"ERR_BAD_REQUEST","message":"Request failed with status code 404"})}
+79
 
-20
+                                    at Array.map (<anonymous>)
 
-2025-08-04T03:25:33.879Z [INFO]: ---- Setting Up SSM Secrets ----
+80
 
-21
+                                    at getPostCssPlugins (/codebuild/output/src107228605/src/ck-v2-nextjs/node_modules/next/dist/build/webpack/config/blocks/css/plugins.js:185:47)
 
-2025-08-04T03:25:33.879Z [INFO]: SSM params {"Path":"/amplify/d1crrnsi5h4ht1/dev-amplify-deployment/","WithDecryption":true}
+81
 
-22
+                                    at async /codebuild/output/src107228605/src/ck-v2-nextjs/node_modules/next/dist/build/webpack/config/blocks/css/index.js:125:36
 
-2025-08-04T03:25:33.926Z [WARNING]: !Failed to set up process.env.secrets
+82
 
-23
+                                    at async /codebuild/output/src107228605/src/ck-v2-nextjs/node_modules/next/dist/build/webpack/loaders/next-font-loader/index.js:94:33
 
-2025-08-04T03:25:34.813Z [INFO]: # No package override configuration found.
+83
 
-24
+                                    at async Span.traceAsyncFn (/codebuild/output/src107228605/src/ck-v2-nextjs/node_modules/next/dist/trace/trace.js:157:20)
 
-2025-08-04T03:25:34.817Z [INFO]: # Retrieving cache...
+84
 
-25
+2025-08-04T03:33:36.329Z [WARNING]: 
 
-2025-08-04T03:25:46.195Z [INFO]: # Extracting cache...
+85
 
-26
+2025-08-04T03:33:36.330Z [WARNING]: 
 
-2025-08-04T03:25:56.241Z [INFO]: # Extraction completed
+86
 
-27
+2025-08-04T03:33:36.330Z [WARNING]: > Build failed because of webpack errors
 
-2025-08-04T03:25:56.424Z [INFO]: # Retrieved cache
+87
 
-28
+2025-08-04T03:33:36.373Z [ERROR]: !!! Build failed
 
-2025-08-04T03:25:57.812Z [INFO]: BackendEnvironment name dev-amplify-deployment for app d1crrnsi5h4ht1 is invalid
+88
 
-29
+2025-08-04T03:33:36.373Z [INFO]: Please read more about Amplify Hosting's support for SSR frameworks to find if your build failure is related to an unsupported feature: https://docs.aws.amazon.com/amplify/latest/userguide/amplify-ssr-framework-support.html. You may also find this troubleshooting guide useful: https://docs.aws.amazon.com/amplify/latest/userguide/troubleshooting-ssr-deployment.html
 
-2025-08-04T03:25:57.860Z [INFO]: Random environment name margaux generated
+89
 
-30
+2025-08-04T03:33:36.373Z [ERROR]: !!! Error: Command failed with exit code 1
 
-2025-08-04T03:26:00.929Z [INFO]: ## Starting Backend Build
+90
 
-31
+2025-08-04T03:33:36.373Z [INFO]: # Starting environment caching...
 
-                                 ## Checking for associated backend environment...
+91
 
-32
-
-                                 ## No backend environment association found, continuing...
-
-33
-
-                                 ## Completed Backend Build
-
-34
-
-2025-08-04T03:26:00.934Z [INFO]: {"backendDuration": 0}
-
-35
-
-                                 ## Starting Frontend Build
-
-36
-
-                                 # Starting phase: preBuild
-
-37
-
-                                 # Executing command: echo "Starting Amplify build process"
-
-38
-
-                                 Starting Amplify build process
-
-39
-
-                                 # Executing command: echo "Build environment info"
+2025-08-04T03:33:36.373Z [INFO]: # Environment caching completed

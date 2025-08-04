@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { fetchPosts, fetchPostsWithPagination, fetchCategories, fetchTags, type WPGraphQLPost, type WPGraphQLCategory, type WPGraphQLTag, decodeHtmlEntities } from '../lib/wpgraphql';
+import { fetchPosts, fetchPostsWithPagination, fetchCategories, fetchTags, type BlogPost, decodeHtmlEntities, processExcerpt } from '../lib/api';
 import WordPressImage from '../components/WordPressImage';
 
 const POSTS_PER_PAGE = 9; // Reduced from 12 to accommodate larger cards
@@ -15,17 +15,16 @@ interface BlogClientProps {
 }
 
 const BlogClient = ({ initialCategory, initialTag, showHeader = true }: BlogClientProps = {}) => {
-  const [posts, setPosts] = useState<WPGraphQLPost[]>([]);
-  const [recentPosts, setRecentPosts] = useState<WPGraphQLPost[]>([]);
-  const [categories, setCategories] = useState<WPGraphQLCategory[]>([]);
-  const [tags, setTags] = useState<WPGraphQLTag[]>([]);
+  const [posts, setPosts] = useState<BlogPost[]>([]);
+  const [recentPosts, setRecentPosts] = useState<BlogPost[]>([]);
+  const [categories, setCategories] = useState<Record<string, unknown>[]>([]);
+  const [tags, setTags] = useState<Record<string, unknown>[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalPosts, setTotalPosts] = useState(0);
   const [hasNextPage, setHasNextPage] = useState(false);
-  const [endCursor, setEndCursor] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [isSidebarSticky, setIsSidebarSticky] = useState(false);
   const [showAllTags, setShowAllTags] = useState(false);
@@ -33,8 +32,14 @@ const BlogClient = ({ initialCategory, initialTag, showHeader = true }: BlogClie
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [isSearching, setIsSearching] = useState(false);
-  const [searchResults, setSearchResults] = useState<WPGraphQLPost[]>([]);
+  const [searchResults, setSearchResults] = useState<BlogPost[]>([]);
   const [searchTotalResults, setSearchTotalResults] = useState(0);
+  const [isMounted, setIsMounted] = useState(false);
+
+  // Handle mounting state to prevent hydration issues
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   // Debounce search term
   useEffect(() => {
@@ -61,14 +66,19 @@ const BlogClient = ({ initialCategory, initialTag, showHeader = true }: BlogClie
       try {
         // Use WordPress search to search ALL content
         const searchData = await fetchPostsWithPagination({
-          first: 50, // Get more results for search
+          per_page: 50, // Get more results for search
           search: debouncedSearchTerm.trim(),
-          categoryName: initialCategory,
-          tagName: initialTag,
         });
 
-        setSearchResults(searchData.posts);
-        setSearchTotalResults(searchData.totalCount);
+        // Validate search results
+        if (searchData && Array.isArray(searchData.posts)) {
+          setSearchResults(searchData.posts);
+          setSearchTotalResults(searchData.totalCount || 0);
+        } else {
+          console.warn('Invalid search results:', searchData);
+          setSearchResults([]);
+          setSearchTotalResults(0);
+        }
       } catch (error) {
         console.error('Search error:', error);
         setSearchResults([]);
@@ -94,33 +104,29 @@ const BlogClient = ({ initialCategory, initialTag, showHeader = true }: BlogClie
       }
       
       try {
-        // Calculate the correct endCursor for pagination
-        let afterCursor = undefined;
-        if (currentPage > 1 && endCursor) {
-          afterCursor = endCursor;
-        }
-
         const result = await fetchPostsWithPagination({
-          first: POSTS_PER_PAGE,
-          after: afterCursor,
-          categoryName: initialCategory,
-          tagName: initialTag,
+          page: currentPage,
+          per_page: POSTS_PER_PAGE,
         });
 
-        setPosts(result.posts);
-        setHasNextPage(result.pageInfo.hasNextPage);
-        
-        // Only update endCursor if we have a next page
-        if (result.pageInfo.hasNextPage) {
-          setEndCursor(result.pageInfo.endCursor);
+        // Ensure we have valid data before updating state
+        if (result && Array.isArray(result.posts)) {
+          setPosts(result.posts);
+          setHasNextPage(result.pageInfo?.hasNextPage || false);
+          
+          // Use actual total count from WordPress
+          setTotalPosts(result.totalCount || 0);
+          setTotalPages(Math.ceil((result.totalCount || 0) / POSTS_PER_PAGE));
+        } else {
+          console.warn('Invalid response from fetchPostsWithPagination:', result);
+          setPosts([]);
+          setHasNextPage(false);
+          setTotalPosts(0);
+          setTotalPages(1);
         }
-        
-        // Use actual total count from WordPress
-        setTotalPosts(result.totalCount);
-        setTotalPages(Math.ceil(result.totalCount / POSTS_PER_PAGE));
-      } catch {
+      } catch (error) {
+        console.error('Error loading posts:', error);
         setError('Failed to load blog posts. Please try again later.');
-        // Remove console.error for production
       } finally {
         setLoading(false);
         setIsPageLoading(false);
@@ -136,16 +142,41 @@ const BlogClient = ({ initialCategory, initialTag, showHeader = true }: BlogClie
         // Fetch recent posts, categories, and tags for sidebar
         const [recentData, categoriesData, tagsData] = await Promise.all([
           fetchPosts({ 
-            first: 5,
+            per_page: 5,
           }),
           fetchCategories(),
           fetchTags()
         ]);
-        setRecentPosts(recentData);
-        setCategories(categoriesData);
-        setTags(tagsData);
-      } catch {
-        // Remove console.error for production - sidebar data failure is non-critical
+        
+        // Validate and set recent posts
+        if (Array.isArray(recentData)) {
+          setRecentPosts(recentData);
+        } else {
+          console.warn('Invalid recent posts data:', recentData);
+          setRecentPosts([]);
+        }
+        
+        // Validate and set categories
+        if (Array.isArray(categoriesData)) {
+          setCategories(categoriesData);
+        } else {
+          console.warn('Invalid categories data:', categoriesData);
+          setCategories([]);
+        }
+        
+        // Validate and set tags
+        if (Array.isArray(tagsData)) {
+          setTags(tagsData);
+        } else {
+          console.warn('Invalid tags data:', tagsData);
+          setTags([]);
+        }
+      } catch (error) {
+        console.error('Error loading sidebar data:', error);
+        // Sidebar data failure is non-critical, so we don't set error state
+        setRecentPosts([]);
+        setCategories([]);
+        setTags([]);
       }
     };
 
@@ -154,8 +185,7 @@ const BlogClient = ({ initialCategory, initialTag, showHeader = true }: BlogClie
     if (currentPage === 1) {
       loadSidebarData();
     }
-  }, [currentPage, initialCategory, initialTag, isSearching]); // eslint-disable-line react-hooks/exhaustive-deps
-  // Note: endCursor is intentionally excluded to prevent unwanted re-renders
+  }, [currentPage, initialCategory, initialTag, isSearching]);
 
   // Remove the old client-side search filtering effect as we now use WordPress search
 
@@ -171,11 +201,17 @@ const BlogClient = ({ initialCategory, initialTag, showHeader = true }: BlogClie
   }, []);
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
-    });
+    if (!dateString) return '';
+    try {
+      return new Date(dateString).toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      });
+    } catch (error) {
+      console.error('Error formatting date:', error);
+      return '';
+    }
   };
 
   const handlePageChange = (page: number) => {
@@ -320,6 +356,19 @@ const BlogClient = ({ initialCategory, initialTag, showHeader = true }: BlogClie
     );
   };
 
+  // Prevent rendering until mounted to avoid hydration issues
+  if (!isMounted) {
+    return (
+      <div className="min-h-screen bg-[#f0f8ff] flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-[#1e2939] mx-auto"></div>
+          <p className="mt-4 text-gray-600 text-lg font-medium">Initializing...</p>
+          <p className="mt-2 text-sm text-gray-500">Please wait while we prepare the blog</p>
+        </div>
+      </div>
+    );
+  }
+
   if (loading) {
     return (
       <div className="min-h-screen bg-[#f0f8ff] flex items-center justify-center">
@@ -341,7 +390,7 @@ const BlogClient = ({ initialCategory, initialTag, showHeader = true }: BlogClie
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
             </svg>
           </div>
-          <h2 className="text-xl font-semibold text-gray-900 mb-2">Unable to Load Blog</h2>
+          <h2 className="text-xl font-semibold text-gray-900 mb-2 serif">Unable to Load Blog</h2>
           <p className="text-red-600 mb-6 text-lg">{error}</p>
           <div className="space-y-3">
             <button
@@ -359,9 +408,39 @@ const BlogClient = ({ initialCategory, initialTag, showHeader = true }: BlogClie
     );
   }
 
-  return (
-    <div className="min-h-screen bg-[#f0f8ff] py-12">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+  try {
+    // Additional safety check for posts array
+    if (!Array.isArray(displayPosts)) {
+      console.error('BlogClient - displayPosts is not an array:', typeof displayPosts, displayPosts);
+      return (
+        <div className="min-h-screen bg-[#f0f8ff] flex items-center justify-center">
+          <div className="text-center max-w-md mx-auto px-4">
+            <div className="text-red-500 mb-4">
+              <svg className="h-16 w-16 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+              </svg>
+            </div>
+            <h2 className="text-xl font-semibold text-gray-900 mb-2 serif">Invalid Data Format</h2>
+            <p className="text-red-600 mb-6 text-lg">The blog posts data is in an unexpected format.</p>
+            <div className="space-y-3">
+              <button
+                onClick={() => window.location.reload()}
+                className="bg-[#1e2939] text-white px-6 py-3 rounded-lg hover:bg-[#2a3441] transition-colors font-medium"
+              >
+                Try Again
+              </button>
+              <div className="text-sm text-gray-500">
+                <p>If the problem persists, please check back later.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    return (
+      <div key="blog-client" className="min-h-screen bg-[#f0f8ff] py-12">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header Section - Only show on main blog page */}
         {showHeader && (
           <div className="text-center mb-16">
@@ -393,10 +472,10 @@ const BlogClient = ({ initialCategory, initialTag, showHeader = true }: BlogClie
           </div>
         )}
 
-        {/* Main Content with Sidebar */}
-        <div className="flex flex-col lg:flex-row gap-8 lg:gap-12">
-          {/* Main Content - Always Left */}
-          <div className="flex-1 lg:order-1 relative">
+                 {/* Main Content with Sidebar */}
+         <div key="main-content" className="flex flex-col lg:flex-row gap-8 lg:gap-12">
+           {/* Main Content - Always Left */}
+           <div key="main-posts" className="flex-1 lg:order-1 relative">
             {displayPosts.length === 0 && !isPageLoading ? (
               <div className="text-center py-16">
                 <div className="text-gray-400 mb-4">
@@ -425,47 +504,67 @@ const BlogClient = ({ initialCategory, initialTag, showHeader = true }: BlogClie
             ) : (
               <>
                 <div className={`columns-1 md:columns-2 lg:columns-3 gap-6 lg:gap-8 space-y-6 lg:space-y-8 transition-opacity duration-300 ${isTransitioning ? 'opacity-50' : 'opacity-100'}`}>
-                  {displayPosts.map((post) => (
-                    <Link key={post.id} href={`/blog/${post.slug}`} className="block group break-inside-avoid mb-6 lg:mb-8">
-                      <article className="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2 cursor-pointer border border-gray-100 hover:border-gray-200">
-                        {/* Featured Image - Natural aspect ratio */}
-                        {post.featuredImage?.node && (
-                          <div className="relative w-full overflow-hidden">
-                            <WordPressImage
-                              post={post}
-                              size="large"
-                              className="w-full h-auto object-cover transition-transform duration-700 group-hover:scale-110"
-                              sizes="(max-width: 640px) 100vw, (max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                  {Array.isArray(displayPosts) && displayPosts.map((post) => {
+                    // Skip invalid posts
+                    if (!post || !post.id || !post.slug) {
+                      console.warn('Invalid post object:', post);
+                      return null;
+                    }
+                    
+                    // Safe data extraction with null checks
+                    const title = post?.title?.rendered || 'Untitled Post';
+                    const date = post?.date || '';
+                    
+                    // Use the safe excerpt processing function
+                    const truncatedExcerpt = processExcerpt(post?.excerpt, 180);
+                    
+                    // Additional safety check for excerpt
+                    if (typeof truncatedExcerpt !== 'string') {
+                      console.warn('BlogClient - truncatedExcerpt is not a string:', typeof truncatedExcerpt, truncatedExcerpt);
+                    }
+                    
+                    return (
+                      <Link key={post.id} href={`/blog/${post.slug}`} className="block group break-inside-avoid mb-6 lg:mb-8">
+                        <article className="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2 cursor-pointer border border-gray-100 hover:border-gray-200">
+                          {/* Featured Image - Natural aspect ratio */}
+                          {post._embedded?.['wp:featuredmedia']?.[0] && (
+                            <div className="relative w-full overflow-hidden">
+                              <WordPressImage
+                                post={post}
+                                size="large"
+                                className="w-full h-auto object-cover transition-transform duration-700 group-hover:scale-110"
+                                sizes="(max-width: 640px) 100vw, (max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                              />
+                              {/* Subtle overlay on hover */}
+                              <div className="absolute inset-0 bg-black opacity-0 group-hover:opacity-10 transition-opacity duration-500"></div>
+                            </div>
+                          )}
+                          {/* Card Content */}
+                          <div className="p-4 sm:p-6 lg:p-8">
+                            <h2 className="text-xl sm:text-2xl font-bold mb-3 text-gray-900 group-hover:text-[#1e2939] transition-colors duration-300 line-clamp-2 serif">
+                              <span dangerouslySetInnerHTML={{ __html: decodeHtmlEntities(title) }} />
+                            </h2>
+
+                            <p className="text-gray-500 text-sm mb-4 font-medium">
+                              {formatDate(date)}
+                            </p>
+
+                            <div
+                              className="text-gray-700 mb-6 line-clamp-4 leading-relaxed text-sm sm:text-base"
+                              dangerouslySetInnerHTML={{
+                                __html: typeof truncatedExcerpt === 'string' ? truncatedExcerpt : ''
+                              }}
                             />
-                            {/* Subtle overlay on hover */}
-                            <div className="absolute inset-0 bg-black opacity-0 group-hover:opacity-10 transition-opacity duration-500"></div>
+
+                            <div className="inline-flex items-center text-[#1e2939] group-hover:text-[#2a3441] font-semibold transition-all duration-300 text-sm sm:text-base">
+                              Read More
+                              <span className="ml-2 group-hover:translate-x-2 transition-transform duration-300">→</span>
+                            </div>
                           </div>
-                        )}
-                        {/* Card Content */}
-                        <div className="p-4 sm:p-6 lg:p-8">
-                          <h2 className="text-xl sm:text-2xl font-bold mb-3 text-gray-900 group-hover:text-[#1e2939] transition-colors duration-300 line-clamp-2 serif">
-                            {decodeHtmlEntities(post.title)}
-                          </h2>
-
-                          <p className="text-gray-500 text-sm mb-4 font-medium">
-                            {formatDate(post.date)}
-                          </p>
-
-                          <div
-                            className="text-gray-700 mb-6 line-clamp-4 leading-relaxed text-sm sm:text-base"
-                            dangerouslySetInnerHTML={{
-                              __html: post.excerpt.substring(0, 180) + '...'
-                            }}
-                          />
-
-                          <div className="inline-flex items-center text-[#1e2939] group-hover:text-[#2a3441] font-semibold transition-all duration-300 text-sm sm:text-base">
-                            Read More
-                            <span className="ml-2 group-hover:translate-x-2 transition-transform duration-300">→</span>
-                          </div>
-                        </div>
-                      </article>
-                    </Link>
-                  ))}
+                        </article>
+                      </Link>
+                    );
+                  })}
                 </div>
 
                 {/* Pagination */}
@@ -484,8 +583,8 @@ const BlogClient = ({ initialCategory, initialTag, showHeader = true }: BlogClie
             )}
           </div>
 
-          {/* Sidebar - Always Right */}
-          <div className={`w-full lg:w-80 lg:order-2 space-y-8 ${isSidebarSticky ? 'lg:sticky lg:top-24 lg:self-start' : ''} lg:z-10`}>
+                     {/* Sidebar - Always Right */}
+           <div key="sidebar" className={`w-full lg:w-80 lg:order-2 space-y-8 ${isSidebarSticky ? 'lg:sticky lg:top-24 lg:self-start' : ''} lg:z-10`}>
             {/* Search Bar - Moved to top of sidebar */}
             <div className="bg-white rounded-xl shadow-lg p-6 lg:p-8 border border-gray-100">
               <h3 className="text-lg font-semibold mb-4 text-gray-800 serif">Search Blog</h3>
@@ -495,7 +594,7 @@ const BlogClient = ({ initialCategory, initialTag, showHeader = true }: BlogClie
                   placeholder="Search blog posts..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full px-4 py-3 text-base border border-gray-200 rounded-lg shadow-sm focus:ring-2 focus:ring-[#1e2939] focus:border-transparent outline-none transition-all duration-300 bg-white placeholder-gray-600"
+                  className="w-full px-4 py-3 text-base border border-gray-200 rounded-lg shadow-sm focus:ring-2 focus:ring-[#1e2939] focus:border-transparent outline-none transition-all duration-300 bg-white placeholder-gray-800"
                   aria-label="Search blog posts"
                   aria-describedby="search-results"
                 />
@@ -529,32 +628,43 @@ const BlogClient = ({ initialCategory, initialTag, showHeader = true }: BlogClie
               <div className="bg-white rounded-xl shadow-lg p-6 lg:p-8 border border-gray-100">
                                  <h3 className="text-xl font-bold mb-6 text-gray-800 serif">Recent Posts</h3>
                 <div className="space-y-6">
-                  {recentPosts.slice(0, 4).map((post) => (
-                    <Link key={post.id} href={`/blog/${post.slug}`} className="block group">
-                      <div className="flex space-x-4 group">
-                        {post.featuredImage?.node && (
-                          <div className="relative w-20 h-20 rounded-lg overflow-hidden flex-shrink-0 shadow-md">
-                            <WordPressImage
-                              post={post}
-                              size="thumbnail"
-                              fill
-                              className="object-cover group-hover:scale-110 transition-transform duration-500"
-                            />
-                            {/* Subtle overlay on hover */}
-                            <div className="absolute inset-0 bg-black opacity-0 group-hover:opacity-10 transition-opacity duration-300"></div>
+                  {Array.isArray(recentPosts) && recentPosts.slice(0, 4).map((post) => {
+                    // Skip invalid posts
+                    if (!post || !post.id || !post.slug) {
+                      return null;
+                    }
+                    
+                    // Safe data extraction with null checks
+                    const title = post?.title?.rendered || 'Untitled Post';
+                    const date = post?.date || '';
+                    
+                    return (
+                      <Link key={post.id} href={`/blog/${post.slug}`} className="block group">
+                        <div className="flex space-x-4 group">
+                          {post._embedded?.['wp:featuredmedia']?.[0] && (
+                            <div className="relative w-20 h-20 rounded-lg overflow-hidden flex-shrink-0 shadow-md">
+                              <WordPressImage
+                                post={post}
+                                size="thumbnail"
+                                fill
+                                className="object-cover group-hover:scale-110 transition-transform duration-500"
+                              />
+                              {/* Subtle overlay on hover */}
+                              <div className="absolute inset-0 bg-black opacity-0 group-hover:opacity-10 transition-opacity duration-300"></div>
+                            </div>
+                          )}
+                          <div className="flex-1 min-w-0">
+                            <h4 className="text-sm font-semibold text-gray-900 line-clamp-2 group-hover:text-[#1e2939] transition-colors duration-300 leading-tight serif">
+                              <span dangerouslySetInnerHTML={{ __html: decodeHtmlEntities(title) }} />
+                            </h4>
+                            <p className="text-xs text-gray-500 mt-2 font-medium">
+                              {formatDate(date)}
+                            </p>
                           </div>
-                        )}
-                        <div className="flex-1 min-w-0">
-                                                     <h4 className="text-sm font-semibold text-gray-900 line-clamp-2 group-hover:text-[#1e2939] transition-colors duration-300 leading-tight serif">
-                             <span dangerouslySetInnerHTML={{ __html: decodeHtmlEntities(post.title) }} />
-                           </h4>
-                          <p className="text-xs text-gray-500 mt-2 font-medium">
-                            {formatDate(post.date)}
-                          </p>
                         </div>
-                      </div>
-                    </Link>
-                  ))}
+                      </Link>
+                    );
+                  })}
                 </div>
               </div>
             )}
@@ -564,18 +674,25 @@ const BlogClient = ({ initialCategory, initialTag, showHeader = true }: BlogClie
               <div className="bg-white rounded-xl shadow-lg p-6 lg:p-8 border border-gray-100">
                                  <h3 className="text-xl font-bold mb-6 text-gray-800 serif">Categories</h3>
                 <div className="space-y-4">
-                  {categories.map((category) => (
-                    <Link
-                      key={category.id}
-                      href={`/blog/category/${category.slug}`}
-                      className="block text-gray-600 hover:text-[#1e2939] transition-colors duration-300 text-sm font-medium hover:font-semibold group"
-                    >
-                      <div className="flex items-center justify-between">
-                        <span>{decodeHtmlEntities(category.name)}</span>
-                        <span className="text-gray-400 group-hover:text-gray-600 transition-colors duration-300">({category.count})</span>
-                      </div>
-                    </Link>
-                  ))}
+                  {Array.isArray(categories) && categories.map((category) => {
+                    // Skip invalid categories
+                    if (!category || !category.id || !category.slug || !category.name) {
+                      return null;
+                    }
+                    
+                    return (
+                      <Link
+                        key={category.id}
+                        href={`/blog/category/${category.slug}`}
+                        className="block text-gray-600 hover:text-[#1e2939] transition-colors duration-300 text-sm font-medium hover:font-semibold group"
+                      >
+                        <div className="flex items-center justify-between">
+                          <span>{decodeHtmlEntities(category.name)}</span>
+                          <span className="text-gray-400 group-hover:text-gray-600 transition-colors duration-300">({category.count || 0})</span>
+                        </div>
+                      </Link>
+                    );
+                  })}
                 </div>
               </div>
             )}
@@ -585,15 +702,22 @@ const BlogClient = ({ initialCategory, initialTag, showHeader = true }: BlogClie
                <div className="bg-white rounded-xl shadow-lg p-6 lg:p-8 border border-gray-100">
                                    <h3 className="text-xl font-bold mb-6 text-gray-800 serif">Tags</h3>
                  <div className="flex flex-wrap gap-3">
-                   {(showAllTags ? tags : tags.slice(0, 8)).map((tag) => (
-                     <Link
-                       key={tag.id}
-                       href={`/blog/tag/${tag.slug}`}
-                       className="px-4 py-2 bg-gray-100 text-gray-700 rounded-full text-xs font-medium hover:bg-gray-200 hover:text-gray-900 transition-all duration-300 hover:shadow-md"
-                     >
-                       {decodeHtmlEntities(tag.name)}
-                     </Link>
-                   ))}
+                   {Array.isArray(tags) && (showAllTags ? tags : tags.slice(0, 8)).map((tag) => {
+                     // Skip invalid tags
+                     if (!tag || !tag.id || !tag.slug || !tag.name) {
+                       return null;
+                     }
+                     
+                     return (
+                       <Link
+                         key={tag.id}
+                         href={`/blog/tag/${tag.slug}`}
+                         className="px-4 py-2 bg-gray-100 text-gray-700 rounded-full text-xs font-medium hover:bg-gray-200 hover:text-gray-900 transition-all duration-300 hover:shadow-md"
+                       >
+                         {decodeHtmlEntities(tag.name)}
+                       </Link>
+                     );
+                   })}
                  </div>
                  {tags.length > 8 && (
                    <button
@@ -620,10 +744,37 @@ const BlogClient = ({ initialCategory, initialTag, showHeader = true }: BlogClie
                </div>
              )}
           </div>
-        </div>
-      </div>
-    </div>
-  );
-};
+                 </div>
+       </div>
+     </div>
+   );
+   } catch (error) {
+     console.error('Error rendering BlogClient:', error);
+     return (
+       <div className="min-h-screen bg-[#f0f8ff] flex items-center justify-center">
+         <div className="text-center max-w-md mx-auto px-4">
+           <div className="text-red-500 mb-4">
+             <svg className="h-16 w-16 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+             </svg>
+           </div>
+           <h2 className="text-xl font-semibold text-gray-900 mb-2 serif">Something went wrong</h2>
+           <p className="text-red-600 mb-6 text-lg">An error occurred while rendering the blog.</p>
+           <div className="space-y-3">
+             <button
+               onClick={() => window.location.reload()}
+               className="bg-[#1e2939] text-white px-6 py-3 rounded-lg hover:bg-[#2a3441] transition-colors font-medium"
+             >
+               Try Again
+             </button>
+             <div className="text-sm text-gray-500">
+               <p>If the problem persists, please check back later.</p>
+             </div>
+           </div>
+         </div>
+       </div>
+     );
+   }
+ };
 
 export default BlogClient; 

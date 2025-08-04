@@ -1,0 +1,16 @@
+{
+  "name": "wordpress-data-import",
+  "version": "1.0.0",
+  "description": "Lambda function for importing WordPress data to Aurora PostgreSQL",
+  "main": "index.js",
+  "scripts": {
+    "build": "echo 'No build step required'",
+    "package": "zip -r ../import-data.zip ."
+  },
+  "dependencies": {
+    "pg": "^8.11.3"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

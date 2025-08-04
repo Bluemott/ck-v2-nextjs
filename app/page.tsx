@@ -13,7 +13,7 @@ export const metadata: Metadata = generateSEOMetadata({
 export default function Home() {
   return (
     <>
-      <div className="relative w-full h-[300px] sm:h-[400px] md:h-[500px] lg:h-[600px]">
+      <div className="relative w-full h-[300px] sm:h-[400px] md:h-[500px] lg:h-[600px] mt-16">
         <Image
           src="/images/CK_New_Hero_Red_Head-1.webp"
           alt="Hero Image"

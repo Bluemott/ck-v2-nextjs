@@ -1,9 +1,8 @@
 import { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
-import { fetchCategoryBySlug } from '../../../lib/wpgraphql';
+import { fetchCategoryBySlug, decodeHtmlEntities } from '../../../lib/api';
 import { generateSEOMetadata } from '../../../lib/seo';
-import { decodeHtmlEntities } from '../../../lib/wpgraphql';
 import BlogClient from '../../BlogClient';
 import Breadcrumbs from '../../../components/Breadcrumbs';
 

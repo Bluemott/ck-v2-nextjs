@@ -198,49 +198,51 @@ const DownloadsClient = () => {
               className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1"
             >
               {/* Main Card with Image and Overlay - Square Aspect Ratio */}
-              <div
-                className="cursor-pointer relative w-full overflow-hidden"
-                style={{ width: '100%', height: 300, background: '#eee' }}
-                onClick={() => toggleCard(section.id)}
-              >
+                             <div
+                 className="cursor-pointer relative w-full overflow-hidden group"
+                 style={{ width: '100%', height: 300, background: '#eee' }}
+                 onClick={() => toggleCard(section.id)}
+               >
                 <Image
                   src={section.image}
-                  alt={section.title + ' preview'}
+                  alt={`${section.title} preview`}
                   fill
                   className="object-cover object-center"
                   sizes="(max-width: 768px) 100vw, 33vw"
                   priority
+                  onError={(e) => {
+                    console.error('Image failed to load:', section.image);
+                    e.currentTarget.style.display = 'none';
+                  }}
                 />
-                {/* Dark Overlay - Only visible on hover, using inline styles for reliable opacity */}
-                <div
-                  className="absolute inset-0 transition-all duration-300"
-                  style={{ background: 'rgba(0,0,0,0)', transition: 'background 0.3s' }}
-                  onMouseEnter={e => (e.currentTarget.style.background = 'rgba(0,0,0,0.35)')}
-                  onMouseLeave={e => (e.currentTarget.style.background = 'rgba(0,0,0,0)')}
-                />
-                {/* Text Content Overlay - Only visible on hover */}
-                <div
-                  className="absolute inset-0 flex flex-col justify-center items-center text-center p-6 opacity-0 hover:opacity-100 transition-opacity duration-300"
-                  style={{ zIndex: 10 }}
-                >
-                  {/* Add a semi-transparent background behind the text for readability */}
-                  <div className="inline-block px-6 py-4 rounded-lg text-center" style={{ background: 'rgba(0,0,0,0.5)' }}>
-                    <h2 className="text-2xl font-bold text-white mb-3 drop-shadow-lg text-center">
-                      {section.title}
-                    </h2>
-                    <p className="text-white text-sm leading-relaxed mb-4 drop-shadow-md line-clamp-3 text-center">
-                      {section.description}
-                    </p>
-                    <div className="flex flex-col items-center text-white">
-                      <span className="font-medium mr-2 drop-shadow-md text-center">
-                        View Items
-                      </span>
-                      <span className="transform transition-transform duration-300 drop-shadow-md text-center">
-                        ↓
-                      </span>
-                    </div>
-                  </div>
-                </div>
+                                 {/* Dark Overlay - Only visible on hover */}
+                 <div
+                   className="absolute inset-0 transition-all duration-300 opacity-0 group-hover:opacity-100"
+                   style={{ background: 'rgba(0,0,0,0.35)', zIndex: 5 }}
+                 />
+                 {/* Text Content Overlay - Only visible on hover */}
+                 <div
+                   className="absolute inset-0 flex flex-col justify-center items-center text-center p-6 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+                   style={{ zIndex: 10 }}
+                 >
+                   {/* Add a semi-transparent background behind the text for readability */}
+                   <div className="inline-block px-6 py-4 rounded-lg text-center" style={{ background: 'rgba(0,0,0,0.5)' }}>
+                     <h2 className="text-2xl font-bold text-white mb-3 drop-shadow-lg text-center serif">
+                       {section.title}
+                     </h2>
+                     <p className="text-white text-sm leading-relaxed mb-4 drop-shadow-md line-clamp-3 text-center">
+                       {section.description}
+                     </p>
+                     <div className="flex flex-col items-center text-white">
+                       <span className="font-medium mr-2 drop-shadow-md text-center">
+                         View Items
+                       </span>
+                       <span className="transform transition-transform duration-300 drop-shadow-md text-center">
+                         ↓
+                       </span>
+                     </div>
+                   </div>
+                 </div>
               </div>
             </div>
           ))}
@@ -250,7 +252,7 @@ const DownloadsClient = () => {
         {expandedCard && (
           <div className="bg-white rounded-lg shadow-md p-6 mb-8">
             <div className="flex justify-between items-center mb-6">
-              <h3 className="text-2xl font-bold text-gray-800">
+              <h3 className="text-2xl font-bold text-gray-800 serif">
                 {downloadSections.find(section => section.id === expandedCard)?.title}
               </h3>
               <button
@@ -275,6 +277,10 @@ const DownloadsClient = () => {
                       alt={item.title}
                       fill
                       className="object-cover"
+                      onError={(e) => {
+                        console.error('Thumbnail failed to load:', item.thumbnail);
+                        e.currentTarget.style.display = 'none';
+                      }}
                     />
                   </div>
                   {/* Download Info */}

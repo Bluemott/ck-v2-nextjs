@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { decodeHtmlEntities } from '../lib/wpgraphql';
+import { decodeHtmlEntities } from '../lib/api';
 
 interface BreadcrumbItem {
   label: string;

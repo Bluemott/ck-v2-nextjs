@@ -35,7 +35,7 @@ export const websiteStructuredData = {
   '@context': 'https://schema.org',
   '@type': 'WebSite',
   name: 'Cowboy Kimono',
-      url: 'https://www.cowboykimono.com',
+  url: 'https://www.cowboykimono.com',
   description: 'Handcrafted Western-inspired robes and apparel',
   publisher: {
     '@type': 'Organization',
@@ -54,7 +54,7 @@ export const blogStructuredData = {
   '@type': 'Blog',
   name: 'Cowboy Kimono Blog',
   description: 'Stories, inspiration, and insights from the world of Cowboy Kimono',
-      url: 'https://www.cowboykimono.com/blog',
+  url: 'https://www.cowboykimono.com/blog',
   publisher: {
     '@type': 'Organization',
     name: 'Cowboy Kimono',
@@ -88,10 +88,10 @@ export function generateArticleStructuredData({
     '@context': 'https://schema.org',
     '@type': 'BlogPosting',
     headline: title,
-    description: description,
-    url: url,
+    description,
+    url,
     image: image || 'https://www.cowboykimono.com/images/CK_New_Hero_Red_Head-1.webp',
-    datePublished: datePublished,
+    datePublished,
     dateModified: dateModified || datePublished,
     author: {
       '@type': 'Organization',

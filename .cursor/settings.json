@@ -1,0 +1,22 @@
+{
+  "typescript.preferences.includePackageJsonAutoImports": "on",
+  "typescript.suggest.autoImports": true,
+  "typescript.updateImportsOnFileMove.enabled": "always",
+  "aws.profile": "default",
+  "aws.region": "us-east-1",
+  "files.associations": {
+    "*.yaml": "yaml",
+    "amplify.yml": "yaml",
+    "*.env*": "properties"
+  },
+  "editor.codeActionsOnSave": {
+    "source.fixAll.eslint": true,
+    "source.organizeImports": true
+  },
+  "eslint.workingDirectories": ["./"],
+  "tailwindCSS.includeLanguages": {
+    "typescript": "javascript",
+    "typescriptreact": "javascript"
+  },
+  "git.ignoreLimitWarning": true
+}

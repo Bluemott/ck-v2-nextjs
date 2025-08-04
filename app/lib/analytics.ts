@@ -2,7 +2,7 @@
 
 declare global {
   interface Window {
-    gtag: (...args: unknown[]) => void;
+    gtag: (..._args: unknown[]) => void;
   }
 }
 
@@ -29,7 +29,7 @@ export const trackEvent = ({ action, category, label, value }: CustomEvent) => {
     window.gtag('event', action, {
       event_category: category,
       event_label: label,
-      value: value,
+      value,
     });
   }
 };

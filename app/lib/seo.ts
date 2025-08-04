@@ -1,5 +1,5 @@
 import { Metadata } from 'next';
-import { WPGraphQLPost } from './wpgraphql';
+import { env } from './env';
 
 interface SEOProps {
   title?: string;
@@ -56,13 +56,13 @@ const defaultSEO = {
   ogImage: '/images/CK_New_Hero_Red_Head-1.webp',
   ogType: 'website' as const,
   author: 'Cowboy Kimono',
-  siteUrl: process.env.NEXT_PUBLIC_SITE_URL || 'https://www.cowboykimono.com'
+      siteUrl: env.NEXT_PUBLIC_SITE_URL
 };
 
 // Helper function to truncate titles to reasonable length
 function truncateTitle(title: string, maxLength: number = 50): string {
   if (title.length <= maxLength) return title;
-  return title.substring(0, maxLength).trim() + '...';
+  return `${title.substring(0, maxLength).trim()}...`;
 }
 
 // Helper function to ensure HTML entities are decoded
@@ -78,7 +78,7 @@ function ensureDecodedText(text: string): string {
     .replace(/&nbsp;/g, ' ');
 }
 
-export function generateSEOMetadata({
+export async function generateSEOMetadata({
   title,
   description,
   keywords = [],
@@ -91,7 +91,7 @@ export function generateSEOMetadata({
   section,
   tags = [],
   yoastSEO
-}: SEOProps = {}): Metadata {
+}: SEOProps = {}): Promise<Metadata> {
   // Use Yoast SEO data if available, otherwise fall back to provided data
   const yoastTitle = yoastSEO?.title ? ensureDecodedText(yoastSEO.title) : '';
   const yoastDescription = yoastSEO?.metaDesc || '';
@@ -112,7 +112,10 @@ export function generateSEOMetadata({
   const seoTitle = yoastTitle || (truncatedTitle ? `${truncatedTitle} | ${defaultSEO.title}` : defaultSEO.title);
   const seoDescription = yoastDescription || description || defaultSEO.description;
   const seoKeywords = [...defaultSEO.keywords, ...keywords, ...tags, ...yoastKeywords, ...yoastFocusKw];
-  const seoImage = yoastOgImage || ogImage || defaultSEO.ogImage;
+  
+  // Use the original image URL (no S3 conversion needed for REST API)
+  const convertedOgImage = ogImage;
+  const seoImage = yoastOgImage || convertedOgImage || defaultSEO.ogImage;
   const seoAuthor = author || defaultSEO.author;
   const seoCanonical = yoastCanonical || canonical || '/';
   
@@ -211,32 +214,68 @@ export function generateSEOMetadata({
   return metadata;
 }
 
-// Helper function to extract Yoast SEO data from WordPress posts
-export function extractYoastSEOData(post: WPGraphQLPost): SEOProps['yoastSEO'] {
-  if (!post?.seo) return undefined;
-  
-  return {
-    title: post.seo.title,
-    metaDesc: post.seo.metaDesc,
-    canonical: post.seo.canonical,
-    opengraphTitle: post.seo.opengraphTitle,
-    opengraphDescription: post.seo.opengraphDescription,
-    opengraphImage: post.seo.opengraphImage?.sourceUrl,
-    twitterTitle: post.seo.twitterTitle,
-    twitterDescription: post.seo.twitterDescription,
-    twitterImage: post.seo.twitterImage?.sourceUrl,
-    focuskw: post.seo.focuskw,
-    metaKeywords: post.seo.metaKeywords,
-    metaRobotsNoindex: post.seo.metaRobotsNoindex,
-    metaRobotsNofollow: post.seo.metaRobotsNofollow,
-    opengraphType: post.seo.opengraphType,
-    opengraphUrl: post.seo.opengraphUrl,
-    opengraphSiteName: post.seo.opengraphSiteName,
-    opengraphAuthor: post.seo.opengraphAuthor,
-    opengraphPublishedTime: post.seo.opengraphPublishedTime,
-    opengraphModifiedTime: post.seo.opengraphModifiedTime,
-    schema: post.seo.schema?.raw,
-  };
-}
 
-export const defaultMetadata = generateSEOMetadata();
+
+export const defaultMetadata: Metadata = {
+  title: 'Cowboy Kimono - Creative Crafts & DIY Projects',
+  description: 'Discover creative crafts, DIY projects, and artistic inspiration. From coloring pages to craft templates, find everything you need for your next creative project.',
+  keywords: ['crafts', 'DIY', 'coloring pages', 'creative projects', 'art', 'crafting'],
+  authors: [{ name: 'Cowboy Kimono' }],
+  creator: 'Cowboy Kimono',
+  publisher: 'Cowboy Kimono',
+  formatDetection: {
+    email: false,
+    address: false,
+    telephone: false,
+  },
+  metadataBase: new URL('https://cowboykimonos.com'),
+  alternates: {
+    canonical: 'https://cowboykimonos.com/',
+  },
+  openGraph: {
+    title: 'Cowboy Kimono - Creative Crafts & DIY Projects',
+    description: 'Discover creative crafts, DIY projects, and artistic inspiration. From coloring pages to craft templates, find everything you need for your next creative project.',
+    url: 'https://cowboykimonos.com/',
+    siteName: 'Cowboy Kimono',
+    images: [
+      {
+        url: 'https://cowboykimonos.com/images/CK_Logo_Blog.webp',
+        width: 1200,
+        height: 630,
+        alt: 'Cowboy Kimono - Creative Crafts & DIY Projects',
+      },
+    ],
+    locale: 'en_US',
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Cowboy Kimono - Creative Crafts & DIY Projects',
+    description: 'Discover creative crafts, DIY projects, and artistic inspiration.',
+    images: ['https://cowboykimonos.com/images/CK_Logo_Blog.webp'],
+    creator: '@cowboykimono',
+    site: '@cowboykimono',
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-video-preview': -1,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+    },
+  },
+  verification: {
+    google: process.env.NEXT_PUBLIC_GOOGLE_VERIFICATION || 'your-google-verification-code',
+    other: {
+      'msvalidate.01': process.env.NEXT_PUBLIC_BING_VERIFICATION || 'your-bing-verification-code',
+    },
+  },
+};
+
+// Async version for when we need to generate metadata with S3 URL conversion
+export async function generateAsyncSEOMetadata(props?: SEOProps): Promise<Metadata> {
+  return generateSEOMetadata(props);
+}

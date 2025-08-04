@@ -1,13 +1,15 @@
 /*
   Font Usage:
-  - Default: Geist Sans (via --font-geist-sans)
+  - Default: Playfair Display (serif) - now the global default
+  - Sans: Geist Sans (via --font-geist-sans) for specific sans-serif needs
   - Mono: Geist Mono (via --font-geist-mono)
-  - Serif: Playfair Display (via --font-playfair)
   
-  Use the .serif class or font-family: var(--font-playfair), serif for Playfair Display.
+  Use the .sans class or font-family: var(--font-geist-sans), sans-serif for sans-serif text.
 */
 
-@import "tailwindcss";
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
 :root {
   --background: #ffffff;
@@ -24,10 +26,68 @@
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, 'Apple Color Emoji', 'Segoe UI Emoji', 'Noto Color Emoji', sans-serif;
+  font-family: var(--font-playfair), serif;
 }
 
+/* Global serif font classes */
 .serif {
+  font-family: var(--font-playfair), serif;
+}
+
+.sans {
+  font-family: var(--font-geist-sans), system-ui, sans-serif;
+}
+
+/* Global heading styles with serif font */
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-playfair), serif;
+  font-weight: 600;
+}
+
+/* Navigation and brand elements with serif font */
+.nav-brand,
+.nav-link,
+.nav-item {
+  font-family: var(--font-playfair), serif;
+}
+
+/* Additional elements that should use serif font */
+button,
+.btn,
+.button {
+  font-family: var(--font-playfair), serif;
+}
+
+/* Links and interactive elements */
+a:not(.sans) {
+  font-family: var(--font-playfair), serif;
+}
+
+/* Form elements that should use serif */
+label:not(.sans),
+input:not(.sans),
+textarea:not(.sans),
+select:not(.sans) {
+  font-family: var(--font-playfair), serif;
+}
+
+/* Remove focus rings from all interactive elements */
+button:focus,
+a:focus,
+input:focus,
+textarea:focus,
+select:focus,
+[tabindex]:focus {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+/* Font weight classes with serif font */
+.font-bold:not(.sans),
+.font-semibold:not(.sans),
+.font-medium:not(.sans),
+.font-normal:not(.sans),
+.font-light:not(.sans) {
   font-family: var(--font-playfair), serif;
 }
 
@@ -42,11 +102,11 @@ body {
   font-weight: 600;
   margin-top: 1.5em;
   margin-bottom: 0.5em;
+  font-family: var(--font-playfair), serif;
 }
 
 .prose h1 {
   font-size: 2.25rem;
-  font-family: var(--font-playfair), serif;
 }
 
 .prose h2, .prose h3, .prose h4, .prose h5, .prose h6 {

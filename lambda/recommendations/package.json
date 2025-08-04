@@ -1,0 +1,16 @@
+{
+  "name": "recommendations-lambda",
+  "version": "1.0.0",
+  "description": "Lambda function for enhanced post recommendations",
+  "main": "index.js",
+  "scripts": {
+    "deploy": "zip -r function.zip . && aws lambda update-function-code --function-name recommendations-lambda --zip-file fileb://function.zip"
+  },
+  "dependencies": {
+    "pg": "^8.11.3"
+  },
+  "devDependencies": {},
+  "keywords": ["lambda", "recommendations", "wordpress"],
+  "author": "Cowboy Kimono",
+  "license": "MIT"
+} 

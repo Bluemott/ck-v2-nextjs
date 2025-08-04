@@ -1,91 +1,177 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { 
-  submitToIndexNow, 
-  submitWordPressPostToIndexNow,
-  submitWordPressCategoryToIndexNow,
-  submitWordPressTagToIndexNow,
-  getIndexNowConfig
-} from '../../lib/indexnow';
+import { validateIndexNowSubmission } from '../../lib/validation';
+import { z } from 'zod';
 
-/**
- * POST /api/indexnow
- * Submit URLs to IndexNow for faster search engine indexing
- */
 export async function POST(request: NextRequest) {
   try {
+    // Parse the request body
     const body = await request.json();
-    const { urls, type, slug, searchEngines } = body;
+    
+    // Validate the IndexNow submission data
+    const validatedSubmission = validateIndexNowSubmission(body);
+    
+    const {
+      host,
+      key,
+      keyLocation,
+      urlList
+    } = validatedSubmission;
 
-    // Validate request
-    if (!urls && !type && !slug) {
-      return NextResponse.json(
-        { error: 'Missing required parameters. Provide either urls array, or type and slug.' },
-        { status: 400 }
-      );
-    }
+    // Log the submission for debugging
+    console.log('IndexNow submission received:', {
+      host,
+      key,
+      keyLocation,
+      urlCount: urlList.length,
+      urls: urlList.slice(0, 5), // Log first 5 URLs
+      timestamp: new Date().toISOString()
+    });
 
-    let result;
-
-    // Handle different submission types
-    if (urls && Array.isArray(urls)) {
-      // Submit multiple URLs
-      result = await submitToIndexNow(urls, searchEngines);
-    } else if (type && slug) {
-      // Submit WordPress content by type
-      switch (type) {
-        case 'post':
-          result = await submitWordPressPostToIndexNow(slug, searchEngines);
-          break;
-        case 'category':
-          result = await submitWordPressCategoryToIndexNow(slug, searchEngines);
-          break;
-        case 'tag':
-          result = await submitWordPressTagToIndexNow(slug, searchEngines);
-          break;
-        default:
-          return NextResponse.json(
-            { error: 'Invalid type. Must be post, category, or tag.' },
-            { status: 400 }
-          );
+    // Validate the key by checking the keyLocation
+    try {
+      const keyResponse = await fetch(keyLocation);
+      if (!keyResponse.ok) {
+        return NextResponse.json(
+          { 
+            error: 'Invalid key location',
+            message: 'Could not verify IndexNow key'
+          },
+          { status: 400 }
+        );
       }
-    } else {
+      
+      const keyContent = await keyResponse.text();
+      if (!keyContent.includes(key)) {
+        return NextResponse.json(
+          { 
+            error: 'Invalid key',
+            message: 'IndexNow key verification failed'
+          },
+          { status: 400 }
+        );
+      }
+    } catch (keyError) {
+      console.error('Key verification error:', keyError);
       return NextResponse.json(
-        { error: 'Invalid request format.' },
+        { 
+          error: 'Key verification failed',
+          message: 'Could not verify IndexNow key'
+        },
         { status: 400 }
       );
     }
 
-    if (result.success) {
-      return NextResponse.json(result, { status: 200 });
-    } else {
-      return NextResponse.json(result, { status: 400 });
-    }
-  } catch (error) {
-    console.error('IndexNow API error:', error);
-    return NextResponse.json(
-      { 
-        error: 'Internal server error', 
-        message: error instanceof Error ? error.message : 'Unknown error',
-        details: error instanceof Error ? error.stack : undefined
-      },
-      { status: 500 }
-    );
-  }
-}
+    // Submit URLs to IndexNow services
+    const indexNowServices = [
+      'https://api.indexnow.org/indexnow',
+      'https://www.bing.com/indexnow',
+      'https://yandex.com/indexnow'
+    ];
 
-/**
- * GET /api/indexnow
- * Get IndexNow configuration status
- */
-export async function GET() {
-  try {
-    const config = await getIndexNowConfig();
-    return NextResponse.json(config, { status: 200 });
+    const results = [];
+
+    for (const service of indexNowServices) {
+      try {
+        const response = await fetch(service, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            host,
+            key,
+            keyLocation,
+            urlList
+          }),
+        });
+
+        const result = {
+          service,
+          status: response.status,
+          success: response.ok,
+          message: response.ok ? 'Submitted successfully' : `HTTP ${response.status}`
+        };
+
+        results.push(result);
+        
+        if (response.ok) {
+          console.log(`Successfully submitted to ${service}`);
+        } else {
+          console.warn(`Failed to submit to ${service}: HTTP ${response.status}`);
+        }
+
+      } catch (serviceError) {
+        console.error(`Error submitting to ${service}:`, serviceError);
+        results.push({
+          service,
+          status: 0,
+          success: false,
+          message: 'Network error'
+        });
+      }
+    }
+
+    // Calculate success rate
+    const successfulSubmissions = results.filter(r => r.success).length;
+    const totalSubmissions = results.length;
+    const successRate = totalSubmissions > 0 ? (successfulSubmissions / totalSubmissions) * 100 : 0;
+
+    // Return results
+    return NextResponse.json({
+      success: successfulSubmissions > 0,
+      message: `Submitted ${urlList.length} URLs to ${totalSubmissions} services. ${successfulSubmissions} successful.`,
+      data: {
+        host,
+        urlCount: urlList.length,
+        services: results,
+        successRate: `${successRate.toFixed(1)}%`,
+        timestamp: new Date().toISOString()
+      }
+    });
+
   } catch (error) {
-    console.error('IndexNow config error:', error);
+    console.error('IndexNow submission error:', error);
+    
+    // Handle Zod validation errors
+    if (error instanceof z.ZodError) {
+      return NextResponse.json(
+        { 
+          error: 'Invalid submission data',
+          details: error.errors.map(err => ({
+            field: err.path.join('.'),
+            message: err.message
+          }))
+        },
+        { status: 400 }
+      );
+    }
+    
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
     );
   }
+}
+
+export async function GET(_request: NextRequest) {
+  return NextResponse.json({
+    message: 'IndexNow submission endpoint',
+    description: 'Submits URLs to search engines for faster indexing',
+    supportedServices: [
+      'https://api.indexnow.org/indexnow',
+      'https://www.bing.com/indexnow',
+      'https://yandex.com/indexnow'
+    ],
+    requiredFields: [
+      'host',
+      'key',
+      'keyLocation',
+      'urlList'
+    ],
+    limits: {
+      maxUrls: 10000,
+      maxUrlLength: 2048
+    },
+    documentation: 'https://www.indexnow.org/'
+  });
 } 

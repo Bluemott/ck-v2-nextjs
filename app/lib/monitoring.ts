@@ -1,6 +1,28 @@
-import { CloudWatchClient, PutMetricDataCommand } from '@aws-sdk/client-cloudwatch';
-import { XRayClient, PutTraceSegmentsCommand } from '@aws-sdk/client-xray';
-import { CloudWatchLogsClient, PutLogEventsCommand } from '@aws-sdk/client-cloudwatch-logs';
+// Conditional imports to avoid Edge Runtime issues
+let CloudWatchClient: any;
+let PutMetricDataCommand: any;
+let XRayClient: any;
+let PutTraceSegmentsCommand: any;
+let CloudWatchLogsClient: any;
+let PutLogEventsCommand: any;
+
+// Only import AWS SDK in server environment
+if (typeof window === 'undefined') {
+  try {
+    const cloudwatch = require('@aws-sdk/client-cloudwatch');
+    const xray = require('@aws-sdk/client-xray');
+    const cloudwatchLogs = require('@aws-sdk/client-cloudwatch-logs');
+    
+    CloudWatchClient = cloudwatch.CloudWatchClient;
+    PutMetricDataCommand = cloudwatch.PutMetricDataCommand;
+    XRayClient = xray.XRayClient;
+    PutTraceSegmentsCommand = xray.PutTraceSegmentsCommand;
+    CloudWatchLogsClient = cloudwatchLogs.CloudWatchLogsClient;
+    PutLogEventsCommand = cloudwatchLogs.PutLogEventsCommand;
+  } catch (error) {
+    console.warn('AWS SDK not available in current environment:', error);
+  }
+}
 
 // Types for monitoring
 export interface MonitoringConfig {
@@ -48,16 +70,19 @@ export class Monitoring {
   constructor(config: MonitoringConfig) {
     this.config = config;
     
-    if (config.enableMetrics || config.enableLogs) {
-      this.cloudwatch = new CloudWatchClient({ region: config.region });
-    }
-    
-    if (config.enableXRay) {
-      this.xray = new XRayClient({ region: config.region });
-    }
-    
-    if (config.enableLogs) {
-      this.logs = new CloudWatchLogsClient({ region: config.region });
+    // Only initialize AWS clients if SDK is available and in server environment
+    if (typeof window === 'undefined' && CloudWatchClient) {
+      if (config.enableMetrics || config.enableLogs) {
+        this.cloudwatch = new CloudWatchClient({ region: config.region });
+      }
+      
+      if (config.enableXRay && XRayClient) {
+        this.xray = new XRayClient({ region: config.region });
+      }
+      
+      if (config.enableLogs && CloudWatchLogsClient) {
+        this.logs = new CloudWatchLogsClient({ region: config.region });
+      }
     }
   }
 
@@ -68,6 +93,12 @@ export class Monitoring {
       if (this.config.environment === 'development') {
         console.log(`[METRIC] ${data.namespace}/${data.metricName}: ${data.value} ${data.unit}`, data.dimensions || '');
       }
+      return;
+    }
+
+    // Skip if AWS SDK is not available
+    if (!this.cloudwatch || !PutMetricDataCommand) {
+      console.warn('CloudWatch not available, skipping metric');
       return;
     }
 
@@ -165,6 +196,12 @@ export class Monitoring {
       return;
     }
 
+    // Skip if AWS SDK is not available
+    if (!this.logs || !PutLogEventsCommand) {
+      console.warn('CloudWatch Logs not available, skipping log');
+      return;
+    }
+
     try {
       const logEvent = {
         timestamp: (data.timestamp || new Date()).getTime(),
@@ -210,6 +247,12 @@ export class Monitoring {
   // X-Ray tracing
   async putTrace(data: TraceData): Promise<void> {
     if (!this.config.enableXRay) return;
+
+    // Skip if AWS SDK is not available
+    if (!this.xray || !PutTraceSegmentsCommand) {
+      console.warn('X-Ray not available, skipping trace');
+      return;
+    }
 
     try {
       const segment = {

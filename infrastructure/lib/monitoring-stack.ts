@@ -1,368 +1,464 @@
 import * as cdk from 'aws-cdk-lib';
 import * as cloudwatch from 'aws-cdk-lib/aws-cloudwatch';
-import * as logs from 'aws-cdk-lib/aws-logs';
-import * as iam from 'aws-cdk-lib/aws-iam';
-import * as xray from 'aws-cdk-lib/aws-xray';
+import * as cloudwatchActions from 'aws-cdk-lib/aws-cloudwatch-actions';
 import * as sns from 'aws-cdk-lib/aws-sns';
 import * as subscriptions from 'aws-cdk-lib/aws-sns-subscriptions';
+import * as iam from 'aws-cdk-lib/aws-iam';
 import { Construct } from 'constructs';
 
 export interface MonitoringStackProps extends cdk.StackProps {
-  wordpressApiUrl: string;
-  cloudfrontDistributionId: string;
-  auroraClusterName: string;
-  lambdaFunctionNames: string[];
+  environment: string;
+  applicationName: string;
+  lambdaFunctionName?: string;
+  apiGatewayId?: string;
+  cloudFrontDistributionId?: string;
+  wordpressApiUrl?: string;
 }
 
 export class MonitoringStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props: MonitoringStackProps) {
     super(scope, id, props);
 
-    // SNS Topic for alarms
-    const alarmTopic = new sns.Topic(this, 'MonitoringAlarms', {
-      displayName: 'WordPress Monitoring Alarms',
-      topicName: 'wordpress-monitoring-alarms',
+    const { environment, applicationName, lambdaFunctionName, apiGatewayId, cloudFrontDistributionId, wordpressApiUrl } = props;
+
+    // SNS Topic for alerts
+    const alertTopic = new sns.Topic(this, 'AlertTopic', {
+      topicName: `${applicationName}-${environment}-alerts`,
+      displayName: `${applicationName} ${environment} Alerts`,
     });
 
-    // Add email subscription (replace with your email)
-    // alarmTopic.addSubscription(new subscriptions.EmailSubscription('your-email@example.com'));
+    // Add email subscription (update with your email)
+    // alertTopic.addSubscription(new subscriptions.EmailSubscription('your-email@example.com'));
 
-    // CloudWatch Log Groups with proper retention
-    const applicationLogGroup = new logs.LogGroup(this, 'ApplicationLogs', {
-      logGroupName: '/aws/wordpress/application',
-      retention: logs.RetentionDays.ONE_MONTH,
-      removalPolicy: cdk.RemovalPolicy.DESTROY,
-    });
+    // Lambda Function Alarms
+    if (lambdaFunctionName) {
+      // Lambda Error Rate Alarm
+      const lambdaErrorAlarm = new cloudwatch.Alarm(this, 'LambdaErrorAlarm', {
+        metric: new cloudwatch.Metric({
+          namespace: 'AWS/Lambda',
+          metricName: 'Errors',
+          statistic: 'Sum',
+          period: cdk.Duration.minutes(5),
+          dimensionsMap: {
+            FunctionName: lambdaFunctionName,
+          },
+        }),
+        threshold: 1,
+        evaluationPeriods: 2,
+        alarmDescription: 'Lambda function errors exceeded threshold',
+        alarmName: `${applicationName}-${environment}-lambda-errors`,
+      });
 
-    const apiLogGroup = new logs.LogGroup(this, 'APILogs', {
-      logGroupName: '/aws/wordpress/api',
-      retention: logs.RetentionDays.ONE_MONTH,
-      removalPolicy: cdk.RemovalPolicy.DESTROY,
-    });
+      // Lambda Duration Alarm
+      const lambdaDurationAlarm = new cloudwatch.Alarm(this, 'LambdaDurationAlarm', {
+        metric: new cloudwatch.Metric({
+          namespace: 'AWS/Lambda',
+          metricName: 'Duration',
+          statistic: 'Average',
+          period: cdk.Duration.minutes(5),
+          dimensionsMap: {
+            FunctionName: lambdaFunctionName,
+          },
+        }),
+        threshold: 25000, // 25 seconds
+        evaluationPeriods: 2,
+        alarmDescription: 'Lambda function duration exceeded threshold',
+        alarmName: `${applicationName}-${environment}-lambda-duration`,
+      });
 
-    const lambdaLogGroup = new logs.LogGroup(this, 'LambdaLogs', {
-      logGroupName: '/aws/wordpress/lambda',
-      retention: logs.RetentionDays.ONE_MONTH,
-      removalPolicy: cdk.RemovalPolicy.DESTROY,
-    });
+      // Lambda Throttles Alarm
+      const lambdaThrottleAlarm = new cloudwatch.Alarm(this, 'LambdaThrottleAlarm', {
+        metric: new cloudwatch.Metric({
+          namespace: 'AWS/Lambda',
+          metricName: 'Throttles',
+          statistic: 'Sum',
+          period: cdk.Duration.minutes(5),
+          dimensionsMap: {
+            FunctionName: lambdaFunctionName,
+          },
+        }),
+        threshold: 1,
+        evaluationPeriods: 2,
+        alarmDescription: 'Lambda function throttles detected',
+        alarmName: `${applicationName}-${environment}-lambda-throttles`,
+      });
 
-    const databaseLogGroup = new logs.LogGroup(this, 'DatabaseLogs', {
-      logGroupName: '/aws/wordpress/database',
-      retention: logs.RetentionDays.ONE_MONTH,
-      removalPolicy: cdk.RemovalPolicy.DESTROY,
-    });
+      // Add alarms to SNS topic
+      lambdaErrorAlarm.addAlarmAction(new cloudwatchActions.SnsAction(alertTopic));
+      lambdaDurationAlarm.addAlarmAction(new cloudwatchActions.SnsAction(alertTopic));
+      lambdaThrottleAlarm.addAlarmAction(new cloudwatchActions.SnsAction(alertTopic));
+    }
 
-    // X-Ray Tracing
-    const tracingGroup = new xray.CfnGroup(this, 'WordPressTracingGroup', {
-      groupName: 'WordPress-Application',
-      filterExpression: 'service("wordpress")',
-    });
+    // API Gateway Alarms
+    if (apiGatewayId) {
+      // API Gateway 5XX Errors
+      const apiGateway5xxAlarm = new cloudwatch.Alarm(this, 'APIGateway5xxAlarm', {
+        metric: new cloudwatch.Metric({
+          namespace: 'AWS/ApiGateway',
+          metricName: '5XXError',
+          statistic: 'Sum',
+          period: cdk.Duration.minutes(5),
+          dimensionsMap: {
+            ApiName: apiGatewayId,
+          },
+        }),
+        threshold: 1,
+        evaluationPeriods: 2,
+        alarmDescription: 'API Gateway 5XX errors exceeded threshold',
+        alarmName: `${applicationName}-${environment}-api-5xx-errors`,
+      });
 
-    // CloudWatch Dashboard
-    const dashboard = new cloudwatch.Dashboard(this, 'WordPressDashboard', {
-      dashboardName: 'WordPress-Monitoring-Dashboard',
+      // API Gateway 4XX Errors
+      const apiGateway4xxAlarm = new cloudwatch.Alarm(this, 'APIGateway4xxAlarm', {
+        metric: new cloudwatch.Metric({
+          namespace: 'AWS/ApiGateway',
+          metricName: '4XXError',
+          statistic: 'Sum',
+          period: cdk.Duration.minutes(5),
+          dimensionsMap: {
+            ApiName: apiGatewayId,
+          },
+        }),
+        threshold: 10,
+        evaluationPeriods: 2,
+        alarmDescription: 'API Gateway 4XX errors exceeded threshold',
+        alarmName: `${applicationName}-${environment}-api-4xx-errors`,
+      });
+
+      // API Gateway Latency
+      const apiGatewayLatencyAlarm = new cloudwatch.Alarm(this, 'APIGatewayLatencyAlarm', {
+        metric: new cloudwatch.Metric({
+          namespace: 'AWS/ApiGateway',
+          metricName: 'Latency',
+          statistic: 'Average',
+          period: cdk.Duration.minutes(5),
+          dimensionsMap: {
+            ApiName: apiGatewayId,
+          },
+        }),
+        threshold: 2000, // 2 seconds
+        evaluationPeriods: 2,
+        alarmDescription: 'API Gateway latency exceeded threshold',
+        alarmName: `${applicationName}-${environment}-api-latency`,
+      });
+
+      // Add alarms to SNS topic
+      apiGateway5xxAlarm.addAlarmAction(new cloudwatchActions.SnsAction(alertTopic));
+      apiGateway4xxAlarm.addAlarmAction(new cloudwatchActions.SnsAction(alertTopic));
+      apiGatewayLatencyAlarm.addAlarmAction(new cloudwatchActions.SnsAction(alertTopic));
+    }
+
+    // CloudFront Alarms
+    if (cloudFrontDistributionId) {
+      // CloudFront Error Rate
+      const cloudFrontErrorAlarm = new cloudwatch.Alarm(this, 'CloudFrontErrorAlarm', {
+        metric: new cloudwatch.Metric({
+          namespace: 'AWS/CloudFront',
+          metricName: 'ErrorRate',
+          statistic: 'Average',
+          period: cdk.Duration.minutes(5),
+          dimensionsMap: {
+            DistributionId: cloudFrontDistributionId,
+            Region: 'Global',
+          },
+        }),
+        threshold: 1, // 1% error rate
+        evaluationPeriods: 2,
+        alarmDescription: 'CloudFront error rate exceeded threshold',
+        alarmName: `${applicationName}-${environment}-cloudfront-errors`,
+      });
+
+      // CloudFront Cache Hit Rate
+      const cloudFrontCacheHitAlarm = new cloudwatch.Alarm(this, 'CloudFrontCacheHitAlarm', {
+        metric: new cloudwatch.Metric({
+          namespace: 'AWS/CloudFront',
+          metricName: 'CacheHitRate',
+          statistic: 'Average',
+          period: cdk.Duration.minutes(5),
+          dimensionsMap: {
+            DistributionId: cloudFrontDistributionId,
+            Region: 'Global',
+          },
+        }),
+        threshold: 80, // 80% cache hit rate
+        evaluationPeriods: 2,
+        comparisonOperator: cloudwatch.ComparisonOperator.LESS_THAN_THRESHOLD,
+        alarmDescription: 'CloudFront cache hit rate below threshold',
+        alarmName: `${applicationName}-${environment}-cloudfront-cache-hit`,
+      });
+
+      // Add alarms to SNS topic
+      cloudFrontErrorAlarm.addAlarmAction(new cloudwatchActions.SnsAction(alertTopic));
+      cloudFrontCacheHitAlarm.addAlarmAction(new cloudwatchActions.SnsAction(alertTopic));
+    }
+
+    // Custom Application Metrics Dashboard
+    const applicationDashboard = new cloudwatch.Dashboard(this, 'ApplicationDashboard', {
+      dashboardName: `${applicationName}-${environment}-application-metrics`,
       widgets: [
-        // Application Performance
+        // Lambda Metrics
         [
           new cloudwatch.GraphWidget({
-            title: 'Application Response Time',
-            left: [
+            title: 'Lambda Function Metrics',
+            left: lambdaFunctionName ? [
               new cloudwatch.Metric({
-                namespace: 'AWS/ApplicationELB',
-                metricName: 'TargetResponseTime',
-                statistic: 'Average',
-                period: cdk.Duration.minutes(1),
-              }),
-            ],
-            width: 12,
-            height: 6,
-          }),
-          new cloudwatch.GraphWidget({
-            title: 'Request Count',
-            left: [
-              new cloudwatch.Metric({
-                namespace: 'AWS/ApplicationELB',
-                metricName: 'RequestCount',
+                namespace: 'AWS/Lambda',
+                metricName: 'Invocations',
                 statistic: 'Sum',
-                period: cdk.Duration.minutes(1),
+                period: cdk.Duration.minutes(5),
+                dimensionsMap: { FunctionName: lambdaFunctionName },
               }),
-            ],
-            width: 12,
-            height: 6,
+              new cloudwatch.Metric({
+                namespace: 'AWS/Lambda',
+                metricName: 'Errors',
+                statistic: 'Sum',
+                period: cdk.Duration.minutes(5),
+                dimensionsMap: { FunctionName: lambdaFunctionName },
+              }),
+            ] : [],
+            right: lambdaFunctionName ? [
+              new cloudwatch.Metric({
+                namespace: 'AWS/Lambda',
+                metricName: 'Duration',
+                statistic: 'Average',
+                period: cdk.Duration.minutes(5),
+                dimensionsMap: { FunctionName: lambdaFunctionName },
+              }),
+              new cloudwatch.Metric({
+                namespace: 'AWS/Lambda',
+                metricName: 'Throttles',
+                statistic: 'Sum',
+                period: cdk.Duration.minutes(5),
+                dimensionsMap: { FunctionName: lambdaFunctionName },
+              }),
+            ] : [],
           }),
         ],
         // API Gateway Metrics
         [
           new cloudwatch.GraphWidget({
-            title: 'API Gateway 4XX Errors',
-            left: [
+            title: 'API Gateway Metrics',
+            left: apiGatewayId ? [
               new cloudwatch.Metric({
                 namespace: 'AWS/ApiGateway',
-                metricName: '4XXError',
+                metricName: 'Count',
                 statistic: 'Sum',
-                period: cdk.Duration.minutes(1),
+                period: cdk.Duration.minutes(5),
+                dimensionsMap: { ApiName: apiGatewayId },
               }),
-            ],
-            width: 8,
-            height: 6,
-          }),
-          new cloudwatch.GraphWidget({
-            title: 'API Gateway 5XX Errors',
-            left: [
               new cloudwatch.Metric({
                 namespace: 'AWS/ApiGateway',
                 metricName: '5XXError',
                 statistic: 'Sum',
-                period: cdk.Duration.minutes(1),
+                period: cdk.Duration.minutes(5),
+                dimensionsMap: { ApiName: apiGatewayId },
               }),
-            ],
-            width: 8,
-            height: 6,
-          }),
-          new cloudwatch.GraphWidget({
-            title: 'API Gateway Latency',
-            left: [
+            ] : [],
+            right: apiGatewayId ? [
               new cloudwatch.Metric({
                 namespace: 'AWS/ApiGateway',
                 metricName: 'Latency',
                 statistic: 'Average',
-                period: cdk.Duration.minutes(1),
+                period: cdk.Duration.minutes(5),
+                dimensionsMap: { ApiName: apiGatewayId },
               }),
-            ],
-            width: 8,
-            height: 6,
+              new cloudwatch.Metric({
+                namespace: 'AWS/ApiGateway',
+                metricName: '4XXError',
+                statistic: 'Sum',
+                period: cdk.Duration.minutes(5),
+                dimensionsMap: { ApiName: apiGatewayId },
+              }),
+            ] : [],
           }),
         ],
         // CloudFront Metrics
         [
           new cloudwatch.GraphWidget({
-            title: 'CloudFront Requests',
-            left: [
+            title: 'CloudFront Metrics',
+            left: cloudFrontDistributionId ? [
               new cloudwatch.Metric({
                 namespace: 'AWS/CloudFront',
                 metricName: 'Requests',
                 statistic: 'Sum',
                 period: cdk.Duration.minutes(5),
-                dimensionsMap: {
-                  DistributionId: props.cloudfrontDistributionId,
-                  Region: 'Global',
-                },
+                dimensionsMap: { DistributionId: cloudFrontDistributionId, Region: 'Global' },
               }),
-            ],
-            width: 12,
-            height: 6,
-          }),
-          new cloudwatch.GraphWidget({
-            title: 'CloudFront Cache Hit Rate',
-            left: [
+              new cloudwatch.Metric({
+                namespace: 'AWS/CloudFront',
+                metricName: 'ErrorRate',
+                statistic: 'Average',
+                period: cdk.Duration.minutes(5),
+                dimensionsMap: { DistributionId: cloudFrontDistributionId, Region: 'Global' },
+              }),
+            ] : [],
+            right: cloudFrontDistributionId ? [
               new cloudwatch.Metric({
                 namespace: 'AWS/CloudFront',
                 metricName: 'CacheHitRate',
                 statistic: 'Average',
                 period: cdk.Duration.minutes(5),
-                dimensionsMap: {
-                  DistributionId: props.cloudfrontDistributionId,
-                  Region: 'Global',
-                },
+                dimensionsMap: { DistributionId: cloudFrontDistributionId, Region: 'Global' },
               }),
-            ],
-            width: 12,
-            height: 6,
-          }),
-        ],
-        // Database Metrics
-        [
-          new cloudwatch.GraphWidget({
-            title: 'Aurora CPU Utilization',
-            left: [
               new cloudwatch.Metric({
-                namespace: 'AWS/RDS',
-                metricName: 'CPUUtilization',
-                statistic: 'Average',
-                period: cdk.Duration.minutes(1),
-                dimensionsMap: {
-                  DBClusterIdentifier: props.auroraClusterName,
-                },
-              }),
-            ],
-            width: 8,
-            height: 6,
-          }),
-          new cloudwatch.GraphWidget({
-            title: 'Aurora Connections',
-            left: [
-              new cloudwatch.Metric({
-                namespace: 'AWS/RDS',
-                metricName: 'DatabaseConnections',
-                statistic: 'Average',
-                period: cdk.Duration.minutes(1),
-                dimensionsMap: {
-                  DBClusterIdentifier: props.auroraClusterName,
-                },
-              }),
-            ],
-            width: 8,
-            height: 6,
-          }),
-          new cloudwatch.GraphWidget({
-            title: 'Aurora Freeable Memory',
-            left: [
-              new cloudwatch.Metric({
-                namespace: 'AWS/RDS',
-                metricName: 'FreeableMemory',
-                statistic: 'Average',
-                period: cdk.Duration.minutes(1),
-                dimensionsMap: {
-                  DBClusterIdentifier: props.auroraClusterName,
-                },
-              }),
-            ],
-            width: 8,
-            height: 6,
-          }),
-        ],
-        // Lambda Metrics
-        [
-          new cloudwatch.GraphWidget({
-            title: 'Lambda Duration',
-            left: props.lambdaFunctionNames.map(name => 
-              new cloudwatch.Metric({
-                namespace: 'AWS/Lambda',
-                metricName: 'Duration',
-                statistic: 'Average',
-                period: cdk.Duration.minutes(1),
-                dimensionsMap: {
-                  FunctionName: name,
-                },
-              })
-            ),
-            width: 12,
-            height: 6,
-          }),
-          new cloudwatch.GraphWidget({
-            title: 'Lambda Errors',
-            left: props.lambdaFunctionNames.map(name => 
-              new cloudwatch.Metric({
-                namespace: 'AWS/Lambda',
-                metricName: 'Errors',
+                namespace: 'AWS/CloudFront',
+                metricName: 'BytesDownloaded',
                 statistic: 'Sum',
-                period: cdk.Duration.minutes(1),
-                dimensionsMap: {
-                  FunctionName: name,
-                },
-              })
-            ),
-            width: 12,
-            height: 6,
+                period: cdk.Duration.minutes(5),
+                dimensionsMap: { DistributionId: cloudFrontDistributionId, Region: 'Global' },
+              }),
+            ] : [],
           }),
         ],
-        // Cost Metrics
+        // Custom Application Metrics
         [
           new cloudwatch.GraphWidget({
-            title: 'Estimated Charges',
+            title: 'Custom Application Metrics',
             left: [
               new cloudwatch.Metric({
-                namespace: 'AWS/Billing',
-                metricName: 'EstimatedCharges',
-                statistic: 'Maximum',
-                period: cdk.Duration.hours(1),
-                dimensionsMap: {
-                  Currency: 'USD',
-                },
+                namespace: 'WordPress/API',
+                metricName: 'APICallCount',
+                statistic: 'Sum',
+                period: cdk.Duration.minutes(5),
+              }),
+              new cloudwatch.Metric({
+                namespace: 'WordPress/API',
+                metricName: 'APICallDuration',
+                statistic: 'Average',
+                period: cdk.Duration.minutes(5),
               }),
             ],
-            width: 12,
-            height: 6,
+            right: [
+              new cloudwatch.Metric({
+                namespace: 'Lambda/API',
+                metricName: 'RequestCount',
+                statistic: 'Sum',
+                period: cdk.Duration.minutes(5),
+              }),
+              new cloudwatch.Metric({
+                namespace: 'Lambda/API',
+                metricName: 'ResponseTime',
+                statistic: 'Average',
+                period: cdk.Duration.minutes(5),
+              }),
+            ],
+          }),
+        ],
+        // Cache Metrics
+        [
+          new cloudwatch.GraphWidget({
+            title: 'Cache Performance',
+            left: [
+              new cloudwatch.Metric({
+                namespace: 'WordPress/Cache',
+                metricName: 'CacheHit',
+                statistic: 'Sum',
+                period: cdk.Duration.minutes(5),
+              }),
+              new cloudwatch.Metric({
+                namespace: 'WordPress/Cache',
+                metricName: 'CacheMiss',
+                statistic: 'Sum',
+                period: cdk.Duration.minutes(5),
+              }),
+            ],
+            right: [
+              new cloudwatch.Metric({
+                namespace: 'WordPress/Cache',
+                metricName: 'CacheOperationDuration',
+                statistic: 'Average',
+                period: cdk.Duration.minutes(5),
+              }),
+            ],
           }),
         ],
       ],
     });
 
-    // CloudWatch Alarms
-    // High Error Rate Alarm
-    const highErrorRateAlarm = new cloudwatch.Alarm(this, 'HighErrorRate', {
-      metric: new cloudwatch.Metric({
-        namespace: 'AWS/ApiGateway',
-        metricName: '5XXError',
-        statistic: 'Sum',
-        period: cdk.Duration.minutes(5),
-      }),
-      threshold: 10,
-      evaluationPeriods: 2,
-      alarmDescription: 'High 5XX error rate detected',
-      alarmName: 'WordPress-High-Error-Rate',
-    });
+    // Infrastructure Health Dashboard
+    const infrastructureDashboard = new cloudwatch.Dashboard(this, 'InfrastructureDashboard', {
+      dashboardName: `${applicationName}-${environment}-infrastructure-health`,
+      widgets: [
+        // System Overview
+        [
+          new cloudwatch.TextWidget({
+            markdown: `
+# ${applicationName} - ${environment} Environment
 
-    // High Latency Alarm
-    const highLatencyAlarm = new cloudwatch.Alarm(this, 'HighLatency', {
-      metric: new cloudwatch.Metric({
-        namespace: 'AWS/ApiGateway',
-        metricName: 'Latency',
-        statistic: 'Average',
-        period: cdk.Duration.minutes(5),
-      }),
-      threshold: 5000, // 5 seconds
-      evaluationPeriods: 2,
-      alarmDescription: 'High API latency detected',
-      alarmName: 'WordPress-High-Latency',
-    });
+## Architecture Overview
+- **Frontend:** Next.js on AWS Amplify
+- **Backend:** WordPress on Lightsail
+- **API:** REST API via WordPress
+- **CDN:** CloudFront Distribution
+- **Serverless:** Lambda Functions
+- **Monitoring:** CloudWatch Dashboards & Alerts
 
-    // Database CPU Alarm
-    const databaseCpuAlarm = new cloudwatch.Alarm(this, 'DatabaseHighCPU', {
-      metric: new cloudwatch.Metric({
-        namespace: 'AWS/RDS',
-        metricName: 'CPUUtilization',
-        statistic: 'Average',
-        period: cdk.Duration.minutes(5),
-        dimensionsMap: {
-          DBClusterIdentifier: props.auroraClusterName,
-        },
-      }),
-      threshold: 80,
-      evaluationPeriods: 2,
-      alarmDescription: 'High database CPU utilization',
-      alarmName: 'WordPress-Database-High-CPU',
-    });
+## Key Endpoints
+- **WordPress API:** ${wordpressApiUrl || 'api.cowboykimono.com'}
+- **Lambda Function:** ${lambdaFunctionName || 'Not configured'}
+- **CloudFront:** ${cloudFrontDistributionId || 'Not configured'}
 
-    // Lambda Error Alarm
-    const lambdaErrorAlarm = new cloudwatch.Alarm(this, 'LambdaErrors', {
-      metric: new cloudwatch.Metric({
-        namespace: 'AWS/Lambda',
-        metricName: 'Errors',
-        statistic: 'Sum',
-        period: cdk.Duration.minutes(5),
-      }),
-      threshold: 5,
-      evaluationPeriods: 2,
-      alarmDescription: 'Lambda function errors detected',
-      alarmName: 'WordPress-Lambda-Errors',
-    });
+## Alert Configuration
+- Lambda errors, duration, and throttles
+- API Gateway 4XX/5XX errors and latency
+- CloudFront error rate and cache performance
+- Custom application metrics
 
-    // Connect alarms to SNS topic
-    highErrorRateAlarm.addAlarmAction(new cloudwatch.SnsAction(alarmTopic));
-    highLatencyAlarm.addAlarmAction(new cloudwatch.SnsAction(alarmTopic));
-    databaseCpuAlarm.addAlarmAction(new cloudwatch.SnsAction(alarmTopic));
-    lambdaErrorAlarm.addAlarmAction(new cloudwatch.SnsAction(alarmTopic));
+## Response Time Targets
+- **API Calls:** < 2 seconds
+- **Lambda Functions:** < 25 seconds
+- **Page Load:** < 3 seconds
+- **Cache Hit Rate:** > 80%
+
+Last Updated: ${new Date().toISOString()}
+            `,
+            height: 8,
+            width: 24,
+          }),
+        ],
+        // Alarm Status
+        [
+          new cloudwatch.AlarmStatusWidget({
+            title: 'Alarm Status',
+            alarms: lambdaFunctionName ? [
+              new cloudwatch.Alarm(this, 'StatusLambdaError', {
+                metric: new cloudwatch.Metric({
+                  namespace: 'AWS/Lambda',
+                  metricName: 'Errors',
+                  statistic: 'Sum',
+                  period: cdk.Duration.minutes(5),
+                  dimensionsMap: { FunctionName: lambdaFunctionName },
+                }),
+                threshold: 1,
+                evaluationPeriods: 1,
+              }),
+            ] : [],
+            height: 6,
+            width: 12,
+          }),
+        ],
+      ],
+    });
 
     // Outputs
-    new cdk.CfnOutput(this, 'DashboardURL', {
-      value: `https://${this.region}.console.aws.amazon.com/cloudwatch/home?region=${this.region}#dashboards:name=WordPress-Monitoring-Dashboard`,
-      description: 'CloudWatch Dashboard URL',
+    new cdk.CfnOutput(this, 'AlertTopicArn', {
+      value: alertTopic.topicArn,
+      description: 'SNS Topic ARN for alerts',
     });
 
-    new cdk.CfnOutput(this, 'AlarmTopicARN', {
-      value: alarmTopic.topicArn,
-      description: 'SNS Topic ARN for alarms',
+    new cdk.CfnOutput(this, 'ApplicationDashboardName', {
+      value: applicationDashboard.dashboardName,
+      description: 'Application metrics dashboard name',
     });
 
-    new cdk.CfnOutput(this, 'ApplicationLogGroup', {
-      value: applicationLogGroup.logGroupName,
-      description: 'Application Log Group Name',
+    new cdk.CfnOutput(this, 'InfrastructureDashboardName', {
+      value: infrastructureDashboard.dashboardName,
+      description: 'Infrastructure health dashboard name',
     });
 
-    new cdk.CfnOutput(this, 'APILogGroup', {
-      value: apiLogGroup.logGroupName,
-      description: 'API Log Group Name',
+    new cdk.CfnOutput(this, 'MonitoringStackArn', {
+      value: this.stackId,
+      description: 'Monitoring stack ARN',
     });
   }
 } 

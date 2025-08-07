@@ -1,167 +1,199 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { createGETHandler, createMethodNotAllowedHandler } from '../../lib/api-handler';
+import { CACHE_CONTROL } from '../../lib/api-response';
 import { monitoring } from '../../lib/monitoring';
-import { cacheManager } from '../../lib/cache';
+import { checkCacheHealth } from '../../lib/cache';
+import { restAPIClient } from '../../lib/rest-api';
+import { env } from '../../lib/env';
+import type { HealthCheckResponse, CacheHealthStats, WordPressHealthStatus } from '../../lib/types/api';
 
-export async function GET(request: NextRequest) {
+// Disable Edge Runtime to avoid module issues
+export const runtime = 'nodejs';
+
+// Health Check Handler with proper type definitions
+const healthHandler = async ({ responseBuilder }: {
+  responseBuilder: {
+    success: <T>(_data: T, _statusCode?: number, _cacheControl?: string) => Response;
+    error: (_error: string, _statusCode?: number, _details?: unknown) => Response;
+    getRequestId: () => string;
+  };
+}): Promise<Response> => {
   const startTime = Date.now();
-  const requestId = request.headers.get('X-Request-ID') || 'unknown';
+  
+  const healthData: HealthCheckResponse = {
+    status: 'healthy',
+    timestamp: new Date().toISOString(),
+    version: '2.3.0',
+    environment: env.NODE_ENV,
+    checks: {
+      wordpress: false,
+      cache: false,
+      monitoring: false,
+      ssl: false,
+      performance: false,
+    },
+    metrics: {
+      responseTime: 0,
+      cacheStats: null,
+      wordpressStatus: null,
+    },
+    issues: [] as string[],
+  };
 
   try {
-    // Perform health checks
-    const healthChecks = await Promise.allSettled([
-      // WordPress API health check
-      fetch(`${process.env.NEXT_PUBLIC_WORDPRESS_REST_URL}/wp/v2/posts?per_page=1`)
-        .then(response => ({ status: response.status, ok: response.ok }))
-        .catch(error => ({ status: 0, ok: false, error: error.message })),
+    // Check WordPress API
+    try {
+      const wpStartTime = Date.now();
+      const wpResponse = await restAPIClient.getPosts({ per_page: 1 });
+      const wpResponseTime = Date.now() - wpStartTime;
+      
+      healthData.checks.wordpress = true;
+      const wordpressStatus: WordPressHealthStatus = {
+        status: 'healthy',
+        responseTime: wpResponseTime,
+        postsAvailable: wpResponse.pagination.totalPosts,
+        apiUrl: env.NEXT_PUBLIC_WORDPRESS_REST_URL,
+        lastCheck: new Date().toISOString(),
+      };
+      healthData.metrics.wordpressStatus = wordpressStatus;
+      
+      // Log WordPress API performance
+      await monitoring.recordAPICall('/wp-json/wp/v2/posts', wpResponseTime, 200);
+      
+    } catch (error) {
+      healthData.checks.wordpress = false;
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      healthData.issues.push(`WordPress API error: ${errorMessage}`);
+      await monitoring.error('WordPress API health check failed', { 
+        error: errorMessage,
+        requestId: responseBuilder.getRequestId(),
+      });
+    }
 
-      // Cache health check
-      cacheManager.getStats()
-        .then(stats => ({ ok: true, stats }))
-        .catch(error => ({ ok: false, error: error.message })),
+    // Check cache health
+    try {
+      const cacheHealth = await checkCacheHealth();
+      healthData.checks.cache = cacheHealth.status === 'healthy';
+      
+      // Convert cache health status to match our type definition
+      const cacheStatus = cacheHealth.status === 'healthy' ? 'healthy' : 
+                         cacheHealth.status === 'warning' ? 'degraded' : 'unhealthy';
+      
+      const cacheStats: CacheHealthStats = {
+        status: cacheStatus,
+        hitRate: typeof cacheHealth.stats.hitRate === 'number' ? cacheHealth.stats.hitRate : 0,
+        missRate: typeof cacheHealth.stats.missRate === 'number' ? cacheHealth.stats.missRate : 0,
+        evictionRate: typeof cacheHealth.stats.evictionRate === 'number' ? cacheHealth.stats.evictionRate : 0,
+        memoryUsage: typeof cacheHealth.stats.memoryUsage === 'number' ? cacheHealth.stats.memoryUsage : 0,
+        entryCount: typeof cacheHealth.stats.entryCount === 'number' ? cacheHealth.stats.entryCount : 0,
+        maxEntries: typeof cacheHealth.stats.maxEntries === 'number' ? cacheHealth.stats.maxEntries : 0,
+        issues: cacheHealth.issues,
+      };
+      healthData.metrics.cacheStats = cacheStats;
+      
+      if (cacheHealth.issues.length > 0) {
+        healthData.issues.push(...cacheHealth.issues);
+      }
+      
+    } catch (error) {
+      healthData.checks.cache = false;
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      healthData.issues.push(`Cache health check error: ${errorMessage}`);
+    }
 
-      // Monitoring health check
-      monitoring.healthCheck()
-        .then(ok => ({ ok }))
-        .catch(error => ({ ok: false, error: error.message })),
-    ]);
+    // Check monitoring system
+    try {
+      const monitoringHealth = await monitoring.healthCheck();
+      healthData.checks.monitoring = monitoringHealth;
+      
+      if (!monitoringHealth) {
+        healthData.issues.push('Monitoring system health check failed');
+      }
+      
+    } catch (error) {
+      healthData.checks.monitoring = false;
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      healthData.issues.push(`Monitoring error: ${errorMessage}`);
+    }
 
-    const [wordpressHealth, cacheHealth, monitoringHealth] = healthChecks;
+    // Check SSL/HTTPS
+    try {
+      const sslResponse = await fetch(env.NEXT_PUBLIC_WORDPRESS_REST_URL, {
+        method: 'HEAD',
+        signal: AbortSignal.timeout(5000),
+      });
+      healthData.checks.ssl = sslResponse.ok;
+      
+      if (!sslResponse.ok) {
+        healthData.issues.push(`SSL check failed: ${sslResponse.status} ${sslResponse.statusText}`);
+      }
+      
+    } catch (error) {
+      healthData.checks.ssl = false;
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      healthData.issues.push(`SSL check error: ${errorMessage}`);
+    }
 
-    // Determine overall health status
-    const isHealthy = wordpressHealth.status === 'fulfilled' && 
-                     wordpressHealth.value.ok &&
-                     cacheHealth.status === 'fulfilled' && 
-                     cacheHealth.value.ok &&
-                     monitoringHealth.status === 'fulfilled' && 
-                     monitoringHealth.value.ok;
+    // Performance check
+    const totalResponseTime = Date.now() - startTime;
+    healthData.metrics.responseTime = totalResponseTime;
+    healthData.checks.performance = totalResponseTime < 2000; // 2 seconds threshold
+    
+    if (totalResponseTime > 2000) {
+      healthData.issues.push(`Slow response time: ${totalResponseTime}ms`);
+    }
 
-    const responseTime = Date.now() - startTime;
+    // Determine overall status
+    const failedChecks = Object.values(healthData.checks).filter(check => !check).length;
+    const criticalIssues = healthData.issues.length;
+    
+    if (failedChecks === 0 && criticalIssues === 0) {
+      healthData.status = 'healthy';
+    } else if (failedChecks <= 1 && criticalIssues <= 2) {
+      healthData.status = 'degraded';
+    } else {
+      healthData.status = 'unhealthy';
+    }
 
-    // Log health check results
-    await monitoring.info('Health check performed', {
-      requestId,
-      responseTime,
-      isHealthy,
-      wordpressStatus: wordpressHealth.status === 'fulfilled' ? wordpressHealth.value.status : 'failed',
-      cacheStatus: cacheHealth.status === 'fulfilled' ? 'ok' : 'failed',
-      monitoringStatus: monitoringHealth.status === 'fulfilled' ? 'ok' : 'failed',
+    // Log health check
+    await monitoring.info('Health check completed', {
+      status: healthData.status,
+      responseTime: totalResponseTime,
+      failedChecks,
+      criticalIssues,
+      checks: healthData.checks,
+      requestId: responseBuilder.getRequestId(),
     });
 
-    // Record health check metrics
-    await monitoring.putMetric({
-      namespace: 'WordPress/Health',
-      metricName: 'HealthCheckDuration',
-      value: responseTime,
-      unit: 'Seconds',
-      dimensions: {
-        Status: isHealthy ? 'healthy' : 'unhealthy',
-        Environment: process.env.NODE_ENV || 'development',
-      },
-    });
+    // Return appropriate status code
+    const statusCode = healthData.status === 'healthy' ? 200 : 
+                      healthData.status === 'degraded' ? 200 : 503;
 
-    const response = {
-      success: true,
-      status: isHealthy ? 'healthy' : 'degraded',
-      timestamp: new Date().toISOString(),
-      responseTime,
-      requestId,
-      checks: {
-        wordpress: {
-          status: wordpressHealth.status === 'fulfilled' ? 'ok' : 'failed',
-          details: wordpressHealth.status === 'fulfilled' ? {
-            statusCode: wordpressHealth.value.status,
-            ok: wordpressHealth.value.ok,
-          } : {
-            error: wordpressHealth.reason,
-          },
-        },
-        cache: {
-          status: cacheHealth.status === 'fulfilled' ? 'ok' : 'failed',
-          details: cacheHealth.status === 'fulfilled' ? {
-            stats: cacheHealth.value.stats,
-          } : {
-            error: cacheHealth.reason,
-          },
-        },
-        monitoring: {
-          status: monitoringHealth.status === 'fulfilled' ? 'ok' : 'failed',
-          details: monitoringHealth.status === 'fulfilled' ? {
-            ok: monitoringHealth.value.ok,
-          } : {
-            error: monitoringHealth.reason,
-          },
-        },
-      },
-      environment: {
-        nodeEnv: process.env.NODE_ENV || 'development',
-        region: process.env.AWS_REGION || 'unknown',
-        version: process.env.npm_package_version || 'unknown',
-      },
-    };
-
-    return NextResponse.json(response, {
-      status: isHealthy ? 200 : 503,
-      headers: {
-        'Content-Type': 'application/json',
-        'Cache-Control': 'no-cache, no-store, must-revalidate',
-        'X-Request-ID': requestId,
-        'X-Response-Time': responseTime.toString(),
-        'X-Health-Status': isHealthy ? 'healthy' : 'degraded',
-      },
-    });
+    return responseBuilder.success(healthData, statusCode, CACHE_CONTROL.NONE);
 
   } catch (error) {
-    const responseTime = Date.now() - startTime;
-
-    // Log health check error
     await monitoring.error('Health check failed', {
-      requestId,
-      responseTime,
-      error: error instanceof Error ? error.message : 'Unknown error',
+      error: error instanceof Error ? error.message : String(error),
       stack: error instanceof Error ? error.stack : undefined,
+      requestId: responseBuilder.getRequestId(),
     });
 
-    return NextResponse.json({
-      success: false,
-      status: 'unhealthy',
-      error: 'Health check failed',
-      message: error instanceof Error ? error.message : 'Unknown error occurred',
-      timestamp: new Date().toISOString(),
-      responseTime,
-      requestId,
-    }, {
-      status: 503,
-      headers: {
-        'Content-Type': 'application/json',
-        'X-Request-ID': requestId,
-        'X-Response-Time': responseTime.toString(),
-        'X-Health-Status': 'unhealthy',
-      },
-    });
+    healthData.status = 'unhealthy';
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    healthData.issues.push(`Health check error: ${errorMessage}`);
+    
+    return responseBuilder.error('Health check failed', 503, healthData);
   }
-}
+};
 
-export async function POST(request: NextRequest) {
-  const requestId = request.headers.get('X-Request-ID') || 'unknown';
-  
-  await monitoring.warn('Health API method not allowed', {
-    requestId,
-    method: 'POST',
-    endpoint: '/api/health',
-  });
+// Export GET handler
+export const GET = createGETHandler(healthHandler, {
+  endpoint: '/api/health',
+  cacheControl: CACHE_CONTROL.NONE,
+  rateLimit: {
+    maxRequests: 60, // Allow more frequent health checks
+    windowMs: 60000, // 1 minute
+  },
+});
 
-  return NextResponse.json({
-    success: false,
-    error: 'Method not allowed',
-    message: 'This endpoint only supports GET requests',
-    meta: {
-      requestId,
-      timestamp: new Date().toISOString(),
-    }
-  }, { 
-    status: 405,
-    headers: {
-      'X-Request-ID': requestId,
-    }
-  });
-} 
+// Export POST handler (method not allowed)
+export const POST = createMethodNotAllowedHandler('/api/health'); 

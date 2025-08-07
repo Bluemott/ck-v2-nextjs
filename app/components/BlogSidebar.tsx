@@ -1,10 +1,18 @@
 'use client';
 
-import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { fetchPosts, fetchCategories, fetchTags, type BlogPost, decodeHtmlEntities } from '../lib/api';
-import WordPressImage from './WordPressImage';
+import { useEffect, useState } from 'react';
+import {
+  decodeHtmlEntities,
+  fetchCategories,
+  fetchPosts,
+  fetchTags,
+  type BlogPost,
+  type WPRestCategory,
+  type WPRestTag,
+} from '../lib/api';
 import RelatedPosts from './RelatedPosts';
+import WordPressImage from './WordPressImage';
 
 interface BlogSidebarProps {
   currentPost?: BlogPost;
@@ -15,19 +23,19 @@ interface BlogSidebarProps {
   showTags?: boolean;
 }
 
-const BlogSidebar = ({ 
-  currentPost, 
-  currentPostCategories = [], 
+const BlogSidebar = ({
+  currentPost,
+  currentPostCategories = [],
   currentPostTags = [],
   showRecentPosts = true,
   showCategories = true,
-  showTags = true
+  showTags = true,
 }: BlogSidebarProps) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [searchResults, setSearchResults] = useState<BlogPost[]>([]);
   const [recentPosts, setRecentPosts] = useState<BlogPost[]>([]);
-  const [categories, setCategories] = useState<any[]>([]);
-  const [tags, setTags] = useState<any[]>([]);
+  const [categories, setCategories] = useState<WPRestCategory[]>([]);
+  const [tags, setTags] = useState<WPRestTag[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -38,22 +46,27 @@ const BlogSidebar = ({
       try {
         setLoading(true);
         setError(null);
-        
-        // Fetch recent posts
-        const recentData = await fetchPosts({ 
+
+        // Fetch recent posts with explicit _embed parameter
+        const recentData = await fetchPosts({
           per_page: 3,
+          _embed: true, // Explicitly request embedded data
         });
+
+        // Debug information removed for production
+
         setRecentPosts(recentData);
 
         // Fetch categories and tags
         const [categoriesData, tagsData] = await Promise.all([
           fetchCategories(),
-          fetchTags()
+          fetchTags(),
         ]);
         setCategories(categoriesData);
         setTags(tagsData);
-      } catch {
-        // Remove console.error for production - sidebar data failure is non-critical
+      } catch (error) {
+        console.error('Error loading sidebar data:', error);
+        setError('Failed to load sidebar data');
       } finally {
         setLoading(false);
       }
@@ -73,7 +86,7 @@ const BlogSidebar = ({
 
       setIsSearching(true);
       try {
-        const data = await fetchPosts({ 
+        const data = await fetchPosts({
           search: searchTerm,
           per_page: 5,
         });
@@ -93,7 +106,7 @@ const BlogSidebar = ({
     return new Date(dateString).toLocaleDateString('en-US', {
       month: 'short',
       day: 'numeric',
-      year: 'numeric'
+      year: 'numeric',
     });
   };
 
@@ -120,7 +133,9 @@ const BlogSidebar = ({
     <div className="w-full lg:w-80 space-y-8">
       {/* Search Section */}
       <div className="bg-white rounded-lg shadow-md p-6">
-        <h3 className="text-lg font-semibold mb-4 text-gray-800 serif">Search Blog</h3>
+        <h3 className="text-lg font-semibold mb-4 text-gray-800 serif">
+          Search Blog
+        </h3>
         <div className="relative">
           <input
             type="text"
@@ -139,7 +154,9 @@ const BlogSidebar = ({
         {/* Search Results */}
         {searchResults.length > 0 && (
           <div className="mt-4 space-y-2">
-            <h4 className="text-sm font-medium text-gray-700">Search Results:</h4>
+            <h4 className="text-sm font-medium text-gray-700">
+              Search Results:
+            </h4>
             {searchResults.map((post) => (
               <Link
                 key={post.id}
@@ -171,7 +188,9 @@ const BlogSidebar = ({
       {/* Categories Section */}
       {showCategories && categories.length > 0 && (
         <div className="bg-white rounded-lg shadow-md p-6">
-          <h3 className="text-lg font-semibold mb-4 text-gray-800 serif">Categories</h3>
+          <h3 className="text-lg font-semibold mb-4 text-gray-800 serif">
+            Categories
+          </h3>
           <div className="space-y-2">
             {categories.slice(0, 8).map((category) => (
               <Link
@@ -190,7 +209,9 @@ const BlogSidebar = ({
       {/* Tags Section */}
       {showTags && tags.length > 0 && (
         <div className="bg-white rounded-lg shadow-md p-6">
-          <h3 className="text-lg font-semibold mb-4 text-gray-800 serif">Popular Tags</h3>
+          <h3 className="text-lg font-semibold mb-4 text-gray-800 serif">
+            Popular Tags
+          </h3>
           <div className="flex flex-wrap gap-2">
             {tags.slice(0, 12).map((tag) => (
               <Link
@@ -208,7 +229,9 @@ const BlogSidebar = ({
       {/* Recent Posts Section */}
       {showRecentPosts && (
         <div className="bg-white rounded-lg shadow-md p-6">
-          <h3 className="text-lg font-semibold mb-4 text-gray-800 serif">Recent Posts</h3>
+          <h3 className="text-lg font-semibold mb-4 text-gray-800 serif">
+            Recent Posts
+          </h3>
           <div className="space-y-4">
             {recentPosts.slice(0, 3).map((post) => (
               <Link
@@ -217,16 +240,14 @@ const BlogSidebar = ({
                 className="block group"
               >
                 <div className="flex items-start space-x-3">
-                  {post._embedded?.['wp:featuredmedia']?.[0] && (
-                    <div className="relative w-16 h-16 flex-shrink-0 rounded overflow-hidden">
-                      <WordPressImage
-                        post={post}
-                        size="medium"
-                        fill
-                        className="object-cover group-hover:scale-105 transition-transform duration-300"
-                      />
-                    </div>
-                  )}
+                  <div className="relative w-16 h-16 flex-shrink-0 rounded overflow-hidden bg-gray-100">
+                    <WordPressImage
+                      post={post}
+                      fill
+                      className="object-cover group-hover:scale-105 transition-transform duration-300"
+                      sizes="64px"
+                    />
+                  </div>
                   <div className="flex-1 min-w-0">
                     <h4 className="text-sm font-medium text-gray-900 group-hover:text-[#1e2939] line-clamp-2 transition-colors">
                       {decodeHtmlEntities(post.title?.rendered || 'Untitled')}
@@ -246,8 +267,18 @@ const BlogSidebar = ({
       {error && (
         <div className="bg-white rounded-lg shadow-md p-6">
           <div className="text-center text-red-600">
-            <svg className="w-8 h-8 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+            <svg
+              className="w-8 h-8 mx-auto mb-2"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"
+              />
             </svg>
             <p className="text-sm">{error}</p>
           </div>

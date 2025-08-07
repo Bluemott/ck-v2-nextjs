@@ -18,7 +18,7 @@ export async function POST(request: NextRequest) {
     } = validatedSubmission;
 
     // Log the submission for debugging
-    console.log('IndexNow submission received:', {
+    console.warn('IndexNow submission received:', {
       host,
       key,
       keyLocation,
@@ -95,7 +95,7 @@ export async function POST(request: NextRequest) {
         results.push(result);
         
         if (response.ok) {
-          console.log(`Successfully submitted to ${service}`);
+          console.warn(`Successfully submitted to ${service}`);
         } else {
           console.warn(`Failed to submit to ${service}: HTTP ${response.status}`);
         }
@@ -137,7 +137,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         { 
           error: 'Invalid submission data',
-          details: error.errors.map(err => ({
+          details: error.issues.map(err => ({
             field: err.path.join('.'),
             message: err.message
           }))

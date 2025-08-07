@@ -16,6 +16,9 @@ const envSchema = z.object({
   AWS_ACCESS_KEY_ID: z.string().optional(),
   AWS_SECRET_ACCESS_KEY: z.string().optional(),
   
+  // Lambda API Configuration
+  NEXT_PUBLIC_LAMBDA_RECOMMENDATIONS_URL: z.string().url().default('https://0xde6p9ls2.execute-api.us-east-1.amazonaws.com/prod/recommendations'),
+  
   // CloudFront Configuration (for media delivery)
   NEXT_PUBLIC_CLOUDFRONT_URL: z.string().url().optional(),
   CLOUDFRONT_DISTRIBUTION_ID: z.string().optional(),
@@ -38,8 +41,8 @@ const envSchema = z.object({
   NEXT_PUBLIC_SITE_VERIFICATION: z.string().optional(),
   
   // API Configuration
-  API_RATE_LIMIT: z.string().transform(val => parseInt(val, 10)).default('100'),
-  API_TIMEOUT: z.string().transform(val => parseInt(val, 10)).default('10000'),
+  API_RATE_LIMIT: z.string().transform(val => parseInt(val, 10)).default(100),
+  API_TIMEOUT: z.string().transform(val => parseInt(val, 10)).default(10000),
 });
 
 // Parse and validate environment variables
@@ -89,6 +92,8 @@ export const config = {
   aws: {
     region: env.AWS_REGION,
     hasCredentials: !!(env.AWS_ACCESS_KEY_ID && env.AWS_SECRET_ACCESS_KEY),
+    // Lambda API endpoints
+    lambdaRecommendationsUrl: env.NEXT_PUBLIC_LAMBDA_RECOMMENDATIONS_URL,
     // Legacy endpoints (deprecated)
     databaseSetupEndpoint: env.AWS_DATABASE_SETUP_ENDPOINT,
     dataImportEndpoint: env.AWS_DATA_IMPORT_ENDPOINT,

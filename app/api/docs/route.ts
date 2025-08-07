@@ -98,7 +98,7 @@ export async function GET(_request: NextRequest) {
         cdn: 'CloudFront for image optimization and caching'
       },
       configuration: {
-        wordpressUrl: apiConfig.restAPIClient.baseUrl,
+        wordpressUrl: apiConfig.WORDPRESS_REST_URL,
         siteUrl: env.NEXT_PUBLIC_APP_URL,
         environment: env.NODE_ENV,
         restApiEnabled: true

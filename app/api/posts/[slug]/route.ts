@@ -1,40 +1,58 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { fetchPostBySlug, fetchRelatedPosts } from '../../../lib/api';
 
-// Path parameter schema for validation - currently unused but kept for future validation
-// const pathSchema = z.object({
-//   slug: z.string().min(1, 'Slug is required')
-// });
+import { createGETHandler, createMethodNotAllowedHandler, handleWordPressError } from '../../../lib/api-handler';
+import { CACHE_CONTROL } from '../../../lib/api-response';
+import { restAPIClient } from '../../../lib/rest-api';
+import { monitoring } from '../../../lib/monitoring';
 
-interface RouteParams {
-  params: Promise<{ slug: string }>;
-}
-
-export async function GET(
-  request: NextRequest,
-  { params }: RouteParams
-) {
+// Individual Post API Handler
+const postHandler = async ({ 
+  request, 
+  responseBuilder 
+}: {
+  request: Request;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  responseBuilder: any;
+}) => {
   try {
-    const { slug } = await params;
-    const searchParams = request.nextUrl.searchParams;
+    const url = new URL(request.url);
+    const slug = url.pathname.split('/').pop() || '';
+    const searchParams = url.searchParams;
     const debug = searchParams.get('debug') === 'true';
     const relatedLimit = parseInt(searchParams.get('related_limit') || '3');
 
+    if (!slug) {
+      return responseBuilder.notFound('Post');
+    }
+
     // Fetch the main post
-    const post = await fetchPostBySlug(slug);
+    const post = await restAPIClient.getPostBySlug(slug);
     
     if (!post) {
-      return NextResponse.json(
-        { error: 'Post not found' },
-        { status: 404 }
-      );
+      return responseBuilder.notFound('Post');
     }
 
     // Fetch related posts
-    const relatedPosts = await fetchRelatedPosts(post.id, relatedLimit);
+    const relatedPosts = await restAPIClient.getRelatedPosts(post.id, relatedLimit);
 
-    // Prepare response
-    const response: Record<string, unknown> = {
+    // Prepare response data
+    const responseData: {
+      post: typeof post;
+      relatedPosts: typeof relatedPosts;
+      meta: {
+        totalRelated: number;
+        requestedLimit: number;
+        postId: number;
+        postSlug: string;
+      };
+      debug?: {
+        postCategories: unknown[];
+        postTags: unknown[];
+        apiConfig: {
+          wordpressRestUrl: string;
+          useRestApi: string;
+        };
+      };
+    } = {
       post,
       relatedPosts,
       meta: {
@@ -47,7 +65,7 @@ export async function GET(
 
     // Add debug information if requested
     if (debug) {
-      response.debug = {
+      responseData.debug = {
         postCategories: post._embedded?.['wp:term']?.[0] || [],
         postTags: post._embedded?.['wp:term']?.[1] || [],
         apiConfig: {
@@ -57,23 +75,33 @@ export async function GET(
       };
     }
 
-    return NextResponse.json(response);
-  } catch (error) {
-    console.error('Error in posts/[slug] API:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
-  }
-}
+    // Log successful API call
+    await monitoring.info('Individual post API call successful', {
+      requestId: responseBuilder.getRequestId(),
+      endpoint: `/api/posts/${slug}`,
+      postId: post.id,
+      postSlug: post.slug,
+      relatedPostsCount: relatedPosts.length,
+      debug,
+    });
 
-export async function POST(
-  _request: NextRequest,
-  _params: { params: Promise<{ slug: string }> }
-) {
-  return NextResponse.json({
-    success: false,
-    error: 'Method not allowed',
-    message: 'This endpoint only supports GET requests'
-  }, { status: 405 });
-} 
+    return responseBuilder.success(responseData, 200, CACHE_CONTROL.MEDIUM);
+
+  } catch (error) {
+    // Handle WordPress API errors
+    return handleWordPressError(error, responseBuilder);
+  }
+};
+
+// Export GET handler
+export const GET = createGETHandler(postHandler, {
+  endpoint: '/api/posts/[slug]',
+  cacheControl: CACHE_CONTROL.MEDIUM,
+  rateLimit: {
+    maxRequests: 100,
+    windowMs: 60000, // 1 minute
+  },
+});
+
+// Export POST handler (method not allowed)
+export const POST = createMethodNotAllowedHandler('/api/posts/[slug]'); 

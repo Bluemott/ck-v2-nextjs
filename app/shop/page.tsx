@@ -1,7 +1,7 @@
 import { Metadata } from 'next';
 import { generateSEOMetadata } from '../lib/seo';
 import ShopClient from './ShopClient';
-import StructuredData from '../components/StructuredData';
+import StructuredData, { generateProductStructuredData, faqStructuredData } from '../components/StructuredData';
 
 export const metadata: Metadata = generateSEOMetadata({
   title: "Shop",
@@ -13,6 +13,7 @@ export const metadata: Metadata = generateSEOMetadata({
 export default function ShopPage() {
   return (
     <>
+      {/* Structured Data for WebSite */}
       <StructuredData
         type="WebSite"
         data={{
@@ -28,6 +29,31 @@ export default function ShopPage() {
           }
         }}
       />
+      
+      {/* Structured Data for Featured Product */}
+      <StructuredData
+        type="Product"
+        data={generateProductStructuredData({
+          name: 'Handcrafted Cowboy Kimono',
+          description: 'Unique handcrafted cowboy kimono blending Western and Eastern aesthetics with premium materials and artistic design.',
+          price: '150.00',
+          image: 'https://www.cowboykimono.com/images/CK_New_Hero_Red_Head-1.webp',
+          url: 'https://www.cowboykimono.com/shop',
+          availability: 'InStock',
+          brand: 'Cowboy Kimono',
+          category: 'Apparel',
+          material: 'Cotton, Silk',
+          color: 'Red, Blue, Black',
+          size: 'One Size Fits Most'
+        })}
+      />
+      
+      {/* Structured Data for FAQ */}
+      <StructuredData
+        type="FAQPage"
+        data={faqStructuredData}
+      />
+      
       <div className="pt-16">
         <ShopClient />
       </div>

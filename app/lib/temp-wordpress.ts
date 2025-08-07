@@ -376,8 +376,8 @@ export async function fetchAdjacentPosts(slug: string): Promise<{
     return { previousPost: null, nextPost: null };
   }
   
-  const previousPost = currentIndex < samplePosts.length - 1 ? samplePosts[currentIndex + 1] : null;
-  const nextPost = currentIndex > 0 ? samplePosts[currentIndex - 1] : null;
+  const previousPost = currentIndex < samplePosts.length - 1 ? (samplePosts[currentIndex + 1] || null) : null;
+  const nextPost = currentIndex > 0 ? (samplePosts[currentIndex - 1] || null) : null;
   
   return { previousPost, nextPost };
 }

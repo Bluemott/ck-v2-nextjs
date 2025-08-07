@@ -21,7 +21,7 @@ export default function PostNavigation({ previousPost, nextPost }: PostNavigatio
                 Next Post
               </p>
               <p className="text-sm font-medium text-gray-900 group-hover:text-gray-700 transition-colors truncate">
-                {decodeHtmlEntities(nextPost.title)}
+                {decodeHtmlEntities(nextPost.title.rendered)}
               </p>
             </div>
             <div className="flex-shrink-0">
@@ -92,7 +92,7 @@ export default function PostNavigation({ previousPost, nextPost }: PostNavigatio
                 Previous Post
               </p>
               <p className="text-sm font-medium text-gray-900 group-hover:text-gray-700 transition-colors truncate">
-                {decodeHtmlEntities(previousPost.title)}
+                {decodeHtmlEntities(previousPost.title.rendered)}
               </p>
             </div>
           </Link>

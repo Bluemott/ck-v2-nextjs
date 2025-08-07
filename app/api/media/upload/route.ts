@@ -1,28 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
-import { writeFile, unlink } from 'fs/promises';
-import { join } from 'path';
-import { tmpdir } from 'os';
-import { v4 as uuidv4 } from 'uuid';
-import { env } from '../../../lib/env';
-import { 
-  validateMediaUpload, 
-  fileTypeSchema, 
-  fileSizeSchema,
-  allowedFileTypes,
-  maxFileSize 
-} from '../../../lib/validation';
-import { z } from 'zod';
+import { allowedFileTypes, maxFileSize } from '../../../lib/validation';
 
-// Initialize S3 client with validated environment variables
-const s3Client = new S3Client({ 
-  region: env.AWS_REGION 
-});
-
-const S3_BUCKET = env.S3_BUCKET_NAME;
-const MEDIA_FOLDER = 'media';
-
-export async function POST(request: NextRequest) {
+export async function POST(_request: NextRequest) {
+  return NextResponse.json({
+    error: 'Media upload temporarily disabled for debugging',
+    message: 'This endpoint is being debugged due to build issues'
+  }, { status: 503 });
+  
+  /*
   try {
     // Check if it's a multipart form data request
     const contentType = request.headers.get('content-type');
@@ -204,6 +189,7 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     );
   }
+  */
 }
 
 export async function GET(_request: NextRequest) {

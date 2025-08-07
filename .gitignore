@@ -174,3 +174,42 @@ temp/
 
 # Local Netlify folder
 .netlify
+
+# Deployment artifacts
+lambda-deployment*.zip
+*-deployment.zip
+deployment-*.zip
+
+# Documentation cleanup (old implementation guides)
+*IMPLEMENTATION_SUMMARY.md
+*IMPLEMENTATION_GUIDE.md
+*PHASE_*.md
+*REDIRECT_FIX_PLAN.md
+*REDIS_IMPLEMENTATION_SUMMARY.md
+*STRUCTURED_DATA_IMPLEMENTATION_SUMMARY.md
+*ENHANCED_LAMBDA_IMPLEMENTATION_SUMMARY.md
+
+# Screenshots and temporary files
+*.png
+*.jpg
+*.jpeg
+*.gif
+*.webp
+Screenshot*.png
+
+# Test and temporary files
+simple-test.js
+test-hooks-fix.js
+test-event.json
+test-payload.json
+
+# Cursor IDE files
+.cursor/
+.cursorignore
+.cursorrules
+
+# Husky git hooks (if not needed in deployment)
+.husky/
+
+# AWS configuration files (if sensitive)
+aws-config.js

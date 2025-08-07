@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { fetchPosts, fetchPostsWithPagination, fetchCategories, fetchTags, type BlogPost, decodeHtmlEntities, processExcerpt } from '../lib/api';
+import { fetchPosts, fetchPostsWithPagination, fetchCategories, fetchTags, type BlogPost, decodeHtmlEntities, processExcerpt, type WPRestCategory, type WPRestTag } from '../lib/api';
 import WordPressImage from '../components/WordPressImage';
 
 const POSTS_PER_PAGE = 9; // Reduced from 12 to accommodate larger cards
@@ -17,8 +17,8 @@ interface BlogClientProps {
 const BlogClient = ({ initialCategory, initialTag, showHeader = true }: BlogClientProps = {}) => {
   const [posts, setPosts] = useState<BlogPost[]>([]);
   const [recentPosts, setRecentPosts] = useState<BlogPost[]>([]);
-  const [categories, setCategories] = useState<Record<string, unknown>[]>([]);
-  const [tags, setTags] = useState<Record<string, unknown>[]>([]);
+  const [categories, setCategories] = useState<WPRestCategory[]>([]);
+  const [tags, setTags] = useState<WPRestTag[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
@@ -439,7 +439,7 @@ const BlogClient = ({ initialCategory, initialTag, showHeader = true }: BlogClie
     }
 
     return (
-      <div key="blog-client" className="min-h-screen bg-[#f0f8ff] py-12">
+      <div key="blog-client" className="min-h-screen bg-[#f0f8ff] pt-24 pb-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header Section - Only show on main blog page */}
         {showHeader && (
@@ -527,18 +527,15 @@ const BlogClient = ({ initialCategory, initialTag, showHeader = true }: BlogClie
                       <Link key={post.id} href={`/blog/${post.slug}`} className="block group break-inside-avoid mb-6 lg:mb-8">
                         <article className="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2 cursor-pointer border border-gray-100 hover:border-gray-200">
                           {/* Featured Image - Natural aspect ratio */}
-                          {post._embedded?.['wp:featuredmedia']?.[0] && (
-                            <div className="relative w-full overflow-hidden">
-                              <WordPressImage
-                                post={post}
-                                size="large"
-                                className="w-full h-auto object-cover transition-transform duration-700 group-hover:scale-110"
-                                sizes="(max-width: 640px) 100vw, (max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
-                              />
-                              {/* Subtle overlay on hover */}
-                              <div className="absolute inset-0 bg-black opacity-0 group-hover:opacity-10 transition-opacity duration-500"></div>
-                            </div>
-                          )}
+                          <div className="relative w-full overflow-hidden">
+                            <WordPressImage
+                              post={post}
+                              className="w-full h-auto object-cover transition-transform duration-700 group-hover:scale-110"
+                              sizes="(max-width: 640px) 100vw, (max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                            />
+                            {/* Subtle overlay on hover */}
+                            <div className="absolute inset-0 bg-black opacity-0 group-hover:opacity-10 transition-opacity duration-500"></div>
+                          </div>
                           {/* Card Content */}
                           <div className="p-4 sm:p-6 lg:p-8">
                             <h2 className="text-xl sm:text-2xl font-bold mb-3 text-gray-900 group-hover:text-[#1e2939] transition-colors duration-300 line-clamp-2 serif">
@@ -641,18 +638,15 @@ const BlogClient = ({ initialCategory, initialTag, showHeader = true }: BlogClie
                     return (
                       <Link key={post.id} href={`/blog/${post.slug}`} className="block group">
                         <div className="flex space-x-4 group">
-                          {post._embedded?.['wp:featuredmedia']?.[0] && (
-                            <div className="relative w-20 h-20 rounded-lg overflow-hidden flex-shrink-0 shadow-md">
-                              <WordPressImage
-                                post={post}
-                                size="thumbnail"
-                                fill
-                                className="object-cover group-hover:scale-110 transition-transform duration-500"
-                              />
-                              {/* Subtle overlay on hover */}
-                              <div className="absolute inset-0 bg-black opacity-0 group-hover:opacity-10 transition-opacity duration-300"></div>
-                            </div>
-                          )}
+                          <div className="relative w-20 h-20 rounded-lg overflow-hidden flex-shrink-0 shadow-md">
+                            <WordPressImage
+                              post={post}
+                              fill
+                              className="object-cover group-hover:scale-110 transition-transform duration-500"
+                            />
+                            {/* Subtle overlay on hover */}
+                            <div className="absolute inset-0 bg-black opacity-0 group-hover:opacity-10 transition-opacity duration-300"></div>
+                          </div>
                           <div className="flex-1 min-w-0">
                             <h4 className="text-sm font-semibold text-gray-900 line-clamp-2 group-hover:text-[#1e2939] transition-colors duration-300 leading-tight serif">
                               <span dangerouslySetInnerHTML={{ __html: decodeHtmlEntities(title) }} />
@@ -687,7 +681,7 @@ const BlogClient = ({ initialCategory, initialTag, showHeader = true }: BlogClie
                         className="block text-gray-600 hover:text-[#1e2939] transition-colors duration-300 text-sm font-medium hover:font-semibold group"
                       >
                         <div className="flex items-center justify-between">
-                          <span>{decodeHtmlEntities(category.name)}</span>
+                          <span>{decodeHtmlEntities(String(category.name))}</span>
                           <span className="text-gray-400 group-hover:text-gray-600 transition-colors duration-300">({category.count || 0})</span>
                         </div>
                       </Link>
@@ -714,7 +708,7 @@ const BlogClient = ({ initialCategory, initialTag, showHeader = true }: BlogClie
                          href={`/blog/tag/${tag.slug}`}
                          className="px-4 py-2 bg-gray-100 text-gray-700 rounded-full text-xs font-medium hover:bg-gray-200 hover:text-gray-900 transition-all duration-300 hover:shadow-md"
                        >
-                         {decodeHtmlEntities(tag.name)}
+                         {decodeHtmlEntities(String(tag.name))}
                        </Link>
                      );
                    })}

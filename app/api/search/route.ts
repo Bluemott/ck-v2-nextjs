@@ -1,81 +1,78 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { searchPosts } from '../../lib/api';
 import { z } from 'zod';
+import { createGETHandler, createMethodNotAllowedHandler, handleWordPressError, transformWordPressResponse } from '../../lib/api-handler';
+import { CACHE_CONTROL } from '../../lib/api-response';
+import { restAPIClient } from '../../lib/rest-api';
+import { monitoring } from '../../lib/monitoring';
 
-// Query parameter schema for validation
-const querySchema = z.object({
+// Search query validation schema
+const searchQuerySchema = z.object({
   q: z.string().min(1, 'Search query is required'),
-  page: z.string().transform(val => parseInt(val, 10)).optional(),
-  per_page: z.string().transform(val => parseInt(val, 10)).optional()
+  page: z.string().transform(val => parseInt(val, 10)).pipe(z.number().int().positive()).optional(),
+  per_page: z.string().transform(val => parseInt(val, 10)).pipe(z.number().int().positive().max(100)).optional()
 });
 
-export async function GET(request: NextRequest) {
+// Search API Handler
+const searchHandler = async ({ query, responseBuilder }: {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  query: any;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  responseBuilder: any;
+}) => {
   try {
-    // Parse and validate query parameters
-    const { searchParams } = new URL(request.url);
-    const queryParams = Object.fromEntries(searchParams.entries());
-    
-    const validatedParams = querySchema.parse(queryParams);
-    
-    // Perform search
-    const searchResults = await searchPosts(validatedParams.q, {
-      page: validatedParams.page,
-      per_page: validatedParams.per_page || 50
+    const {
+      q,
+      page = 1,
+      per_page = 50
+    } = query;
+
+    // Perform search using WordPress REST API
+    const result = await restAPIClient.searchPosts(q, {
+      page,
+      per_page,
+      subtype: 'post'
     });
-    
-    // Return successful response with proper headers
-    return NextResponse.json({
-      success: true,
-      data: {
-        query: validatedParams.q,
-        results: searchResults.posts,
-        pagination: {
-          totalPosts: searchResults.totalPosts,
-          totalPages: searchResults.totalPages,
-          currentPage: validatedParams.page || 1,
-          perPage: validatedParams.per_page || 50
-        },
-        meta: {
-          timestamp: new Date().toISOString(),
-          endpoint: '/api/search',
-          method: 'GET'
-        }
-      }
-    }, {
-      headers: {
-        'Content-Type': 'application/json',
-        'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=600' // 5 min cache, 10 min stale
-      }
+
+    // Transform response
+    const responseData = transformWordPressResponse(result.results, {
+      currentPage: page,
+      perPage: per_page,
+      totalPages: result.totalPages,
+      totalItems: result.total
     });
+
+    // Add search query to response
+    responseData.query = q;
+
+    // Log successful API call
+    await monitoring.info('Search API call successful', {
+      requestId: responseBuilder.getRequestId(),
+      endpoint: '/api/search',
+      query: q,
+      resultCount: result.results.length,
+      totalPosts: result.total,
+      totalPages: result.totalPages,
+      currentPage: page,
+      perPage: per_page,
+    });
+
+    return responseBuilder.success(responseData, 200, CACHE_CONTROL.SHORT);
 
   } catch (error) {
-    console.error('API Error:', error);
-    
-    // Handle validation errors
-    if (error instanceof z.ZodError) {
-      return NextResponse.json({
-        success: false,
-        error: 'Invalid request parameters',
-        details: error.errors.map(err => ({
-          field: err.path.join('.'),
-          message: err.message
-        }))
-      }, { status: 400 });
-    }
-    
-    // Handle other errors
-    return NextResponse.json({
-      success: false,
-      error: 'Internal server error',
-      message: error instanceof Error ? error.message : 'Unknown error occurred'
-    }, { status: 500 });
+    // Handle WordPress API errors
+    return handleWordPressError(error, responseBuilder);
   }
-}
+};
 
-export async function POST(_request: NextRequest) {
-  return NextResponse.json({
-    success: false,
-    error: 'Method not allowed',
-    message: 'This endpoint only supports GET requests'
-  }, { status: 405 });
-} 
+// Export GET handler
+export const GET = createGETHandler(searchHandler, {
+  endpoint: '/api/search',
+  cacheControl: CACHE_CONTROL.SHORT,
+  validateQuery: searchQuerySchema,
+  rateLimit: {
+    maxRequests: 30,
+    windowMs: 60000, // 1 minute
+  },
+});
+
+// Export POST handler (method not allowed)
+export const POST = createMethodNotAllowedHandler('/api/search'); 

@@ -5,6 +5,11 @@ export interface RedirectEntry {
   source: string;
   destination: string;
   permanent: boolean;
+  has?: Array<{
+    type: string;
+    key: string;
+    value: string;
+  }>;
 }
 
 export interface SlugChangeData {
@@ -26,14 +31,16 @@ export function addSlugRedirect(oldSlug: string, newSlug: string): void {
     destination: `/blog/${newSlug}`,
     permanent: true,
   };
-  
+
   // Remove any existing redirect for the old slug
-  dynamicRedirects = dynamicRedirects.filter(r => r.source !== redirect.source);
-  
+  dynamicRedirects = dynamicRedirects.filter(
+    (r) => r.source !== redirect.source
+  );
+
   // Add the new redirect
   dynamicRedirects.push(redirect);
-  
-  console.log(`Added redirect: ${redirect.source} → ${redirect.destination}`);
+
+  console.warn(`Added redirect: ${redirect.source} → ${redirect.destination}`);
 }
 
 /**
@@ -47,8 +54,8 @@ export function getDynamicRedirects(): RedirectEntry[] {
  * Remove a redirect
  */
 export function removeRedirect(source: string): void {
-  dynamicRedirects = dynamicRedirects.filter(r => r.source !== source);
-  console.log(`Removed redirect: ${source}`);
+  dynamicRedirects = dynamicRedirects.filter((r) => r.source !== source);
+  console.warn(`Removed redirect: ${source}`);
 }
 
 /**
@@ -56,10 +63,10 @@ export function removeRedirect(source: string): void {
  */
 export function handleSlugChange(data: SlugChangeData): void {
   const { oldSlug, newSlug, postId, postTitle } = data;
-  
-  console.log(`Handling slug change for post "${postTitle}" (ID: ${postId})`);
-  console.log(`Old slug: ${oldSlug} → New slug: ${newSlug}`);
-  
+
+  console.warn(`Handling slug change for post "${postTitle}" (ID: ${postId})`);
+  console.warn(`Old slug: ${oldSlug} → New slug: ${newSlug}`);
+
   addSlugRedirect(oldSlug, newSlug);
 }
 
@@ -68,14 +75,43 @@ export function handleSlugChange(data: SlugChangeData): void {
  */
 export function getRedirectsForNextConfig(): RedirectEntry[] {
   return [
+    // Canonical redirects (www to non-www) - Primary redirect
+    {
+      source: '/:path*',
+      destination: 'https://cowboykimono.com/:path*',
+      permanent: true,
+      has: [
+        {
+          type: 'host',
+          key: 'host',
+          value: 'www.cowboykimono.com',
+        },
+      ],
+    },
+
+    // Fallback redirects for any non-www to www redirects (in case they exist)
+    {
+      source: '/:path*',
+      destination: 'https://cowboykimono.com/:path*',
+      permanent: true,
+      has: [
+        {
+          type: 'host',
+          key: 'host',
+          value: 'cowboykimono.com',
+        },
+      ],
+    },
+
     // Static redirects (from next.config.ts)
     {
       source: '/blog/how-to-create-a-hip-jackalope-display',
       destination: '/blog/jackalope-garden-display-diy',
       permanent: true,
     },
+
     // Dynamic redirects (from slug changes)
-    ...dynamicRedirects
+    ...dynamicRedirects,
   ];
 }
 
@@ -107,4 +143,4 @@ export async function getRedirects() {
     }
     return [];
   }
-} 
+}

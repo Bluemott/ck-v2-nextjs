@@ -1,116 +1,208 @@
-import { MetadataRoute } from 'next'
-import { fetchPosts, fetchCategories, fetchTags } from './lib/api'
+import { MetadataRoute } from 'next';
+import { fetchCategories, fetchPosts, fetchTags } from './lib/api';
 import { env } from './lib/env';
 
+// Enhanced sitemap configuration
+const SITEMAP_CONFIG = {
+  MAX_POSTS: 100, // Reduced to avoid WordPress API limits
+  MAX_CATEGORIES: 100,
+  MAX_TAGS: 100,
+  CACHE_TTL: 3600000, // 1 hour cache
+  PRIORITY_DECAY: 0.1, // How much priority decreases for older posts
+};
+
+// Ensure canonical URL (currently www, will be updated when redirects are fixed)
+function getCanonicalUrl(url: string): string {
+  try {
+    const parsed = new URL(url);
+    // Currently using www as canonical (temporary until redirects are fixed)
+    // TODO: Change to non-www when redirects are properly configured
+    if (!parsed.hostname.startsWith('www.')) {
+      parsed.hostname = `www.${parsed.hostname}`;
+    }
+    return parsed.toString();
+  } catch {
+    return url;
+  }
+}
+
+// Enhanced sitemap generation with proper canonicalization
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const baseUrl = env.NEXT_PUBLIC_SITE_URL;
+  // Ensure we're using the canonical URL (currently www)
+  const baseUrl = getCanonicalUrl(env.NEXT_PUBLIC_SITE_URL);
 
-  // Fetch blog post slugs from WordPress REST API
-  let blogUrls: MetadataRoute.Sitemap = [];
-  let categoryUrls: MetadataRoute.Sitemap = [];
-  let tagUrls: MetadataRoute.Sitemap = [];
-  
-  try {
-    // Fetch posts - only include published posts
-    const posts = await fetchPosts({ per_page: 100 });
-    if (posts && Array.isArray(posts)) {
-      blogUrls = posts
-        .filter(post => post && post.status === 'publish') // Only include published posts
-        .map((post) => ({
-          url: `${baseUrl}/blog/${post.slug}`,
-          lastModified: new Date(post.modified || post.date).toISOString(),
-          changeFrequency: 'monthly' as const,
-          priority: 0.7,
-        }));
-    }
-  } catch (error) {
-    // Log error only in development
-    if (process.env.NODE_ENV === 'development') {
-      console.error('Error fetching posts for sitemap:', error);
-    }
-    // Continue with empty blogUrls array
-  }
-
-  try {
-    // Fetch categories
-    const categories = await fetchCategories();
-    if (categories && Array.isArray(categories)) {
-      categoryUrls = categories
-        .filter(cat => cat && cat.count > 0) // Only include categories with posts
-        .map((category) => ({
-          url: `${baseUrl}/blog/category/${category.slug}`,
-          lastModified: new Date().toISOString(),
-          changeFrequency: 'weekly' as const,
-          priority: 0.6,
-        }));
-    }
-  } catch (error) {
-    // Log error only in development
-    if (process.env.NODE_ENV === 'development') {
-      console.error('Error fetching categories for sitemap:', error);
-    }
-    // Continue with empty categoryUrls array
-  }
-
-  try {
-    // Fetch tags
-    const tags = await fetchTags();
-    if (tags && Array.isArray(tags)) {
-      tagUrls = tags
-        .filter(tag => tag && tag.count > 0) // Only include tags with posts
-        .map((tag) => ({
-          url: `${baseUrl}/blog/tag/${tag.slug}`,
-          lastModified: new Date().toISOString(),
-          changeFrequency: 'weekly' as const,
-          priority: 0.5,
-        }));
-    }
-  } catch (error) {
-    // Log error only in development
-    if (process.env.NODE_ENV === 'development') {
-      console.error('Error fetching tags for sitemap:', error);
-    }
-    // Continue with empty tagUrls array
-  }
-
-  // Statically known downloads (add more as needed)
-  const downloadUrls: MetadataRoute.Sitemap = [
-    {
-      url: `${baseUrl}/downloads`,
-      lastModified: new Date().toISOString(),
-      changeFrequency: 'monthly' as const,
-      priority: 0.7,
-    },
-    // Add more download URLs if you have dynamic download pages
-  ];
-
-  // Core site pages - only include pages that actually exist and have content
+  // High priority core pages
   const corePages: MetadataRoute.Sitemap = [
     {
       url: baseUrl,
-      lastModified: new Date().toISOString(),
+      lastModified: new Date(),
       changeFrequency: 'daily' as const,
-      priority: 1,
+      priority: 1.0,
     },
     {
       url: `${baseUrl}/blog`,
-      lastModified: new Date().toISOString(),
+      lastModified: new Date(),
       changeFrequency: 'daily' as const,
       priority: 0.9,
     },
     {
       url: `${baseUrl}/shop`,
-      lastModified: new Date().toISOString(),
+      lastModified: new Date(),
       changeFrequency: 'daily' as const,
       priority: 0.9,
     },
+    {
+      url: `${baseUrl}/downloads`,
+      lastModified: new Date(),
+      changeFrequency: 'weekly' as const,
+      priority: 0.8,
+    },
+    {
+      url: `${baseUrl}/about`,
+      lastModified: new Date(),
+      changeFrequency: 'monthly' as const,
+      priority: 0.7,
+    },
   ];
 
-  return [
+  // Enhanced blog posts with priority-based generation
+  let blogUrls: MetadataRoute.Sitemap = [];
+  try {
+    const posts = await fetchPosts({ per_page: SITEMAP_CONFIG.MAX_POSTS });
+    if (posts && Array.isArray(posts)) {
+      blogUrls = posts
+        .filter((post) => post && post.status === 'publish')
+        .map((post, index) => {
+          // Calculate priority based on recency and importance
+          const basePriority = 0.9;
+          const recencyBonus = Math.max(0, 0.1 - index * 0.01); // Newer posts get higher priority
+          const finalPriority = Math.max(
+            0.3,
+            basePriority - index * SITEMAP_CONFIG.PRIORITY_DECAY + recencyBonus
+          );
+
+          return {
+            url: `${baseUrl}/blog/${post.slug}`,
+            lastModified: new Date(post.modified || post.date),
+            changeFrequency: 'monthly' as const,
+            priority: finalPriority,
+          };
+        });
+    }
+  } catch (error) {
+    if (process.env.NODE_ENV === 'development') {
+      console.error('Error fetching posts for sitemap:', error);
+    }
+  }
+
+  // Enhanced categories with post count consideration
+  let categoryUrls: MetadataRoute.Sitemap = [];
+  try {
+    const categories = await fetchCategories();
+    if (categories && Array.isArray(categories)) {
+      categoryUrls = categories
+        .filter((cat) => cat && cat.count > 0)
+        .sort((a, b) => (b.count || 0) - (a.count || 0)) // Sort by post count
+        .map((category, index) => {
+          // Calculate priority based on post count
+          const postCount = category.count || 0;
+          const priority = Math.max(
+            0.4,
+            0.8 - index * 0.05 + (postCount > 10 ? 0.1 : 0)
+          );
+
+          return {
+            url: `${baseUrl}/blog/category/${category.slug}`,
+            lastModified: new Date(),
+            changeFrequency: 'weekly' as const,
+            priority,
+          };
+        });
+    }
+  } catch (error) {
+    if (process.env.NODE_ENV === 'development') {
+      console.error('Error fetching categories for sitemap:', error);
+    }
+  }
+
+  // Enhanced tags with post count consideration
+  let tagUrls: MetadataRoute.Sitemap = [];
+  try {
+    const tags = await fetchTags();
+    if (tags && Array.isArray(tags)) {
+      tagUrls = tags
+        .filter((tag) => tag && tag.count > 0)
+        .sort((a, b) => (b.count || 0) - (a.count || 0)) // Sort by post count
+        .map((tag, index) => {
+          // Calculate priority based on post count
+          const postCount = tag.count || 0;
+          const priority = Math.max(
+            0.3,
+            0.7 - index * 0.05 + (postCount > 5 ? 0.1 : 0)
+          );
+
+          return {
+            url: `${baseUrl}/blog/tag/${tag.slug}`,
+            lastModified: new Date(),
+            changeFrequency: 'weekly' as const,
+            priority,
+          };
+        });
+    }
+  } catch (error) {
+    if (process.env.NODE_ENV === 'development') {
+      console.error('Error fetching tags for sitemap:', error);
+    }
+  }
+
+  // Enhanced downloads section with specific download pages
+  const downloadUrls: MetadataRoute.Sitemap = [
+    {
+      url: `${baseUrl}/downloads`,
+      lastModified: new Date(),
+      changeFrequency: 'monthly' as const,
+      priority: 0.7,
+    },
+    // Add specific download category pages if they exist
+    {
+      url: `${baseUrl}/downloads/coloring-pages`,
+      lastModified: new Date(),
+      changeFrequency: 'monthly' as const,
+      priority: 0.6,
+    },
+    {
+      url: `${baseUrl}/downloads/craft-templates`,
+      lastModified: new Date(),
+      changeFrequency: 'monthly' as const,
+      priority: 0.6,
+    },
+    {
+      url: `${baseUrl}/downloads/diy-tutorials`,
+      lastModified: new Date(),
+      changeFrequency: 'monthly' as const,
+      priority: 0.6,
+    },
+  ];
+
+  // Combine all sitemap entries
+  const allUrls = [
     ...corePages,
     ...blogUrls,
     ...categoryUrls,
     ...tagUrls,
     ...downloadUrls,
   ];
+
+  // Ensure all URLs are canonical (currently www, will be updated when redirects are fixed)
+  const canonicalUrls = allUrls.map((entry) => ({
+    ...entry,
+    url: getCanonicalUrl(entry.url),
+  }));
+
+  // Log sitemap generation info in development
+  if (process.env.NODE_ENV === 'development') {
+    // Removed console.log statements for production readiness
+  }
+
+  return canonicalUrls;
 }

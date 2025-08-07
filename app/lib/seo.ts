@@ -78,7 +78,7 @@ function ensureDecodedText(text: string): string {
     .replace(/&nbsp;/g, ' ');
 }
 
-export async function generateSEOMetadata({
+export function generateSEOMetadata({
   title,
   description,
   keywords = [],
@@ -91,7 +91,7 @@ export async function generateSEOMetadata({
   section,
   tags = [],
   yoastSEO
-}: SEOProps = {}): Promise<Metadata> {
+}: SEOProps = {}): Metadata {
   // Use Yoast SEO data if available, otherwise fall back to provided data
   const yoastTitle = yoastSEO?.title ? ensureDecodedText(yoastSEO.title) : '';
   const yoastDescription = yoastSEO?.metaDesc || '';

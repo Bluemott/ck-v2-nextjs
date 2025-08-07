@@ -1,41 +1,30 @@
-#!/usr/bin/env ts-node
-
+#!/usr/bin/env node
+import 'source-map-support/register';
 import * as cdk from 'aws-cdk-lib';
 import { MonitoringStack } from '../lib/monitoring-stack';
-import { WordPressBlogStack } from '../lib/aws-cdk-stack';
 
 const app = new cdk.App();
 
-// Get stack outputs from existing WordPress stack
-const wordpressStack = new WordPressBlogStack(app, 'WordPressBlogStack', {
+// Get environment from context or default to 'production'
+const environment = app.node.tryGetContext('environment') || 'production';
+const applicationName = app.node.tryGetContext('applicationName') || 'CowboyKimono';
+
+// Get infrastructure details from context or use defaults
+const lambdaFunctionName = app.node.tryGetContext('lambdaFunctionName');
+const apiGatewayId = app.node.tryGetContext('apiGatewayId');
+const cloudFrontDistributionId = app.node.tryGetContext('cloudFrontDistributionId');
+const wordpressApiUrl = app.node.tryGetContext('wordpressApiUrl') || 'api.cowboykimono.com';
+
+new MonitoringStack(app, `${applicationName}MonitoringStack`, {
+  environment,
+  applicationName,
+  lambdaFunctionName,
+  apiGatewayId,
+  cloudFrontDistributionId,
+  wordpressApiUrl,
   env: {
     account: process.env.CDK_DEFAULT_ACCOUNT,
     region: process.env.CDK_DEFAULT_REGION || 'us-east-1',
   },
-});
-
-// Create monitoring stack with dependencies
-const monitoringStack = new MonitoringStack(app, 'WordPressMonitoringStack', {
-  env: {
-    account: process.env.CDK_DEFAULT_ACCOUNT,
-    region: process.env.CDK_DEFAULT_REGION || 'us-east-1',
-  },
-  wordpressApiUrl: 'https://api.cowboykimono.com', // Replace with your actual API URL
-  cloudfrontDistributionId: 'E1234567890ABC', // Replace with your actual CloudFront distribution ID
-  auroraClusterName: 'WordPressAurora', // Replace with your actual Aurora cluster name
-  lambdaFunctionNames: [
-    'WordPressBlogStack-DatabaseSetup',
-    'WordPressBlogStack-DataImport',
-    'WordPressBlogStack-WordPressGraphQL',
-  ],
-});
-
-// Add dependency
-monitoringStack.addDependency(wordpressStack);
-
-// Add tags
-cdk.Tags.of(monitoringStack).add('Project', 'CowboyKimono');
-cdk.Tags.of(monitoringStack).add('Environment', process.env.NODE_ENV || 'development');
-cdk.Tags.of(monitoringStack).add('Component', 'Monitoring');
-
-app.synth(); 
+  description: `CloudWatch monitoring stack for ${applicationName} ${environment} environment`,
+}); 

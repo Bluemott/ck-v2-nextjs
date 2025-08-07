@@ -1,11 +1,40 @@
-import { env } from './env';
-import { restAPIClient, type WPRestPost, type WPRestCategory, type WPRestTag } from './rest-api';
 import { z } from 'zod';
+import { env } from './env';
+import { lambdaAPIClient } from './lambda-api';
+import {
+  restAPIClient,
+  type WPRestCategory,
+  type WPRestPost,
+  type WPRestSearchResult,
+  type WPRestTag,
+} from './rest-api';
+
+// Conditional cache import to avoid client-side bundling issues
+let cacheManager: typeof import('./cache').cacheManager | null = null;
+if (typeof window === 'undefined') {
+  try {
+    // Dynamic import to avoid bundling issues
+    import('./cache')
+      .then((cacheModule) => {
+        cacheManager = cacheModule.cacheManager;
+      })
+      .catch((error) => {
+        console.warn('Cache not available in current environment:', error);
+      });
+  } catch (error) {
+    console.warn('Cache not available in current environment:', error);
+  }
+}
+
+// Re-export types for use in other components
+export type { WPRestCategory, WPRestTag };
 
 // API Configuration with validated environment variables
 const API_CONFIG = {
-  WORDPRESS_REST_URL: env.NEXT_PUBLIC_WORDPRESS_REST_URL || 'https://api.cowboykimono.com',
-  WORDPRESS_ADMIN_URL: env.NEXT_PUBLIC_WORDPRESS_ADMIN_URL || 'https://admin.cowboykimono.com',
+  WORDPRESS_REST_URL:
+    env.NEXT_PUBLIC_WORDPRESS_REST_URL || 'https://api.cowboykimono.com',
+  WORDPRESS_ADMIN_URL:
+    env.NEXT_PUBLIC_WORDPRESS_ADMIN_URL || 'https://admin.cowboykimono.com',
 };
 
 // Blog Post Schema for validation with more flexible excerpt handling
@@ -17,13 +46,15 @@ const blogPostSchema = z.object({
   status: z.string(),
   title: z.object({ rendered: z.string() }),
   content: z.object({ rendered: z.string() }),
-  excerpt: z.object({ 
-    rendered: z.string().default(''),
-    protected: z.boolean().optional()
-  }).or(z.string().transform(str => ({ rendered: str, protected: false }))),
+  excerpt: z
+    .object({
+      rendered: z.string().default(''),
+      protected: z.boolean().optional(),
+    })
+    .or(z.string().transform((str) => ({ rendered: str, protected: false }))),
   author: z.number(),
   featured_media: z.number(),
-  _embedded: z.any().optional()
+  _embedded: z.any().optional(),
 });
 
 export type BlogPost = z.infer<typeof blogPostSchema>;
@@ -36,7 +67,8 @@ const searchParamsSchema = z.object({
   categories: z.array(z.number()).optional(),
   tags: z.array(z.number()).optional(),
   orderby: z.string().optional(),
-  order: z.enum(['asc', 'desc']).optional()
+  order: z.enum(['asc', 'desc']).optional(),
+  _embed: z.boolean().optional(),
 });
 
 export type SearchParams = z.infer<typeof searchParamsSchema>;
@@ -46,10 +78,15 @@ function transformWPRestPost(wpPost: WPRestPost): BlogPost {
   // Ensure excerpt has the correct structure
   let safeExcerpt = wpPost.excerpt;
   if (!safeExcerpt || typeof safeExcerpt !== 'object') {
-    console.warn('transformWPRestPost: Invalid excerpt format, creating safe excerpt object:', safeExcerpt);
+    console.warn(
+      'transformWPRestPost: Invalid excerpt format, creating safe excerpt object:',
+      safeExcerpt
+    );
     safeExcerpt = { rendered: String(safeExcerpt || ''), protected: false };
   } else if (!safeExcerpt.rendered) {
-    console.warn('transformWPRestPost: Missing excerpt.rendered, setting to empty string');
+    console.warn(
+      'transformWPRestPost: Missing excerpt.rendered, setting to empty string'
+    );
     safeExcerpt.rendered = '';
   }
 
@@ -64,41 +101,63 @@ function transformWPRestPost(wpPost: WPRestPost): BlogPost {
     excerpt: safeExcerpt,
     author: wpPost.author,
     featured_media: wpPost.featured_media,
-    _embedded: wpPost._embedded
+    _embedded: wpPost._embedded,
   };
 }
 
 /**
- * Fetch posts with validation using REST API
+ * Fetch posts with validation using REST API and caching
  */
-export async function fetchPosts(params: SearchParams = {}): Promise<BlogPost[]> {
+export async function fetchPosts(
+  params: SearchParams = {}
+): Promise<BlogPost[]> {
   try {
     // Validate search parameters
     const validatedParams = searchParamsSchema.parse(params);
-    
-    const result = await restAPIClient.getPosts({
-      page: validatedParams.page,
-      per_page: validatedParams.per_page || 12,
-      search: validatedParams.search,
-      categories: validatedParams.categories,
-      tags: validatedParams.tags,
-      orderby: validatedParams.orderby || 'date',
-      order: validatedParams.order || 'desc',
-      _embed: true
-    });
+
+    let result: { posts: WPRestPost[] };
+
+    // Use cached posts if available (server-side only)
+    if (cacheManager) {
+      result = await cacheManager.getCachedPosts({
+        page: validatedParams.page,
+        per_page: validatedParams.per_page || 12,
+        search: validatedParams.search,
+        categories: validatedParams.categories,
+        tags: validatedParams.tags,
+        orderby: validatedParams.orderby || 'date',
+        order: validatedParams.order || 'desc',
+        _embed: true,
+      });
+    } else {
+      // Fallback to direct API call for client-side
+      const posts = await restAPIClient.getPosts({
+        page: validatedParams.page,
+        per_page: validatedParams.per_page || 12,
+        search: validatedParams.search,
+        categories: validatedParams.categories,
+        tags: validatedParams.tags,
+        orderby: validatedParams.orderby || 'date',
+        order: validatedParams.order || 'desc',
+        _embed: true,
+      });
+      result = posts;
+    }
 
     // Transform and validate each post
-    const validatedPosts = result.posts.map((post: WPRestPost) => {
-      try {
-        const transformed = transformWPRestPost(post);
-        return blogPostSchema.parse(transformed);
-      } catch (error) {
-        if (error instanceof z.ZodError) {
-          console.error('Post validation error:', error.issues);
+    const validatedPosts = result.posts
+      .map((post: WPRestPost) => {
+        try {
+          const transformed = transformWPRestPost(post);
+          return blogPostSchema.parse(transformed);
+        } catch (error) {
+          if (error instanceof z.ZodError) {
+            console.error('Post validation error:', error.issues);
+          }
+          return null;
         }
-        return null;
-      }
-    }).filter(Boolean) as BlogPost[];
+      })
+      .filter(Boolean) as BlogPost[];
 
     return validatedPosts;
   } catch (error) {
@@ -108,9 +167,11 @@ export async function fetchPosts(params: SearchParams = {}): Promise<BlogPost[]>
 }
 
 /**
- * Fetch posts with pagination
+ * Fetch posts with pagination and caching
  */
-export async function fetchPostsWithPagination(params: SearchParams = {}): Promise<{
+export async function fetchPostsWithPagination(
+  params: SearchParams = {}
+): Promise<{
   posts: BlogPost[];
   pageInfo: {
     hasNextPage: boolean;
@@ -122,33 +183,56 @@ export async function fetchPostsWithPagination(params: SearchParams = {}): Promi
 }> {
   try {
     const validatedParams = searchParamsSchema.parse(params);
-    
-    const result = await restAPIClient.getPosts({
-      page: validatedParams.page,
-      per_page: validatedParams.per_page || 12,
-      search: validatedParams.search,
-      categories: validatedParams.categories,
-      tags: validatedParams.tags,
-      orderby: validatedParams.orderby || 'date',
-      order: validatedParams.order || 'desc',
-      _embed: true
-    });
+
+    let result: {
+      posts: WPRestPost[];
+      pagination: { totalPages: number; totalPosts: number };
+    };
+
+    // Use cached posts if available (server-side only)
+    if (cacheManager) {
+      result = await cacheManager.getCachedPosts({
+        page: validatedParams.page,
+        per_page: validatedParams.per_page || 12,
+        search: validatedParams.search,
+        categories: validatedParams.categories,
+        tags: validatedParams.tags,
+        orderby: validatedParams.orderby || 'date',
+        order: validatedParams.order || 'desc',
+        _embed: true,
+      });
+    } else {
+      // Fallback to direct API call for client-side
+      const posts = await restAPIClient.getPosts({
+        page: validatedParams.page,
+        per_page: validatedParams.per_page || 12,
+        search: validatedParams.search,
+        categories: validatedParams.categories,
+        tags: validatedParams.tags,
+        orderby: validatedParams.orderby || 'date',
+        order: validatedParams.order || 'desc',
+        _embed: true,
+      });
+      result = posts;
+    }
 
     // Transform and validate posts
-    const validatedPosts = result.posts.map((post: WPRestPost) => {
-      try {
-        const transformed = transformWPRestPost(post);
-        return blogPostSchema.parse(transformed);
-      } catch (error) {
-        if (error instanceof z.ZodError) {
-          console.error('Post validation error:', error.issues);
+    const validatedPosts = result.posts
+      .map((post: WPRestPost) => {
+        try {
+          const transformed = transformWPRestPost(post);
+          return blogPostSchema.parse(transformed);
+        } catch (error) {
+          if (error instanceof z.ZodError) {
+            console.error('Post validation error:', error.issues);
+          }
+          return null;
         }
-        return null;
-      }
-    }).filter(Boolean) as BlogPost[];
+      })
+      .filter(Boolean) as BlogPost[];
 
     const currentPage = validatedParams.page || 1;
-    const hasNextPage = currentPage < result.totalPages;
+    const hasNextPage = currentPage < result.pagination.totalPages;
     const hasPreviousPage = currentPage > 1;
 
     return {
@@ -156,10 +240,14 @@ export async function fetchPostsWithPagination(params: SearchParams = {}): Promi
       pageInfo: {
         hasNextPage,
         hasPreviousPage,
-        startCursor: hasPreviousPage ? String((currentPage - 1) * (validatedParams.per_page || 12)) : null,
-        endCursor: hasNextPage ? String(currentPage * (validatedParams.per_page || 12)) : null,
+        startCursor: hasPreviousPage
+          ? String((currentPage - 1) * (validatedParams.per_page || 12))
+          : null,
+        endCursor: hasNextPage
+          ? String(currentPage * (validatedParams.per_page || 12))
+          : null,
       },
-      totalCount: result.totalPosts
+      totalCount: result.pagination.totalPosts,
     };
   } catch (error) {
     console.error('Error fetching posts with pagination:', error);
@@ -171,21 +259,34 @@ export async function fetchPostsWithPagination(params: SearchParams = {}): Promi
         startCursor: null,
         endCursor: null,
       },
-      totalCount: 0
+      totalCount: 0,
     };
   }
 }
 
 /**
- * Fetch a single post by slug
+ * Fetch a single post by slug with caching
  */
 export async function fetchPostBySlug(slug: string): Promise<BlogPost | null> {
   try {
-    const post = await restAPIClient.getPostBySlug(slug);
-    if (!post) return null;
+    // Use cached post if available
+    if (cacheManager) {
+      const post = await cacheManager.getCachedPost(slug);
+      if (!post) return null;
 
-    const transformed = transformWPRestPost(post);
-    return blogPostSchema.parse(transformed);
+      const transformed = transformWPRestPost(post);
+      return blogPostSchema.parse(transformed);
+    } else {
+      // Fallback to direct API call
+      const posts = await restAPIClient.getPosts({ slug });
+      if (!posts.posts || posts.posts.length === 0) return null;
+
+      const post = posts.posts[0];
+      if (!post) return null;
+
+      const transformed = transformWPRestPost(post);
+      return blogPostSchema.parse(transformed);
+    }
   } catch (error) {
     console.error('Error fetching post by slug:', error);
     return null;
@@ -193,11 +294,16 @@ export async function fetchPostBySlug(slug: string): Promise<BlogPost | null> {
 }
 
 /**
- * Fetch categories
+ * Fetch categories with caching
  */
 export async function fetchCategories(): Promise<WPRestCategory[]> {
   try {
-    return await restAPIClient.getCategories();
+    if (cacheManager) {
+      return await cacheManager.getCachedCategories();
+    } else {
+      // Fallback to direct API call
+      return await restAPIClient.getCategories();
+    }
   } catch (error) {
     console.error('Error fetching categories:', error);
     return [];
@@ -207,10 +313,22 @@ export async function fetchCategories(): Promise<WPRestCategory[]> {
 /**
  * Fetch category by slug
  */
-export async function fetchCategoryBySlug(slug: string): Promise<WPRestCategory | null> {
+export async function fetchCategoryBySlug(
+  slug: string
+): Promise<WPRestCategory | null> {
   try {
-    const categories = await restAPIClient.getCategories();
-    return categories.find(cat => cat.slug === slug) || null;
+    if (cacheManager) {
+      const categories = await cacheManager.getCachedCategories();
+      return (
+        categories.find((cat: WPRestCategory) => cat.slug === slug) || null
+      );
+    } else {
+      // Fallback to direct API call
+      const categories = await restAPIClient.getCategories();
+      return (
+        categories.find((cat: WPRestCategory) => cat.slug === slug) || null
+      );
+    }
   } catch (error) {
     console.error('Error fetching category by slug:', error);
     return null;
@@ -218,11 +336,16 @@ export async function fetchCategoryBySlug(slug: string): Promise<WPRestCategory 
 }
 
 /**
- * Fetch tags
+ * Fetch tags with caching
  */
 export async function fetchTags(): Promise<WPRestTag[]> {
   try {
-    return await restAPIClient.getTags();
+    if (cacheManager) {
+      return await cacheManager.getCachedTags();
+    } else {
+      // Fallback to direct API call
+      return await restAPIClient.getTags();
+    }
   } catch (error) {
     console.error('Error fetching tags:', error);
     return [];
@@ -234,8 +357,14 @@ export async function fetchTags(): Promise<WPRestTag[]> {
  */
 export async function fetchTagBySlug(slug: string): Promise<WPRestTag | null> {
   try {
-    const tags = await restAPIClient.getTags();
-    return tags.find(tag => tag.slug === slug) || null;
+    if (cacheManager) {
+      const tags = await cacheManager.getCachedTags();
+      return tags.find((tag: WPRestTag) => tag.slug === slug) || null;
+    } else {
+      // Fallback to direct API call
+      const tags = await restAPIClient.getTags();
+      return tags.find((tag: WPRestTag) => tag.slug === slug) || null;
+    }
   } catch (error) {
     console.error('Error fetching tag by slug:', error);
     return null;
@@ -243,23 +372,46 @@ export async function fetchTagBySlug(slug: string): Promise<WPRestTag | null> {
 }
 
 /**
- * Fetch related posts
+ * Fetch related posts with caching
  */
-export async function fetchRelatedPosts(postId: number, limit: number = 3): Promise<BlogPost[]> {
+export async function fetchRelatedPosts(
+  postId: number,
+  limit: number = 3
+): Promise<BlogPost[]> {
   try {
+    // Try Lambda API first for better performance and advanced recommendations
+    const lambdaResult = await lambdaAPIClient.getRecommendations(
+      postId,
+      limit
+    );
+
+    if (lambdaResult.recommendations.length > 0) {
+      // Log successful Lambda API usage for monitoring
+      console.warn(
+        `Lambda API recommendations found: ${lambdaResult.recommendations.length} posts`
+      );
+      return lambdaResult.recommendations;
+    }
+
+    // Fallback to WordPress REST API if Lambda returns no results
+    console.warn(
+      'Lambda API returned no results, falling back to WordPress REST API'
+    );
     const relatedPosts = await restAPIClient.getRelatedPosts(postId, limit);
-    
-    return relatedPosts.map((post: WPRestPost) => {
-      try {
-        const transformed = transformWPRestPost(post);
-        return blogPostSchema.parse(transformed);
-      } catch (error) {
-        if (error instanceof z.ZodError) {
-          console.error('Related post validation error:', error.issues);
+
+    return relatedPosts
+      .map((post: WPRestPost) => {
+        try {
+          const transformed = transformWPRestPost(post);
+          return blogPostSchema.parse(transformed);
+        } catch (error) {
+          if (error instanceof z.ZodError) {
+            console.error('Related post validation error:', error.issues);
+          }
+          return null;
         }
-        return null;
-      }
-    }).filter(Boolean) as BlogPost[];
+      })
+      .filter(Boolean) as BlogPost[];
   } catch (error) {
     console.error('Error fetching related posts:', error);
     return [];
@@ -267,12 +419,79 @@ export async function fetchRelatedPosts(postId: number, limit: number = 3): Prom
 }
 
 /**
- * Search posts
+ * Get recommendations with metadata using Lambda API
+ * Returns enhanced information about the recommendation process
  */
-export async function searchPosts(query: string, params: {
-  page?: number;
-  per_page?: number;
-} = {}): Promise<{
+export async function fetchRecommendationsWithMetadata(
+  postId: number,
+  limit: number = 3
+): Promise<{
+  recommendations: BlogPost[];
+  total: number;
+  metadata?: {
+    sourcePostId: number;
+    categoriesFound: number;
+    tagsFound: number;
+    totalPostsProcessed: number;
+    uniquePostsFound: number;
+  };
+  source: 'lambda' | 'wordpress';
+}> {
+  try {
+    // Try Lambda API first
+    const lambdaResult = await lambdaAPIClient.getRecommendations(
+      postId,
+      limit
+    );
+
+    if (lambdaResult.recommendations.length > 0) {
+      return {
+        ...lambdaResult,
+        source: 'lambda' as const,
+      };
+    }
+
+    // Fallback to WordPress REST API
+    const relatedPosts = await restAPIClient.getRelatedPosts(postId, limit);
+    const transformedPosts = relatedPosts
+      .map((post: WPRestPost) => {
+        try {
+          const transformed = transformWPRestPost(post);
+          return blogPostSchema.parse(transformed);
+        } catch (error) {
+          if (error instanceof z.ZodError) {
+            console.error('Related post validation error:', error.issues);
+          }
+          return null;
+        }
+      })
+      .filter(Boolean) as BlogPost[];
+
+    return {
+      recommendations: transformedPosts,
+      total: transformedPosts.length,
+      source: 'wordpress' as const,
+    };
+  } catch (error) {
+    console.error('Error fetching recommendations with metadata:', error);
+    return {
+      recommendations: [],
+      total: 0,
+      source: 'wordpress' as const,
+    };
+  }
+}
+
+/**
+ * Search posts with caching
+ */
+export async function searchPosts(
+  query: string,
+  params: {
+    page?: number;
+    per_page?: number;
+  } = {}
+): Promise<{
   posts: BlogPost[];
   totalPages: number;
   totalPosts: number;
@@ -281,33 +500,51 @@ export async function searchPosts(query: string, params: {
     const result = await restAPIClient.searchPosts(query, {
       page: params.page,
       per_page: params.per_page || 12,
-      subtype: 'post'
+      subtype: 'post',
     });
 
     // Transform and validate posts
-    const validatedPosts = result.posts.map((post: WPRestPost) => {
-      try {
-        const transformed = transformWPRestPost(post);
-        return blogPostSchema.parse(transformed);
-      } catch (error) {
-        if (error instanceof z.ZodError) {
-          console.error('Search post validation error:', error.issues);
+    const validatedPosts = result.results
+      .map((result: WPRestSearchResult) => {
+        try {
+          // Convert search result to blog post format
+          const post: BlogPost = {
+            id: result.id,
+            title: { rendered: result.title },
+            slug: result.url.split('/').pop() || '',
+            excerpt: { rendered: result.title, protected: false },
+            content: { rendered: result.title },
+            date: new Date().toISOString(),
+            modified: new Date().toISOString(),
+            author: 0,
+            featured_media: 0,
+            status: 'publish',
+            _embedded: undefined,
+          };
+          return post;
+        } catch (error) {
+          if (error instanceof z.ZodError) {
+            console.error(
+              'Search post validation error:',
+              (error as z.ZodError).issues
+            );
+          }
+          return null;
         }
-        return null;
-      }
-    }).filter(Boolean) as BlogPost[];
+      })
+      .filter(Boolean) as BlogPost[];
 
     return {
       posts: validatedPosts,
       totalPages: result.totalPages,
-      totalPosts: result.totalPosts
+      totalPosts: result.total,
     };
   } catch (error) {
     console.error('Error searching posts:', error);
     return {
       posts: [],
       totalPages: 0,
-      totalPosts: 0
+      totalPosts: 0,
     };
   }
 }
@@ -317,14 +554,14 @@ export async function searchPosts(query: string, params: {
  */
 export function decodeHtmlEntities(text: string): string {
   if (!text || typeof text !== 'string') return '';
-  
+
   // Check if we're in a browser environment
   if (typeof document !== 'undefined') {
     const textarea = document.createElement('textarea');
     textarea.innerHTML = text;
     return textarea.value;
   }
-  
+
   // Server-side fallback: basic HTML entity decoding
   return text
     .replace(/&amp;/g, '&')
@@ -345,39 +582,38 @@ export function decodeHtmlEntities(text: string): string {
  * Safely process WordPress excerpt data
  * Handles both string and object formats from WordPress REST API
  */
-export function processExcerpt(excerpt: any, maxLength: number = 150): string {
+export function processExcerpt(
+  excerpt: unknown,
+  maxLength: number = 150
+): string {
   if (!excerpt) return '';
-  
+
   let excerptText = '';
-  
+
   try {
-    // Debug logging
-    console.log('processExcerpt input:', { excerpt, type: typeof excerpt, isObject: typeof excerpt === 'object' });
-    
     // Handle WordPress REST API excerpt object format
-    if (typeof excerpt === 'object' && excerpt !== null && 'rendered' in excerpt) {
-      excerptText = excerpt.rendered || '';
-      console.log('processExcerpt: extracted from object.rendered:', excerptText);
+    if (
+      typeof excerpt === 'object' &&
+      excerpt !== null &&
+      'rendered' in excerpt
+    ) {
+      excerptText = (excerpt as { rendered: string }).rendered || '';
     } else if (typeof excerpt === 'string') {
       excerptText = excerpt;
-      console.log('processExcerpt: using string directly:', excerptText);
     } else {
       excerptText = String(excerpt || '');
-      console.log('processExcerpt: converted to string:', excerptText);
     }
-    
+
     // Ensure excerptText is a string
     if (typeof excerptText !== 'string') {
-      console.warn('processExcerpt: excerptText is not a string, converting:', typeof excerptText, excerptText);
       excerptText = String(excerptText || '');
     }
-    
+
     // Additional safety check: ensure we have a valid string before processing
     if (!excerptText || typeof excerptText !== 'string') {
-      console.warn('processExcerpt: invalid excerptText after conversion, returning empty string');
       return '';
     }
-    
+
     // Clean HTML tags and decode entities
     let cleanExcerpt = '';
     try {
@@ -388,23 +624,27 @@ export function processExcerpt(excerpt: any, maxLength: number = 150): string {
       console.error('processExcerpt: error cleaning excerpt:', cleanError);
       cleanExcerpt = String(excerptText || '').trim();
     }
-    
+
     // Final safety check before calling substring
     if (!cleanExcerpt || typeof cleanExcerpt !== 'string') {
-      console.warn('processExcerpt: cleanExcerpt is not a valid string:', typeof cleanExcerpt, cleanExcerpt);
       return '';
     }
-    
+
     // Truncate if needed
     if (cleanExcerpt.length > maxLength) {
       try {
         return `${cleanExcerpt.substring(0, maxLength)}...`;
       } catch (substringError) {
-        console.error('processExcerpt: error calling substring:', substringError, 'cleanExcerpt:', cleanExcerpt);
+        console.error(
+          'processExcerpt: error calling substring:',
+          substringError,
+          'cleanExcerpt:',
+          cleanExcerpt
+        );
         return `${cleanExcerpt.slice(0, maxLength)}...`; // Fallback to slice
       }
     }
-    
+
     return cleanExcerpt;
   } catch (error) {
     console.error('Error processing excerpt:', error, 'excerpt:', excerpt);
@@ -413,27 +653,92 @@ export function processExcerpt(excerpt: any, maxLength: number = 150): string {
 }
 
 /**
- * Get featured image URL from post
+ * Fetch media data by ID when embedded data is missing
  */
-export function getFeaturedImageUrl(post: BlogPost): string | null {
-  if (!post._embedded?.['wp:featuredmedia']?.[0]) {
+export async function fetchMediaById(mediaId: number): Promise<{
+  source_url: string;
+  alt_text: string;
+} | null> {
+  try {
+    const wpRestUrl =
+      env.NEXT_PUBLIC_WORDPRESS_REST_URL || 'https://api.cowboykimono.com';
+    const response = await fetch(`${wpRestUrl}/wp-json/wp/v2/media/${mediaId}`);
+
+    if (!response.ok) {
+      console.warn(`Failed to fetch media ${mediaId}: ${response.status}`);
+      return null;
+    }
+
+    const media = await response.json();
+    return {
+      source_url: media.source_url,
+      alt_text: media.alt_text || '',
+    };
+  } catch (error) {
+    console.error(`Error fetching media ${mediaId}:`, error);
     return null;
   }
-
-  const media = post._embedded['wp:featuredmedia'][0];
-  return media.source_url || null;
 }
 
 /**
- * Get featured image alt text from post
+ * Get featured image URL from post with enhanced fallback and debugging
+ */
+export function getFeaturedImageUrl(post: BlogPost): string | null {
+  if (!post) {
+    console.warn('getFeaturedImageUrl - No post provided');
+    return null;
+  }
+
+  // Check if post has embedded featured media
+  if (post._embedded?.['wp:featuredmedia']?.[0]) {
+    const media = post._embedded['wp:featuredmedia'][0];
+    if (media.source_url) {
+      return media.source_url;
+    }
+  }
+
+  // If no embedded data but post has featured_media ID, return null
+  // The WordPressImage component will handle fetching the media data
+  if (post.featured_media && post.featured_media > 0) {
+    console.warn(
+      'getFeaturedImageUrl - No embedded data, but featured_media ID exists:',
+      {
+        postId: post.id,
+        postTitle: post.title?.rendered,
+        featuredMediaId: post.featured_media,
+      }
+    );
+    return null;
+  }
+
+  // Enhanced debugging for missing featured images
+  console.warn('getFeaturedImageUrl - No featured image found for post:', {
+    postId: post.id,
+    postTitle: post.title?.rendered,
+    featuredMediaId: post.featured_media,
+    hasEmbedded: !!post._embedded,
+    embeddedKeys: post._embedded ? Object.keys(post._embedded) : [],
+    hasFeaturedMedia: !!post._embedded?.['wp:featuredmedia'],
+    featuredMediaLength: post._embedded?.['wp:featuredmedia']?.length || 0,
+  });
+
+  return null;
+}
+
+/**
+ * Get featured image alt text from post with enhanced fallback
  */
 export function getFeaturedImageAlt(post: BlogPost): string {
+  if (!post) {
+    return '';
+  }
+
   if (!post._embedded?.['wp:featuredmedia']?.[0]) {
     return '';
   }
 
   const media = post._embedded['wp:featuredmedia'][0];
-  return media.alt_text || '';
+  return media.alt_text || post.title?.rendered || '';
 }
 
 /**
@@ -449,18 +754,20 @@ export function getPostCategories(post: BlogPost): Array<{
   }
 
   const terms = post._embedded['wp:term'];
-  const categories = terms.find((termArray: any[]) => 
-    termArray.length > 0 && termArray[0].taxonomy === 'category'
+  const categories = terms.find(
+    (termArray: Record<string, unknown>[]) =>
+      termArray.length > 0 &&
+      (termArray[0] as Record<string, unknown>).taxonomy === 'category'
   );
 
   if (!categories) {
     return [];
   }
 
-  return categories.map((cat: any) => ({
-    id: cat.id,
-    name: cat.name,
-    slug: cat.slug
+  return categories.map((cat: Record<string, unknown>) => ({
+    id: cat.id as number,
+    name: cat.name as string,
+    slug: cat.slug as string,
   }));
 }
 
@@ -477,18 +784,20 @@ export function getPostTags(post: BlogPost): Array<{
   }
 
   const terms = post._embedded['wp:term'];
-  const tags = terms.find((termArray: any[]) => 
-    termArray.length > 0 && termArray[0].taxonomy === 'post_tag'
+  const tags = terms.find(
+    (termArray: Record<string, unknown>[]) =>
+      termArray.length > 0 &&
+      (termArray[0] as Record<string, unknown>).taxonomy === 'post_tag'
   );
 
   if (!tags) {
     return [];
   }
 
-  return tags.map((tag: any) => ({
-    id: tag.id,
-    name: tag.name,
-    slug: tag.slug
+  return tags.map((tag: Record<string, unknown>) => ({
+    id: tag.id as number,
+    name: tag.name as string,
+    slug: tag.slug as string,
   }));
 }
 
@@ -510,7 +819,8 @@ export function getPostAuthor(post: BlogPost): {
     id: author.id,
     name: author.name,
     slug: author.slug,
-    avatar: author.avatar_urls?.['96'] || author.avatar_urls?.['48'] || undefined
+    avatar:
+      author.avatar_urls?.['96'] || author.avatar_urls?.['48'] || undefined,
   };
 }
 
@@ -526,4 +836,31 @@ export function getWordPressAdminUrl(): string {
  */
 export function getApiConfig() {
   return API_CONFIG;
-} 
+}
+
+/**
+ * Cache management functions
+ */
+export function invalidatePostCache(slug: string): void {
+  if (cacheManager) {
+    cacheManager.clearPost(slug);
+  }
+}
+
+export function invalidateAllCache(): void {
+  if (cacheManager) {
+    cacheManager.clear();
+  }
+}
+
+export function getCacheStats() {
+  return (
+    cacheManager?.getStats() || { hitCount: 0, missCount: 0, evictionCount: 0 }
+  );
+}
+
+export async function warmCache(): Promise<void> {
+  if (cacheManager) {
+    await cacheManager.warmCache();
+  }
+}

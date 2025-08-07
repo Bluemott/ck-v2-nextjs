@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useEffect } from 'react';
 import Image from 'next/image';
+import { useEffect, useState } from 'react';
 
 interface EtsyProduct {
   title: string;
@@ -26,55 +26,23 @@ const ShopClient = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Replace 'YourShopName' with the actual Etsy shop name
-  const ETSY_SHOP_NAME = 'CowboyKimono'; // Update this with your actual shop name
-  const RSS_URL = `https://www.etsy.com/shop/${ETSY_SHOP_NAME}/rss`;
-
   useEffect(() => {
     const fetchProducts = async () => {
       try {
-        // We'll use a CORS proxy since Etsy RSS doesn't allow direct browser access
-        const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(RSS_URL)}`;
-        const response = await fetch(proxyUrl);
-        
+        // Use our server-side API route instead of CORS proxy
+        const response = await fetch('/api/shop/etsy');
+
         if (!response.ok) {
           throw new Error('Failed to fetch products');
         }
 
-        const rssText = await response.text();
-        const parser = new DOMParser();
-        const xmlDoc = parser.parseFromString(rssText, 'text/xml');
-        
-        const items = xmlDoc.querySelectorAll('item');
-        const parsedProducts: EtsyProduct[] = [];
+        const data = await response.json();
 
-        items.forEach((item) => {
-          const title = item.querySelector('title')?.textContent || '';
-          const link = item.querySelector('link')?.textContent || '';
-          const description = item.querySelector('description')?.textContent || '';
-          const pubDate = item.querySelector('pubDate')?.textContent || '';
-          const guid = item.querySelector('guid')?.textContent || '';
-          
-          // Extract image from description (Etsy includes images in CDATA)
-          const imageMatch = description.match(/<img[^>]+src="([^"]+)"/);
-          const image = imageMatch ? imageMatch[1] : '';
-          
-          // Extract price from title (usually in format "Title - $XX.XX")
-          const priceMatch = title.match(/\$[\d,]+\.?\d*/);
-          const price = priceMatch ? priceMatch[0] : '';
+        if (!data.success) {
+          throw new Error(data.message || 'Failed to load products');
+        }
 
-          parsedProducts.push({
-            title: title.replace(/\s*-\s*\$[\d,]+\.?\d*/, ''), // Remove price from title
-            link,
-            description: description.replace(/<[^>]*>/g, ''), // Strip HTML
-            pubDate,
-            guid,
-            image,
-            price
-          });
-        });
-
-        setProducts(parsedProducts);
+        setProducts(data.products);
       } catch (err) {
         setError('Failed to load products. Please try again later.');
         // Only log in development
@@ -87,14 +55,14 @@ const ShopClient = () => {
     };
 
     fetchProducts();
-  }, [RSS_URL]);
+  }, []);
 
   const formatDate = (dateString: string) => {
     try {
       return new Date(dateString).toLocaleDateString('en-US', {
         year: 'numeric',
         month: 'short',
-        day: 'numeric'
+        day: 'numeric',
       });
     } catch {
       return '';
@@ -117,8 +85,8 @@ const ShopClient = () => {
       <div className="min-h-screen bg-[#f0f8ff] flex items-center justify-center">
         <div className="text-center">
           <p className="text-red-600 mb-4">{error}</p>
-          <button 
-            onClick={() => window.location.reload()} 
+          <button
+            onClick={() => window.location.reload()}
             className="bg-[#1e2939] text-white px-4 py-2 rounded hover:bg-[#2a3441] transition-colors"
           >
             Try Again
@@ -157,7 +125,10 @@ const ShopClient = () => {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {products.map((product, index) => (
-              <div key={product.guid || index} className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
+              <div
+                key={product.guid || index}
+                className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1"
+              >
                 {/* Product Image */}
                 {product.image && (
                   <div className="relative h-64 w-full overflow-hidden">
@@ -170,34 +141,37 @@ const ShopClient = () => {
                     />
                   </div>
                 )}
-                
+
                 {/* Product Info */}
                 <div className="p-6">
                   <h2 className="text-xl font-semibold mb-3 text-gray-900 line-clamp-2 leading-tight serif">
                     {decodeHTMLEntities(product.title)}
                   </h2>
-                  
+
                   {product.price && (
                     <p className="text-2xl font-bold text-green-600 mb-3 text-center">
                       {product.price}
                     </p>
                   )}
-                  
+
                   <p className="text-gray-600 mb-4 line-clamp-3 text-sm leading-relaxed">
-                    {product.description && typeof product.description === 'string' 
+                    {product.description &&
+                    typeof product.description === 'string'
                       ? `${decodeHTMLEntities(product.description.substring(0, 150))}...`
-                      : product.description && typeof product.description === 'object' && product.description.rendered
-                      ? `${decodeHTMLEntities(String(product.description.rendered).substring(0, 150))}...`
-                      : ''
-                    }
+                      : product.description &&
+                          typeof product.description === 'object' &&
+                          (product.description as { rendered?: string })
+                            .rendered
+                        ? `${decodeHTMLEntities(String((product.description as { rendered?: string }).rendered).substring(0, 150))}...`
+                        : ''}
                   </p>
-                  
+
                   <div className="flex justify-between items-center">
                     <span className="text-xs text-gray-500">
                       {formatDate(product.pubDate)}
                     </span>
-                    
-                    <a 
+
+                    <a
                       href={product.link}
                       target="_blank"
                       rel="noopener noreferrer"
@@ -216,7 +190,7 @@ const ShopClient = () => {
         {/* Etsy Shop Link */}
         <div className="text-center mt-12">
           <a
-            href={`https://www.etsy.com/shop/${ETSY_SHOP_NAME}`}
+            href="https://www.etsy.com/shop/CowboyKimono"
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex items-center bg-[#1e2939] text-white px-6 py-3 rounded-lg hover:bg-[#2a3441] transition-colors font-medium text-lg"

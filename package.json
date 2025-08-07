@@ -7,42 +7,79 @@
     "npm": ">=8.0.0"
   },
   "scripts": {
-    "dev": "next dev --turbopack",
+    "dev": "next dev --turbo",
+    "dev:webpack": "next dev",
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
     "lint:fix": "next lint --fix",
-    "type-check": "tsc --noEmit --skipLibCheck",
-    "deploy:infrastructure": "cd infrastructure && cdk deploy",
-    "deploy:monitoring": "cd infrastructure && cdk deploy WordPressMonitoringStack"
+    "lint:strict": "next lint --max-warnings 0",
+    "type-check": "tsc --noEmit",
+    "type-check:watch": "tsc --noEmit --watch",
+    "validate": "npm run type-check && npm run lint:strict",
+    "validate:fix": "npm run type-check && npm run lint:fix",
+    "pre-build": "npm run validate && npm run test:basic",
+    "test:basic": "echo 'Running basic tests...' && npm run health-check",
+    "test:redis-cache": "node scripts/test-redis-cache.js",
+    "test:redis-simple": "node scripts/test-redis-cache-simple.js",
+    "test:bundle-optimization": "npm run build && node scripts/test-bundle-optimization.js",
+    "validate:comprehensive": "node scripts/validate-code.js",
+    "validate:watch": "node scripts/watch-validation.js",
+    "health-check": "node scripts/health-check.js",
+    "performance-check": "node scripts/performance-check.js",
+    "test:web-vitals": "node scripts/test-core-web-vitals.js",
+    "test:image-optimization": "node scripts/test-image-optimization.js",
+    "test:rss-feed": "node scripts/test-rss-feed.js",
+    "test:enhanced-lambda": "node scripts/test-enhanced-lambda.js",
+    "test:enhanced-cloudfront": "node scripts/test-enhanced-cloudfront.js",
+    "test:sitemap": "node scripts/test-sitemap.js",
+    "test:structured-data": "node scripts/test-structured-data.js",
+    "verify:amplify-redirects": "node scripts/verify-amplify-redirects.js",
+    "deploy:infrastructure": "cd infrastructure && npm run deploy",
+    "build:workspaces": "npm run build --workspaces",
+    "prepare": "husky"
   },
   "dependencies": {
+    "@aws-sdk/client-cloudfront": "^3.858.0",
     "@aws-sdk/client-cloudwatch": "^3.858.0",
     "@aws-sdk/client-cloudwatch-logs": "^3.858.0",
-    "@aws-sdk/client-cloudfront": "^3.858.0",
     "@aws-sdk/client-lambda": "^3.857.0",
     "@aws-sdk/client-s3": "^3.858.0",
     "@aws-sdk/client-secrets-manager": "^3.857.0",
     "@aws-sdk/client-xray": "^3.858.0",
     "@tailwindcss/typography": "^0.5.16",
+    "@types/xmldom": "^0.1.34",
     "autoprefixer": "^10.4.20",
+    "aws-sdk": "^2.1692.0",
+    "critters": "^0.0.23",
+    "isomorphic-dompurify": "^2.26.0",
+    "lru-cache": "^11.1.0",
     "next": "15.3.4",
     "pg": "^8.16.3",
     "postcss": "^8.4.49",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
+    "redis": "^4.7.1",
     "tailwindcss": "^3.4.17",
     "uuid": "^9.0.1",
+    "xmldom": "^0.6.0",
     "zod": "^4.0.14"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
+    "@types/aws-lambda": "^8.10.152",
     "@types/node": "^20",
+    "@types/pg": "^8.15.5",
     "@types/react": "19.1.9",
     "@types/react-dom": "^19",
     "@types/uuid": "^9.0.8",
+    "chokidar": "^4.0.3",
     "eslint": "^9",
     "eslint-config-next": "15.3.4",
+    "husky": "^9.1.7",
+    "lint-staged": "^16.1.4",
+    "prettier": "^3.6.2",
+    "terser": "^5.43.1",
     "typescript": "^5"
   },
   "workspaces": [
@@ -50,5 +87,18 @@
   ],
   "overrides": {
     "semver": "^7.7.1"
+  },
+  "lint-staged": {
+    "*.{ts,tsx}": [
+      "eslint --max-warnings 0",
+      "prettier --write"
+    ],
+    "*.{js,jsx}": [
+      "eslint --max-warnings 0",
+      "prettier --write"
+    ],
+    "*.{json,md}": [
+      "prettier --write"
+    ]
   }
 }

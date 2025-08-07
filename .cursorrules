@@ -1,5 +1,31 @@
 # Cursor AI Rules for Cowboy Kimono v2 - AWS Integration
 
+## 📚 Documentation-First Approach
+
+### CRITICAL: Always Reference Documentation
+- **ALWAYS** read and reference `DOCUMENTATION.md` for any questions about this project
+- **ALWAYS** check `README.md` for quick reference information
+- **NEVER** make assumptions about architecture, patterns, or implementation without consulting documentation
+- **ALWAYS** update documentation when making significant changes to the codebase
+
+### Documentation Maintenance Rules
+- Keep `DOCUMENTATION.md` as the single source of truth for all project information
+- Update documentation immediately when:
+  - Adding new features or components
+  - Changing architecture or patterns
+  - Modifying AWS infrastructure
+  - Updating dependencies or configurations
+  - Fixing bugs that reveal new patterns
+- Ensure all code examples in documentation match current implementation
+- Remove outdated information and replace with current practices
+- Maintain version numbers and last updated dates
+
+### Documentation Structure Requirements
+- `DOCUMENTATION.md` - Comprehensive project documentation (single source of truth)
+- `README.md` - Quick reference and project overview
+- Keep root directory clean of unnecessary documentation files
+- All detailed information belongs in `DOCUMENTATION.md`
+
 ## Project Context
 This is a Next.js 15.3.4 TypeScript project with AWS serverless architecture:
 - WordPress REST API integration (migrated FROM GraphQL - no GraphQL code remains)
@@ -10,9 +36,9 @@ This is a Next.js 15.3.4 TypeScript project with AWS serverless architecture:
 
 ## AWS Architecture
 - **Frontend**: Next.js on Amplify with CloudFront CDN
-- **Backend**: WordPress on EC2 (headless CMS via REST API)
+- **Backend**: WordPress on Lightsail (headless CMS via REST API)
 - **Serverless**: Lambda functions with API Gateway
-- **Database**: Aurora Serverless for enhanced features
+- **Database**: MySQL on Lightsail (WordPress database)
 - **Storage**: S3 for static assets, images optimized via CloudFront
 
 ## Key Migration Notes
@@ -30,3 +56,28 @@ This is a Next.js 15.3.4 TypeScript project with AWS serverless architecture:
 - CloudFront (CDN & image optimization)
 - Aurora Serverless (enhanced data features)
 - S3 (static asset storage)
+```
+
+## Documentation References
+- **Complete Documentation**: `DOCUMENTATION.md` - 904 lines of comprehensive project documentation
+- **Quick Reference**: `README.md` - 125 lines of essential information
+- **Architecture Details**: See System Architecture section in `DOCUMENTATION.md`
+- **API Documentation**: See Core Features & Implementation section in `DOCUMENTATION.md`
+- **AWS Infrastructure**: See AWS Infrastructure section in `DOCUMENTATION.md`
+- **Best Practices**: See Best Practices section in `DOCUMENTATION.md`
+- **Troubleshooting**: See Troubleshooting Guide section in `DOCUMENTATION.md`
+
+## Code Quality Standards
+- Follow patterns documented in `DOCUMENTATION.md`
+- Use TypeScript strict mode as configured
+- Follow ESLint rules as defined
+- Maintain consistent error handling patterns
+- Use proper logging and monitoring as documented
+- Follow security best practices outlined in documentation
+
+## When Making Changes
+1. **First**: Read relevant sections of `DOCUMENTATION.md`
+2. **During**: Follow patterns and best practices documented
+3. **After**: Update documentation if changes affect architecture, patterns, or implementation
+4. **Verify**: Ensure documentation examples match current code
+5. **Test**: Follow testing procedures documented in `DOCUMENTATION.md`

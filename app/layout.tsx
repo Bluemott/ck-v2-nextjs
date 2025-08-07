@@ -6,12 +6,15 @@ import Footer from './components/Footer';
 import FloatingSocialMedia from './components/FloatingSocialMedia';
 import GoogleTagManager from './components/GoogleTagManager';
 import GoogleAnalytics from './components/GoogleAnalytics';
-import { env, isDevelopment } from './lib/env';
+import RealUserMonitoring from './components/RealUserMonitoring';
+import { env } from './lib/env';
 
 const playfair = Playfair_Display({ 
   subsets: ['latin'],
   variable: '--font-playfair',
   display: 'swap',
+  preload: true,
+  fallback: ['serif'],
 });
 
 export const metadata: Metadata = {
@@ -27,7 +30,9 @@ export const metadata: Metadata = {
     'design inspiration',
     'DIY projects',
     'western lifestyle',
-    'fashion blog',
+    'artisan clothing',
+    'handmade kimonos',
+    'western robes',
     'craft blog'
   ],
   authors: [{ name: 'Cowboy Kimono' }],
@@ -55,6 +60,7 @@ export const metadata: Metadata = {
         width: 1200,
         height: 630,
         alt: 'Cowboy Kimono - Western Fashion & Handcraft Stories',
+        type: 'image/webp',
       },
     ],
   },
@@ -64,6 +70,7 @@ export const metadata: Metadata = {
     description: 'Discover western fashion, handcraft stories, and design inspiration from Cowboy Kimono.',
     images: [`${env.NEXT_PUBLIC_SITE_URL}/images/CK_Logo_Blog.webp`],
     creator: '@cowboykimono',
+    site: '@cowboykimono',
   },
   robots: {
     index: true,
@@ -77,7 +84,19 @@ export const metadata: Metadata = {
     },
   },
   verification: {
-    google: env.NEXT_PUBLIC_GOOGLE_VERIFICATION,
+    google: env.NEXT_PUBLIC_SITE_VERIFICATION,
+  },
+  category: 'fashion',
+  classification: 'business',
+  other: {
+    'theme-color': '#8B4513',
+    'color-scheme': 'light',
+    'apple-mobile-web-app-capable': 'yes',
+    'apple-mobile-web-app-status-bar-style': 'default',
+    'apple-mobile-web-app-title': 'Cowboy Kimono',
+    'application-name': 'Cowboy Kimono',
+    'msapplication-TileColor': '#8B4513',
+    'msapplication-config': '/browserconfig.xml',
   },
 };
 
@@ -86,52 +105,26 @@ export default function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const gtmId = env.NEXT_PUBLIC_GTM_ID || 'GTM-PNZTN4S4';
-
   return (
     <html lang="en" className={playfair.variable}>
       <head>
-        {/* Google Tag Manager */}
-        <GoogleTagManager gtmId={gtmId} />
-        
-        {/* Google Analytics */}
-        <GoogleAnalytics />
-        
-        {/* Google and Bing verification */}
-        {env.NEXT_PUBLIC_GOOGLE_VERIFICATION && (
-          <meta name="google-site-verification" content={env.NEXT_PUBLIC_GOOGLE_VERIFICATION} />
-        )}
-        
-        {/* Bing verification */}
-        <meta name="msvalidate.01" content="BING_VERIFICATION_CODE" />
-        
-        {/* Additional meta tags for better SEO */}
-        <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <meta name="theme-color" content="#8B4513" />
-        <meta name="apple-mobile-web-app-capable" content="yes" />
-        <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-        <meta name="apple-mobile-web-app-title" content="Cowboy Kimono" />
-        
         {/* Preconnect to external domains for performance */}
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link rel="preconnect" href="https://api.cowboykimono.com" />
         <link rel="preconnect" href="https://www.google-analytics.com" />
         <link rel="preconnect" href="https://www.googletagmanager.com" />
         
         {/* DNS prefetch for performance */}
         <link rel="dns-prefetch" href="//fonts.googleapis.com" />
+        <link rel="dns-prefetch" href="//api.cowboykimono.com" />
         <link rel="dns-prefetch" href="//www.google-analytics.com" />
-        <link rel="dns-prefetch" href="//www.googletagmanager.com" />
         
-        {/* Favicon and app icons */}
-        <link rel="icon" href="/favicon.ico" sizes="any" />
-        <link rel="icon" href="/favicon.ico" type="image/svg+xml" />
-        <link rel="apple-touch-icon" href="/favicon.ico" />
+        {/* Preload critical resources */}
+        <link rel="preload" href="/images/CK_Logo_Blog.webp" as="image" type="image/webp" />
+        <link rel="preload" href="/images/CK_Logo_Title-01.webp" as="image" type="image/webp" />
         
-        {/* Manifest for PWA */}
-        <link rel="manifest" href="/manifest.json" />
-        
-        {/* Structured data for organization */}
+        {/* Structured Data for Organization */}
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{
@@ -140,8 +133,8 @@ export default function RootLayout({
               "@type": "Organization",
               "name": "Cowboy Kimono",
               "url": env.NEXT_PUBLIC_SITE_URL,
-              "logo": `${env.NEXT_PUBLIC_SITE_URL}/images/CK_Logo_Blog.webp`,
-              "description": "Western fashion and handcraft stories",
+              "logo": `${env.NEXT_PUBLIC_SITE_URL}/images/CK_Logo_Title-01.webp`,
+              "description": "Discover western fashion, handcraft stories, and design inspiration from Cowboy Kimono.",
               "sameAs": [
                 "https://www.instagram.com/cowboykimono",
                 "https://www.facebook.com/cowboykimono",
@@ -150,40 +143,56 @@ export default function RootLayout({
               "contactPoint": {
                 "@type": "ContactPoint",
                 "contactType": "customer service",
-                "email": "hello@cowboykimono.com"
+                "availableLanguage": "English"
+              },
+              "address": {
+                "@type": "PostalAddress",
+                "addressCountry": "US"
+              }
+            })
+          }}
+        />
+        
+        {/* Structured Data for WebSite */}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "WebSite",
+              "name": "Cowboy Kimono",
+              "url": env.NEXT_PUBLIC_SITE_URL,
+              "description": "Discover western fashion, handcraft stories, and design inspiration from Cowboy Kimono.",
+              "potentialAction": {
+                "@type": "SearchAction",
+                "target": {
+                  "@type": "EntryPoint",
+                  "urlTemplate": `${env.NEXT_PUBLIC_SITE_URL}/api/search?q={search_term_string}`
+                },
+                "query-input": "required name=search_term_string"
               }
             })
           }}
         />
       </head>
-      <body className={playfair.className}>
-        {/* Google Tag Manager (noscript) */}
-        <noscript>
-          <iframe
-            src={`https://www.googletagmanager.com/ns.html?id=${gtmId}`}
-            height="0"
-            width="0"
-            style={{ display: 'none', visibility: 'hidden' }}
-          />
-        </noscript>
+      <body className={`${playfair.variable} font-serif antialiased`}>
+        <GoogleTagManager gtmId={env.NEXT_PUBLIC_GTM_ID || ''} />
+        <GoogleAnalytics />
+        <RealUserMonitoring enabled={process.env.NODE_ENV === 'production'} />
+        
+        {/* Skip to main content for accessibility */}
+        <a href="#main-content" className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 bg-blue-600 text-white px-4 py-2 rounded z-50">
+          Skip to main content
+        </a>
         
         <div className="min-h-screen flex flex-col">
           <Navbar />
-          <main className="flex-grow">
+          <main id="main-content" className="flex-grow">
             {children}
           </main>
           <Footer />
+          <FloatingSocialMedia />
         </div>
-        
-        {/* Floating Social Media */}
-        <FloatingSocialMedia />
-        
-        {/* Development mode indicator */}
-        {isDevelopment && (
-          <div className="fixed bottom-4 right-4 bg-yellow-500 text-black px-2 py-1 rounded text-xs font-bold z-50">
-            DEV MODE
-          </div>
-        )}
       </body>
     </html>
   );

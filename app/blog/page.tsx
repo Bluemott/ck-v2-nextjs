@@ -1,8 +1,6 @@
 import { Metadata } from 'next';
 import { generateSEOMetadata } from '../lib/seo';
 import BlogClient from './BlogClient';
-import StructuredData, { blogStructuredData } from '../components/StructuredData';
-import ErrorBoundary from '../components/ErrorBoundary';
 
 export const metadata: Metadata = generateSEOMetadata({
   title: "Blog",
@@ -12,14 +10,5 @@ export const metadata: Metadata = generateSEOMetadata({
 });
 
 export default function BlogPage() {
-  return (
-    <>
-      <StructuredData type="WebSite" data={blogStructuredData} />
-      <ErrorBoundary>
-        <div className="pt-16">
-          <BlogClient />
-        </div>
-      </ErrorBoundary>
-    </>
-  );
+  return <BlogClient />;
 }

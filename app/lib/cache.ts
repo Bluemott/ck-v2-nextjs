@@ -1,393 +1,720 @@
-import { monitoring } from './monitoring';
+// Conditional monitoring import to avoid client-side bundling issues
+let monitoring: typeof import('./monitoring').monitoring | null = null;
 
-// Cache interfaces
-export interface CacheConfig {
-  ttl: number; // Time to live in seconds
-  maxSize: number; // Maximum number of items
-  enableMonitoring: boolean;
+// Import types
+import type {
+  WPRestCategory,
+  WPRestPagination,
+  WPRestPost,
+  WPRestTag,
+} from './rest-api';
+
+// Only import monitoring on the server side
+if (typeof window === 'undefined') {
+  try {
+    // Dynamic import to avoid bundling issues
+    import('./monitoring')
+      .then((module) => {
+        monitoring = module.monitoring;
+      })
+      .catch(() => {
+        // Silently fail if monitoring is not available
+        console.warn('Monitoring not available in current environment');
+      });
+  } catch {
+    // Silently fail if monitoring is not available
+  }
 }
 
-export interface CacheItem<T> {
-  data: T;
-  timestamp: number;
-  ttl: number;
-  accessCount: number;
-  lastAccessed: number;
-}
+// Enhanced Cache Manager for WordPress API with Redis integration
+export class CacheManager {
+  private cache = new Map<
+    string,
+    { data: unknown; timestamp: number; ttl: number; accessCount: number }
+  >();
+  private maxSize = 2000; // Increased for better performance
+  private hitCount = 0;
+  private missCount = 0;
+  private evictionCount = 0;
+  private lastCleanup = Date.now();
+  private cleanupInterval = 5 * 60 * 1000; // 5 minutes
 
-// Memory cache implementation
-export class MemoryCache<T> {
-  private cache = new Map<string, CacheItem<T>>();
-  private config: CacheConfig;
-  private cleanupInterval: NodeJS.Timeout;
-
-  constructor(config: CacheConfig) {
-    this.config = config;
-    
-    // Cleanup expired items every 5 minutes
-    this.cleanupInterval = setInterval(() => {
-      this.cleanup();
-    }, 5 * 60 * 1000);
+  constructor() {
+    // Start periodic cleanup
+    if (typeof window === 'undefined') {
+      setInterval(() => this.cleanup(), this.cleanupInterval);
+    }
   }
 
-  async get(key: string): Promise<T | null> {
+  set(key: string, data: unknown, ttl: number = 300000): void {
+    // Implement LRU eviction with access count tracking
+    if (this.cache.size >= this.maxSize) {
+      this.evictLRU();
+    }
+
+    this.cache.set(key, {
+      data,
+      timestamp: Date.now(),
+      ttl,
+      accessCount: 0,
+    });
+  }
+
+  get(key: string): unknown | null {
     const item = this.cache.get(key);
-    
     if (!item) {
-      if (this.config.enableMonitoring) {
-        await monitoring.recordCacheMiss('memory');
-      }
+      this.missCount++;
       return null;
     }
 
-    // Check if item is expired
-    if (Date.now() - item.timestamp > item.ttl * 1000) {
+    const isExpired = Date.now() - item.timestamp > item.ttl;
+    if (isExpired) {
       this.cache.delete(key);
-      if (this.config.enableMonitoring) {
-        await monitoring.recordCacheMiss('memory');
-      }
+      this.missCount++;
       return null;
     }
 
-    // Update access statistics
+    // Update access count for LRU
     item.accessCount++;
-    item.lastAccessed = Date.now();
-
-    if (this.config.enableMonitoring) {
-      await monitoring.recordCacheHit('memory');
-    }
-
+    this.hitCount++;
     return item.data;
   }
 
-  async set(key: string, data: T, ttl?: number): Promise<void> {
-    // Remove oldest items if cache is full
-    if (this.cache.size >= this.config.maxSize) {
-      this.evictOldest();
-    }
-
-    const item: CacheItem<T> = {
-      data,
-      timestamp: Date.now(),
-      ttl: ttl || this.config.ttl,
-      accessCount: 0,
-      lastAccessed: Date.now(),
-    };
-
-    this.cache.set(key, item);
-  }
-
-  async delete(key: string): Promise<void> {
-    this.cache.delete(key);
-  }
-
-  async clear(): Promise<void> {
-    this.cache.clear();
-  }
-
-  async has(key: string): Promise<boolean> {
-    const item = this.cache.get(key);
-    if (!item) return false;
-    
-    // Check if item is expired
-    if (Date.now() - item.timestamp > item.ttl * 1000) {
-      this.cache.delete(key);
-      return false;
-    }
-    
-    return true;
-  }
-
-  async keys(): Promise<string[]> {
-    this.cleanup(); // Clean up before returning keys
-    return Array.from(this.cache.keys());
-  }
-
-  async size(): Promise<number> {
-    this.cleanup();
-    return this.cache.size;
-  }
-
-  private cleanup(): void {
-    const now = Date.now();
-    for (const [key, item] of this.cache.entries()) {
-      if (now - item.timestamp > item.ttl * 1000) {
-        this.cache.delete(key);
-      }
-    }
-  }
-
-  private evictOldest(): void {
-    let oldestKey: string | null = null;
-    let oldestTime = Date.now();
+  // Enhanced eviction strategy
+  private evictLRU(): void {
+    let oldestKey = null;
+    let oldestAccess = Infinity;
+    let oldestTime = Infinity;
 
     for (const [key, item] of this.cache.entries()) {
-      if (item.lastAccessed < oldestTime) {
-        oldestTime = item.lastAccessed;
+      const age = Date.now() - item.timestamp;
+      const accessScore = item.accessCount;
+
+      // Prioritize by access count, then by age
+      if (
+        accessScore < oldestAccess ||
+        (accessScore === oldestAccess && age > oldestTime)
+      ) {
         oldestKey = key;
+        oldestAccess = accessScore;
+        oldestTime = age;
       }
     }
 
     if (oldestKey) {
       this.cache.delete(oldestKey);
+      this.evictionCount++;
     }
   }
 
-  destroy(): void {
-    if (this.cleanupInterval) {
-      clearInterval(this.cleanupInterval);
-    }
-  }
-}
+  // Periodic cleanup of expired entries
+  private cleanup(): void {
+    const now = Date.now();
+    let cleanedCount = 0;
 
-// Redis-like cache implementation (for future use)
-export class RedisCache<T> {
-  private config: CacheConfig;
-
-  constructor(config: CacheConfig) {
-    this.config = config;
-  }
-
-  async get(_key: string): Promise<T | null> {
-    // This would integrate with Redis in production
-    // For now, return null to indicate cache miss
-    if (this.config.enableMonitoring) {
-      await monitoring.recordCacheMiss('redis');
-    }
-    return null;
-  }
-
-  async set(_key: string, _data: T, _ttl?: number): Promise<void> {
-    // This would integrate with Redis in production
-    if (this.config.enableMonitoring) {
-      await monitoring.recordCacheHit('redis');
-    }
-  }
-
-  async delete(_key: string): Promise<void> {
-    // This would integrate with Redis in production
-  }
-
-  async clear(): Promise<void> {
-    // This would integrate with Redis in production
-  }
-}
-
-// Cache manager for different types of data
-export class CacheManager {
-  private caches = new Map<string, MemoryCache<any>>();
-  private configs: Record<string, CacheConfig> = {
-    posts: {
-      ttl: 300, // 5 minutes
-      maxSize: 1000,
-      enableMonitoring: true,
-    },
-    categories: {
-      ttl: 3600, // 1 hour
-      maxSize: 100,
-      enableMonitoring: true,
-    },
-    tags: {
-      ttl: 3600, // 1 hour
-      maxSize: 500,
-      enableMonitoring: true,
-    },
-    media: {
-      ttl: 1800, // 30 minutes
-      maxSize: 2000,
-      enableMonitoring: true,
-    },
-    search: {
-      ttl: 600, // 10 minutes
-      maxSize: 500,
-      enableMonitoring: true,
-    },
-  };
-
-  getCache<T>(type: string): MemoryCache<T> {
-    if (!this.caches.has(type)) {
-      const config = this.configs[type] || {
-        ttl: 300,
-        maxSize: 100,
-        enableMonitoring: true,
-      };
-      
-      this.caches.set(type, new MemoryCache<T>(config));
-    }
-    
-    return this.caches.get(type)!;
-  }
-
-  async clearAll(): Promise<void> {
-    for (const cache of this.caches.values()) {
-      await cache.clear();
-    }
-  }
-
-  async getStats(): Promise<Record<string, number>> {
-    const stats: Record<string, number> = {};
-    
-    for (const [type, cache] of this.caches.entries()) {
-      stats[type] = await cache.size();
-    }
-    
-    return stats;
-  }
-}
-
-// Global cache manager instance
-export const cacheManager = new CacheManager();
-
-// Cache decorator for functions
-export function cached(type: string, keyGenerator?: (..._args: any[]) => string) {
-  return function (target: any, propertyKey: string, descriptor: PropertyDescriptor) {
-    const originalMethod = descriptor.value;
-    const cache = cacheManager.getCache(type);
-
-    descriptor.value = async function (...args: any[]) {
-      const key = keyGenerator ? keyGenerator(...args) : JSON.stringify(args);
-      
-      // Try to get from cache first
-      let result = await cache.get(key);
-      
-      if (result === null) {
-        // Cache miss, execute original method
-        result = await originalMethod.apply(this, args);
-        
-        // Store in cache
-        await cache.set(key, result);
+    for (const [key, item] of this.cache.entries()) {
+      if (now - item.timestamp > item.ttl) {
+        this.cache.delete(key);
+        cleanedCount++;
       }
-      
-      return result;
-    };
+    }
 
-    return descriptor;
-  };
-}
-
-// Cache utilities
-export class CacheUtils {
-  static generateKey(...parts: any[]): string {
-    return parts.map(part => 
-      typeof part === 'string' ? part : JSON.stringify(part)
-    ).join(':');
+    if (cleanedCount > 0) {
+      console.warn(`Cache cleanup: removed ${cleanedCount} expired entries`);
+    }
   }
 
-  static async withCache<T>(
-    type: string,
-    key: string,
-    operation: () => Promise<T>,
-    ttl?: number
-  ): Promise<T> {
-    const cache = cacheManager.getCache<T>(type);
-    
-    // Try to get from cache
-    let result = await cache.get(key);
-    
-    if (result === null) {
-      // Cache miss, execute operation
-      result = await operation();
-      
-      // Store in cache
-      await cache.set(key, result, ttl);
+  // WordPress-specific caching methods with enhanced performance
+  async getCachedPosts(params: Record<string, unknown>): Promise<{
+    posts: WPRestPost[];
+    pagination: WPRestPagination;
+  }> {
+    const cacheKey = `posts:${JSON.stringify(params)}`;
+    const cached = this.get(cacheKey);
+
+    if (cached) {
+      if (monitoring) {
+        await monitoring.recordCacheHit('wordpress_posts');
+      }
+      return cached as {
+        posts: WPRestPost[];
+        pagination: WPRestPagination;
+      };
     }
-    
+
+    // Import here to avoid circular dependencies
+    const { restAPIClient } = await import('./rest-api');
+    const result = await restAPIClient.getPosts(params);
+
+    // Cache with different TTL based on content type
+    const ttl = params.search ? 180000 : 300000; // 3 min for search, 5 min for regular
+    this.set(cacheKey, result, ttl);
+
+    if (monitoring) {
+      await monitoring.recordCacheMiss('wordpress_posts');
+    }
+
     return result;
   }
 
-  static async invalidateCache(type: string, pattern?: string): Promise<void> {
-    const cache = cacheManager.getCache(type);
-    
-    if (pattern) {
-      const keys = await cache.keys();
-      for (const key of keys) {
-        if (key.includes(pattern)) {
-          await cache.delete(key);
+  async getCachedPost(slug: string): Promise<WPRestPost | null> {
+    const cacheKey = `post:${slug}`;
+    const cached = this.get(cacheKey);
+
+    if (cached) {
+      if (monitoring) {
+        await monitoring.recordCacheHit('wordpress_post');
+      }
+      return cached as WPRestPost;
+    }
+
+    // Import here to avoid circular dependencies
+    const { restAPIClient } = await import('./rest-api');
+    const post = await restAPIClient.getPostBySlug(slug);
+
+    if (post) {
+      this.set(cacheKey, post, 900000); // 15 minutes cache for individual posts
+      if (monitoring) {
+        await monitoring.recordCacheMiss('wordpress_post');
+      }
+    }
+
+    return post;
+  }
+
+  async getCachedCategories(): Promise<WPRestCategory[]> {
+    const cacheKey = 'categories';
+    const cached = this.get(cacheKey);
+
+    if (cached) {
+      if (monitoring) {
+        await monitoring.recordCacheHit('wordpress_categories');
+      }
+      return cached as WPRestCategory[];
+    }
+
+    // Import here to avoid circular dependencies
+    const { restAPIClient } = await import('./rest-api');
+    const categories = await restAPIClient.getCategories();
+    this.set(cacheKey, categories, 1800000); // 30 minutes cache for categories
+    if (monitoring) {
+      await monitoring.recordCacheMiss('wordpress_categories');
+    }
+
+    return categories;
+  }
+
+  async getCachedTags(): Promise<WPRestTag[]> {
+    const cacheKey = 'tags';
+    const cached = this.get(cacheKey);
+
+    if (cached) {
+      if (monitoring) {
+        await monitoring.recordCacheHit('wordpress_tags');
+      }
+      return cached as WPRestTag[];
+    }
+
+    // Import here to avoid circular dependencies
+    const { restAPIClient } = await import('./rest-api');
+    const tags = await restAPIClient.getTags();
+    this.set(cacheKey, tags, 1800000); // 30 minutes cache for tags
+    if (monitoring) {
+      await monitoring.recordCacheMiss('wordpress_tags');
+    }
+
+    return tags;
+  }
+
+  // Enhanced cache statistics
+  getStats() {
+    const totalRequests = this.hitCount + this.missCount;
+    const hitRate =
+      totalRequests > 0 ? (this.hitCount / totalRequests) * 100 : 0;
+    const usagePercentage = (this.cache.size / this.maxSize) * 100;
+
+    return {
+      hitCount: this.hitCount,
+      missCount: this.missCount,
+      totalRequests,
+      hitRate: `${hitRate.toFixed(2)}%`,
+      cacheSize: this.cache.size,
+      maxSize: this.maxSize,
+      usagePercentage: `${usagePercentage.toFixed(2)}%`,
+      evictionCount: this.evictionCount,
+      lastCleanup: new Date(this.lastCleanup).toISOString(),
+      memoryUsage: this.getMemoryUsage(),
+    };
+  }
+
+  // Memory usage estimation
+  private getMemoryUsage(): string {
+    try {
+      if (typeof process !== 'undefined' && process.memoryUsage) {
+        const usage = process.memoryUsage();
+        return `${Math.round(usage.heapUsed / 1024 / 1024)}MB`;
+      }
+      return 'N/A';
+    } catch {
+      return 'N/A';
+    }
+  }
+
+  // Clear specific cache entries with pattern matching
+  clearPosts(): void {
+    const keysToDelete = Array.from(this.cache.keys()).filter((key) =>
+      key.startsWith('posts:')
+    );
+    keysToDelete.forEach((key) => this.cache.delete(key));
+  }
+
+  clearPost(slug: string): void {
+    this.cache.delete(`post:${slug}`);
+  }
+
+  clearCategories(): void {
+    this.cache.delete('categories');
+  }
+
+  clearTags(): void {
+    this.cache.delete('tags');
+  }
+
+  // Clear cache by pattern
+  clearByPattern(pattern: RegExp): void {
+    const keysToDelete = Array.from(this.cache.keys()).filter((key) =>
+      pattern.test(key)
+    );
+    keysToDelete.forEach((key) => this.cache.delete(key));
+  }
+
+  // Clear all cache
+  clear(): void {
+    this.cache.clear();
+    this.hitCount = 0;
+    this.missCount = 0;
+    this.evictionCount = 0;
+  }
+
+  // Cache warming for critical data with enhanced strategy
+  async warmCache(): Promise<void> {
+    try {
+      console.warn('Warming cache with enhanced strategy...');
+
+      // Warm categories and tags cache (high priority)
+      await Promise.all([this.getCachedCategories(), this.getCachedTags()]);
+
+      // Warm recent posts cache (medium priority)
+      await this.getCachedPosts({ per_page: 10, _embed: true });
+
+      // Warm featured posts if available
+      await this.getCachedPosts({
+        per_page: 5,
+        orderby: 'date',
+        order: 'desc',
+        _embed: true,
+      });
+
+      console.warn('Enhanced cache warming completed');
+    } catch (error) {
+      console.error('Cache warming failed:', error);
+    }
+  }
+
+  // Cache health check with enhanced metrics
+  async checkCacheHealth(): Promise<{
+    status: 'healthy' | 'warning' | 'error';
+    stats: Record<string, unknown>;
+    issues: string[];
+    recommendations: string[];
+  }> {
+    const stats = this.getStats();
+    const issues: string[] = [];
+    const recommendations: string[] = [];
+
+    // Check hit rate
+    const hitRate = parseFloat(stats.hitRate);
+    if (hitRate < 50) {
+      issues.push(`Low cache hit rate: ${stats.hitRate}`);
+      recommendations.push(
+        'Consider increasing cache TTL or implementing cache warming'
+      );
+    }
+
+    // Check cache size
+    const usagePercentage = parseFloat(stats.usagePercentage);
+    if (usagePercentage > 80) {
+      issues.push(`High cache usage: ${stats.usagePercentage}`);
+      recommendations.push(
+        'Consider increasing maxSize or implementing more aggressive eviction'
+      );
+    }
+
+    // Check eviction rate
+    if (stats.evictionCount > 100) {
+      issues.push(`High eviction count: ${stats.evictionCount}`);
+      recommendations.push(
+        'Consider increasing maxSize or optimizing cache keys'
+      );
+    }
+
+    // Check memory usage
+    if (stats.memoryUsage !== 'N/A') {
+      const memoryMB = parseInt(stats.memoryUsage.replace('MB', ''));
+      if (memoryMB > 100) {
+        issues.push(`High memory usage: ${stats.memoryUsage}`);
+        recommendations.push(
+          'Consider reducing cache size or implementing memory-based eviction'
+        );
+      }
+    }
+
+    let status: 'healthy' | 'warning' | 'error' = 'healthy';
+    if (issues.length > 0) {
+      status = issues.length > 2 ? 'error' : 'warning';
+    }
+
+    return {
+      status,
+      stats,
+      issues,
+      recommendations,
+    };
+  }
+}
+
+// Enhanced Cache Manager with Redis integration
+export class EnhancedCacheManager extends CacheManager {
+  private redisClient?: ReturnType<typeof import('redis').createClient>; // Redis client type
+
+  constructor() {
+    super();
+    // Only initialize Redis on server side
+    if (typeof window === 'undefined') {
+      this.initializeRedis();
+    }
+  }
+
+  private async initializeRedis() {
+    try {
+      const { createClient } = await import('redis');
+      this.redisClient = createClient({
+        url: process.env.REDIS_URL || 'redis://localhost:6379',
+      });
+      await this.redisClient.connect();
+      console.warn('Redis connected successfully');
+    } catch (error) {
+      console.warn('Redis not available, falling back to memory cache:', error);
+    }
+  }
+
+  async getWithRedis(key: string): Promise<unknown | null> {
+    // Try memory cache first
+    const memoryResult = this.get(key);
+    if (memoryResult) return memoryResult;
+
+    // Fall back to Redis
+    if (this.redisClient) {
+      try {
+        const redisResult = await this.redisClient.get(key);
+        if (redisResult) {
+          const parsed = JSON.parse(redisResult);
+          this.set(key, parsed); // Cache in memory
+          return parsed;
         }
+      } catch (error) {
+        console.error('Redis cache error:', error);
+      }
+    }
+
+    return null;
+  }
+
+  async setWithRedis(
+    key: string,
+    data: unknown,
+    ttl: number = 300000
+  ): Promise<void> {
+    // Set in memory cache
+    this.set(key, data, ttl);
+
+    // Set in Redis
+    if (this.redisClient) {
+      try {
+        await this.redisClient.setEx(
+          key,
+          Math.floor(ttl / 1000),
+          JSON.stringify(data)
+        );
+      } catch (error) {
+        console.error('Redis set error:', error);
+      }
+    }
+  }
+
+  // Enhanced WordPress-specific methods with Redis
+  async getCachedPostsWithRedis(params: Record<string, unknown>): Promise<{
+    posts: WPRestPost[];
+    pagination: WPRestPagination;
+  }> {
+    const cacheKey = `posts:${JSON.stringify(params)}`;
+    const cached = await this.getWithRedis(cacheKey);
+
+    if (cached) {
+      if (monitoring) {
+        await monitoring.recordCacheHit('wordpress_posts_redis');
+      }
+      return cached as {
+        posts: WPRestPost[];
+        pagination: WPRestPagination;
+      };
+    }
+
+    // Import here to avoid circular dependencies
+    const { restAPIClient } = await import('./rest-api');
+    const result = await restAPIClient.getPosts(params);
+
+    // Cache with different TTL based on content type
+    const ttl = params.search ? 180000 : 300000; // 3 min for search, 5 min for regular
+    await this.setWithRedis(cacheKey, result, ttl);
+
+    if (monitoring) {
+      await monitoring.recordCacheMiss('wordpress_posts_redis');
+    }
+
+    return result;
+  }
+
+  async getCachedPostWithRedis(slug: string): Promise<WPRestPost | null> {
+    const cacheKey = `post:${slug}`;
+    const cached = await this.getWithRedis(cacheKey);
+
+    if (cached) {
+      if (monitoring) {
+        await monitoring.recordCacheHit('wordpress_post_redis');
+      }
+      return cached as WPRestPost;
+    }
+
+    // Import here to avoid circular dependencies
+    const { restAPIClient } = await import('./rest-api');
+    const post = await restAPIClient.getPostBySlug(slug);
+
+    if (post) {
+      await this.setWithRedis(cacheKey, post, 900000); // 15 minutes cache for individual posts
+      if (monitoring) {
+        await monitoring.recordCacheMiss('wordpress_post_redis');
+      }
+    }
+
+    return post;
+  }
+
+  async getCachedCategoriesWithRedis(): Promise<WPRestCategory[]> {
+    const cacheKey = 'categories';
+    const cached = await this.getWithRedis(cacheKey);
+
+    if (cached) {
+      if (monitoring) {
+        await monitoring.recordCacheHit('wordpress_categories_redis');
+      }
+      return cached as WPRestCategory[];
+    }
+
+    // Import here to avoid circular dependencies
+    const { restAPIClient } = await import('./rest-api');
+    const categories = await restAPIClient.getCategories();
+    await this.setWithRedis(cacheKey, categories, 1800000); // 30 minutes cache for categories
+    if (monitoring) {
+      await monitoring.recordCacheMiss('wordpress_categories_redis');
+    }
+
+    return categories;
+  }
+
+  async getCachedTagsWithRedis(): Promise<WPRestTag[]> {
+    const cacheKey = 'tags';
+    const cached = await this.getWithRedis(cacheKey);
+
+    if (cached) {
+      if (monitoring) {
+        await monitoring.recordCacheHit('wordpress_tags_redis');
+      }
+      return cached as WPRestTag[];
+    }
+
+    // Import here to avoid circular dependencies
+    const { restAPIClient } = await import('./rest-api');
+    const tags = await restAPIClient.getTags();
+    await this.setWithRedis(cacheKey, tags, 1800000); // 30 minutes cache for tags
+    if (monitoring) {
+      await monitoring.recordCacheMiss('wordpress_tags_redis');
+    }
+
+    return tags;
+  }
+
+  // Enhanced cache warming with Redis
+  async warmCacheWithRedis(): Promise<void> {
+    try {
+      console.warn('Warming cache with Redis-enhanced strategy...');
+
+      // Warm categories and tags cache (high priority)
+      await Promise.all([
+        this.getCachedCategoriesWithRedis(),
+        this.getCachedTagsWithRedis(),
+      ]);
+
+      // Warm recent posts cache (medium priority)
+      await this.getCachedPostsWithRedis({ per_page: 10, _embed: true });
+
+      // Warm featured posts if available
+      await this.getCachedPostsWithRedis({
+        per_page: 5,
+        orderby: 'date',
+        order: 'desc',
+        _embed: true,
+      });
+
+      console.warn('Redis-enhanced cache warming completed');
+    } catch (error) {
+      console.error('Redis cache warming failed:', error);
+    }
+  }
+
+  // Enhanced cache health check with Redis metrics
+  async checkCacheHealthWithRedis(): Promise<{
+    status: 'healthy' | 'warning' | 'error';
+    stats: Record<string, unknown>;
+    issues: string[];
+    recommendations: string[];
+    redisStatus: 'connected' | 'disconnected' | 'error';
+  }> {
+    const baseHealth = await this.checkCacheHealth();
+    let redisStatus: 'connected' | 'disconnected' | 'error' = 'disconnected';
+
+    if (this.redisClient) {
+      try {
+        await this.redisClient.ping();
+        redisStatus = 'connected';
+      } catch {
+        redisStatus = 'error';
+        baseHealth.issues.push('Redis connection failed');
+        baseHealth.recommendations.push(
+          'Check Redis server status and connection settings'
+        );
       }
     } else {
-      await cache.clear();
+      baseHealth.issues.push('Redis client not initialized');
+      baseHealth.recommendations.push(
+        'Check Redis configuration and environment variables'
+      );
+    }
+
+    return {
+      ...baseHealth,
+      redisStatus,
+    };
+  }
+}
+
+// Export singleton instances
+export const cacheManager = new CacheManager();
+export const enhancedCache = new EnhancedCacheManager();
+
+// Enhanced cache middleware for API routes
+export function withCache<T>(
+  cacheKey: string,
+  ttl: number,
+  operation: () => Promise<T>,
+  _options: {
+    staleWhileRevalidate?: boolean;
+    staleTime?: number;
+  } = {}
+): Promise<T> {
+  const cached = cacheManager.get(cacheKey);
+  if (cached) {
+    return Promise.resolve(cached as T);
+  }
+
+  return operation().then((result) => {
+    cacheManager.set(cacheKey, result, ttl);
+    return result;
+  });
+}
+
+// Enhanced cache middleware with Redis
+export async function withRedisCache<T>(
+  cacheKey: string,
+  ttl: number,
+  operation: () => Promise<T>,
+  _options: {
+    staleWhileRevalidate?: boolean;
+    staleTime?: number;
+  } = {}
+): Promise<T> {
+  const cached = await enhancedCache.getWithRedis(cacheKey);
+  if (cached) {
+    return cached as T;
+  }
+
+  const result = await operation();
+  await enhancedCache.setWithRedis(cacheKey, result, ttl);
+  return result;
+}
+
+// Cache invalidation helpers with enhanced functionality
+export function invalidatePostCache(slug: string): void {
+  cacheManager.clearPost(slug);
+  cacheManager.clearPosts(); // Clear posts list cache as well
+}
+
+export function invalidateAllCache(): void {
+  cacheManager.clear();
+}
+
+export function invalidateCacheByPattern(pattern: RegExp): void {
+  cacheManager.clearByPattern(pattern);
+}
+
+// Enhanced cache invalidation with Redis
+export async function invalidateRedisCache(key: string): Promise<void> {
+  if (enhancedCache['redisClient']) {
+    try {
+      await enhancedCache['redisClient'].del(key);
+    } catch (error) {
+      console.error('Redis cache invalidation error:', error);
     }
   }
 }
 
-// WordPress-specific cache helpers
-export class WordPressCache {
-  static async getPosts(page: number = 1, perPage: number = 10): Promise<any> {
-    return CacheUtils.withCache(
-      'posts',
-      `posts:${page}:${perPage}`,
-      async () => {
-        // This would call your WordPress API
-        const response = await fetch(`${process.env.NEXT_PUBLIC_WORDPRESS_REST_URL}/wp/v2/posts?page=${page}&per_page=${perPage}`);
-        return response.json();
-      },
-      300 // 5 minutes TTL
-    );
-  }
-
-  static async getPost(slug: string): Promise<any> {
-    return CacheUtils.withCache(
-      'posts',
-      `post:${slug}`,
-      async () => {
-        const response = await fetch(`${process.env.NEXT_PUBLIC_WORDPRESS_REST_URL}/wp/v2/posts?slug=${slug}`);
-        const posts = await response.json();
-        return posts[0] || null;
-      },
-      600 // 10 minutes TTL
-    );
-  }
-
-  static async getCategories(): Promise<any> {
-    return CacheUtils.withCache(
-      'categories',
-      'categories:all',
-      async () => {
-        const response = await fetch(`${process.env.NEXT_PUBLIC_WORDPRESS_REST_URL}/wp/v2/categories`);
-        return response.json();
-      },
-      3600 // 1 hour TTL
-    );
-  }
-
-  static async getTags(): Promise<any> {
-    return CacheUtils.withCache(
-      'tags',
-      'tags:all',
-      async () => {
-        const response = await fetch(`${process.env.NEXT_PUBLIC_WORDPRESS_REST_URL}/wp/v2/tags`);
-        return response.json();
-      },
-      3600 // 1 hour TTL
-    );
-  }
-
-  static async searchPosts(query: string): Promise<any> {
-    return CacheUtils.withCache(
-      'search',
-      `search:${query}`,
-      async () => {
-        const response = await fetch(`${process.env.NEXT_PUBLIC_WORDPRESS_REST_URL}/wp/v2/posts?search=${encodeURIComponent(query)}`);
-        return response.json();
-      },
-      600 // 10 minutes TTL
-    );
-  }
-
-  static async invalidatePostCache(slug?: string): Promise<void> {
-    if (slug) {
-      await CacheUtils.invalidateCache('posts', `post:${slug}`);
-    } else {
-      await CacheUtils.invalidateCache('posts');
+export async function invalidateAllRedisCache(): Promise<void> {
+  if (enhancedCache['redisClient']) {
+    try {
+      await enhancedCache['redisClient'].flushAll();
+    } catch (error) {
+      console.error('Redis cache flush error:', error);
     }
   }
+}
 
-  static async invalidateCategoryCache(): Promise<void> {
-    await CacheUtils.invalidateCache('categories');
-  }
+// Cache health check with enhanced reporting
+export async function checkCacheHealth(): Promise<{
+  status: 'healthy' | 'warning' | 'error';
+  stats: Record<string, unknown>;
+  issues: string[];
+  recommendations: string[];
+}> {
+  return await cacheManager.checkCacheHealth();
+}
 
-  static async invalidateTagCache(): Promise<void> {
-    await CacheUtils.invalidateCache('tags');
-  }
-} 
+// Enhanced cache health check with Redis
+export async function checkCacheHealthWithRedis(): Promise<{
+  status: 'healthy' | 'warning' | 'error';
+  stats: Record<string, unknown>;
+  issues: string[];
+  recommendations: string[];
+  redisStatus: 'connected' | 'disconnected' | 'error';
+}> {
+  return await enhancedCache.checkCacheHealthWithRedis();
+}

@@ -89,20 +89,6 @@ export function getRedirectsForNextConfig(): RedirectEntry[] {
       ],
     },
 
-    // Fallback redirects for any non-www to www redirects (in case they exist)
-    {
-      source: '/:path*',
-      destination: 'https://cowboykimono.com/:path*',
-      permanent: true,
-      has: [
-        {
-          type: 'host',
-          key: 'host',
-          value: 'cowboykimono.com',
-        },
-      ],
-    },
-
     // Static redirects (from next.config.ts)
     {
       source: '/blog/how-to-create-a-hip-jackalope-display',

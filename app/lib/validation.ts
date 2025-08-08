@@ -441,8 +441,8 @@ export type S3Upload = z.infer<typeof s3UploadSchema>;
 // Validation helper functions with proper error handling
 // Helper function to format ZodError messages
 function formatZodError(error: z.ZodError): string {
-  return (error as any).errors
-    .map((e: any) => `${e.path.join('.')}: ${e.message}`)
+  return error.issues
+    .map((e: z.ZodIssue) => `${e.path.join('.')}: ${e.message}`)
     .join(', ');
 }
 

@@ -101,8 +101,10 @@ export async function middleware(request: NextRequest) {
       response.headers.set('Cache-Control', 'no-cache, no-store, must-revalidate');
     }
     
-    // Enhanced rate limiting for API routes
-    if (pathname.startsWith('/api/') && !pathname.startsWith('/api/health')) {
+    // Enhanced rate limiting for API routes (exclude analytics and health endpoints)
+    if (pathname.startsWith('/api/') && 
+        !pathname.startsWith('/api/health') && 
+        !pathname.startsWith('/api/analytics')) {
       const clientIP = request.headers.get('x-forwarded-for') || 
                        request.headers.get('x-real-ip') || 
                        'unknown';
@@ -185,6 +187,9 @@ export async function middleware(request: NextRequest) {
       response.headers.set('Content-Type', 'application/json');
       response.headers.set('X-API-Response', 'true');
       response.headers.set('Vary', 'Accept-Encoding');
+      
+      // Don't override CORS headers for API routes - let the route handlers manage them
+      // This prevents conflicts with CloudFront CORS headers
     }
     
     // Add performance monitoring headers

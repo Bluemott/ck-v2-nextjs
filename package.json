@@ -11,6 +11,7 @@
     "dev:webpack": "next dev",
     "build": "next build",
     "start": "next start",
+    "test": "npm run test:basic",
     "lint": "next lint",
     "lint:fix": "next lint --fix",
     "lint:strict": "next lint --max-warnings 0",

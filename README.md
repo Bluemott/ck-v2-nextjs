@@ -91,6 +91,7 @@ For comprehensive documentation covering:
 npm run dev                    # Start development server
 npm run build                  # Build for production
 npm run start                  # Start production server
+npm test                       # Runs basic validation test hook
 npm run lint                   # Run ESLint
 npm run lint:fix              # Fix ESLint errors
 npm run type-check            # Run TypeScript type checking

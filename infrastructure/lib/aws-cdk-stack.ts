@@ -97,6 +97,10 @@ export class WordPressBlogStack extends cdk.Stack {
           origin: new origins.HttpOrigin('api.cowboykimono.com', {
             protocolPolicy: cloudfront.OriginProtocolPolicy.HTTPS_ONLY,
             originShieldRegion: this.region,
+            customHeaders: {
+              'X-Forwarded-Host': 'api.cowboykimono.com',
+              'X-CloudFront-Origin': 'api',
+            },
           }),
           viewerProtocolPolicy:
             cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
@@ -113,7 +117,7 @@ export class WordPressBlogStack extends cdk.Stack {
                 contentSecurityPolicy: {
                   override: true,
                   contentSecurityPolicy:
-                    "default-src 'self'; script-src 'self' 'unsafe-inline' https://www.googletagmanager.com https://www.google-analytics.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https: blob:; media-src 'self' https:; connect-src 'self' https://api.cowboykimono.com https://www.google-analytics.com; frame-src 'self' https://www.googletagmanager.com; object-src 'none'; base-uri 'self'; form-action 'self';",
+                    "default-src 'self'; script-src 'self' 'unsafe-inline' https://www.googletagmanager.com https://www.google-analytics.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https: blob:; media-src 'self' https:; connect-src 'self' https://api.cowboykimono.com https://www.google-analytics.com https://*.execute-api.us-east-1.amazonaws.com; frame-src 'self' https://www.googletagmanager.com; object-src 'none'; base-uri 'self'; form-action 'self';",
                 },
                 strictTransportSecurity: {
                   override: true,
@@ -171,12 +175,17 @@ export class WordPressBlogStack extends cdk.Stack {
           cachedMethods: cloudfront.CachedMethods.CACHE_GET_HEAD,
         },
         additionalBehaviors: {
+          // API routes for Next.js API endpoints
           '/api/*': {
             origin: new origins.HttpOrigin(
               `${api.restApiId}.execute-api.${this.region}.amazonaws.com`,
               {
                 protocolPolicy: cloudfront.OriginProtocolPolicy.HTTPS_ONLY,
                 originPath: '/prod', // Add the API Gateway stage path
+                customHeaders: {
+                  'X-Forwarded-Host': 'cowboykimono.com',
+                  'X-CloudFront-Origin': 'amplify',
+                },
               }
             ),
             viewerProtocolPolicy:
@@ -185,13 +194,13 @@ export class WordPressBlogStack extends cdk.Stack {
             originRequestPolicy: cloudfront.OriginRequestPolicy.ALL_VIEWER,
             allowedMethods: cloudfront.AllowedMethods.ALLOW_ALL, // Allow POST methods
             cachedMethods: cloudfront.CachedMethods.CACHE_GET_HEAD,
-            // Add security headers for API routes
+            // Add CORS headers for API routes
             responseHeadersPolicy: new cloudfront.ResponseHeadersPolicy(
               this,
               'APISecurityHeaders',
               {
                 responseHeadersPolicyName: 'APISecurityHeaders',
-                comment: 'Security headers for API responses',
+                comment: 'Security headers for API responses with CORS',
                 securityHeadersBehavior: {
                   contentSecurityPolicy: {
                     override: true,
@@ -211,12 +220,43 @@ export class WordPressBlogStack extends cdk.Stack {
                     override: true,
                     frameOption: cloudfront.HeadersFrameOption.DENY,
                   },
+                  referrerPolicy: {
+                    override: true,
+                    referrerPolicy:
+                      cloudfront.HeadersReferrerPolicy
+                        .STRICT_ORIGIN_WHEN_CROSS_ORIGIN,
+                  },
+                  xssProtection: {
+                    override: true,
+                    protection: true,
+                    modeBlock: true,
+                  },
                 },
                 customHeadersBehavior: {
                   customHeaders: [
                     {
-                      header: 'X-Custom-API-Version',
-                      value: '1.0',
+                      header: 'Access-Control-Allow-Origin',
+                      value: '*',
+                      override: true,
+                    },
+                    {
+                      header: 'Access-Control-Allow-Methods',
+                      value: 'GET, POST, PUT, DELETE, OPTIONS',
+                      override: true,
+                    },
+                    {
+                      header: 'Access-Control-Allow-Headers',
+                      value: 'Content-Type, Authorization, X-Requested-With',
+                      override: true,
+                    },
+                    {
+                      header: 'Access-Control-Max-Age',
+                      value: '86400',
+                      override: true,
+                    },
+                    {
+                      header: 'Cache-Control',
+                      value: 'no-cache, no-store, must-revalidate',
                       override: true,
                     },
                   ],
@@ -224,54 +264,155 @@ export class WordPressBlogStack extends cdk.Stack {
               }
             ),
           },
-          '/wp-content/uploads/*': {
-            origin: new origins.HttpOrigin('api.cowboykimono.com', {
+          // WordPress admin routes
+          '/wp-admin/*': {
+            origin: new origins.HttpOrigin('admin.cowboykimono.com', {
               protocolPolicy: cloudfront.OriginProtocolPolicy.HTTPS_ONLY,
-              originShieldRegion: this.region,
+              customHeaders: {
+                'X-Forwarded-Host': 'admin.cowboykimono.com',
+                'X-CloudFront-Origin': 'admin',
+              },
             }),
             viewerProtocolPolicy:
               cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
-            cachePolicy:
-              cloudfront.CachePolicy.CACHING_OPTIMIZED_FOR_UNCOMPRESSED_OBJECTS,
-            originRequestPolicy: cloudfront.OriginRequestPolicy.CORS_S3_ORIGIN,
-            functionAssociations: [
-              {
-                function: new cloudfront.Function(this, 'MediaURLRewrite', {
-                  code: cloudfront.FunctionCode.fromInline(`
-                  function handler(event) {
-                    var request = event.request;
-                    var uri = request.uri;
-                    
-                    // Rewrite media URLs to include proper headers
-                    if (uri.startsWith('/wp-content/uploads/')) {
-                      request.headers['cache-control'] = { value: 'public, max-age=31536000' };
-                      request.headers['access-control-allow-origin'] = { value: '*' };
-                    }
-                    
-                    return request;
-                  }
-                `),
-                }),
-                eventType: cloudfront.FunctionEventType.VIEWER_REQUEST,
-              },
-            ],
-            // Add security headers for media files
+            cachePolicy: cloudfront.CachePolicy.CACHING_DISABLED,
+            originRequestPolicy: cloudfront.OriginRequestPolicy.ALL_VIEWER,
+            allowedMethods: cloudfront.AllowedMethods.ALLOW_ALL,
+            cachedMethods: cloudfront.CachedMethods.CACHE_GET_HEAD,
+            // Add security headers for admin routes
             responseHeadersPolicy: new cloudfront.ResponseHeadersPolicy(
               this,
-              'MediaSecurityHeaders',
+              'AdminSecurityHeaders',
               {
-                responseHeadersPolicyName: 'MediaSecurityHeaders',
-                comment: 'Security headers for media files',
+                responseHeadersPolicyName: 'AdminSecurityHeaders',
+                comment: 'Security headers for admin responses',
                 securityHeadersBehavior: {
+                  contentSecurityPolicy: {
+                    override: true,
+                    contentSecurityPolicy:
+                      "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; connect-src 'self' https:; frame-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self';",
+                  },
+                  strictTransportSecurity: {
+                    override: true,
+                    accessControlMaxAge: cdk.Duration.days(2 * 365),
+                    includeSubdomains: true,
+                    preload: true,
+                  },
                   contentTypeOptions: {
                     override: true,
+                  },
+                  frameOptions: {
+                    override: true,
+                    frameOption: cloudfront.HeadersFrameOption.SAMEORIGIN,
+                  },
+                  referrerPolicy: {
+                    override: true,
+                    referrerPolicy:
+                      cloudfront.HeadersReferrerPolicy
+                        .STRICT_ORIGIN_WHEN_CROSS_ORIGIN,
+                  },
+                  xssProtection: {
+                    override: true,
+                    protection: true,
+                    modeBlock: true,
                   },
                 },
                 customHeadersBehavior: {
                   customHeaders: [
                     {
                       header: 'Cache-Control',
-                      value: 'public, max-age=31536000',
+                      value: 'no-cache, no-store, must-revalidate',
+                      override: true,
+                    },
+                    {
+                      header: 'X-Admin-Route',
+                      value: 'true',
+                      override: true,
+                    },
+                  ],
+                },
+              }
+            ),
+          },
+          // WordPress REST API routes
+          '/wp-json/*': {
+            origin: new origins.HttpOrigin('api.cowboykimono.com', {
+              protocolPolicy: cloudfront.OriginProtocolPolicy.HTTPS_ONLY,
+              customHeaders: {
+                'X-Forwarded-Host': 'api.cowboykimono.com',
+                'X-CloudFront-Origin': 'api',
+              },
+            }),
+            viewerProtocolPolicy:
+              cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
+            cachePolicy: cloudfront.CachePolicy.CACHING_OPTIMIZED,
+            originRequestPolicy: cloudfront.OriginRequestPolicy.ALL_VIEWER,
+            allowedMethods: cloudfront.AllowedMethods.ALLOW_ALL,
+            cachedMethods: cloudfront.CachedMethods.CACHE_GET_HEAD,
+            // Add CORS headers for REST API
+            responseHeadersPolicy: new cloudfront.ResponseHeadersPolicy(
+              this,
+              'RESTAPISecurityHeaders',
+              {
+                responseHeadersPolicyName: 'RESTAPISecurityHeaders',
+                comment: 'Security headers for REST API responses with CORS',
+                securityHeadersBehavior: {
+                  contentSecurityPolicy: {
+                    override: true,
+                    contentSecurityPolicy:
+                      "default-src 'self'; script-src 'none'; style-src 'none';",
+                  },
+                  strictTransportSecurity: {
+                    override: true,
+                    accessControlMaxAge: cdk.Duration.days(2 * 365),
+                    includeSubdomains: true,
+                    preload: true,
+                  },
+                  contentTypeOptions: {
+                    override: true,
+                  },
+                  frameOptions: {
+                    override: true,
+                    frameOption: cloudfront.HeadersFrameOption.DENY,
+                  },
+                  referrerPolicy: {
+                    override: true,
+                    referrerPolicy:
+                      cloudfront.HeadersReferrerPolicy
+                        .STRICT_ORIGIN_WHEN_CROSS_ORIGIN,
+                  },
+                  xssProtection: {
+                    override: true,
+                    protection: true,
+                    modeBlock: true,
+                  },
+                },
+                customHeadersBehavior: {
+                  customHeaders: [
+                    {
+                      header: 'Access-Control-Allow-Origin',
+                      value: '*',
+                      override: true,
+                    },
+                    {
+                      header: 'Access-Control-Allow-Methods',
+                      value: 'GET, POST, PUT, DELETE, OPTIONS',
+                      override: true,
+                    },
+                    {
+                      header: 'Access-Control-Allow-Headers',
+                      value:
+                        'Content-Type, Authorization, X-Requested-With, X-WP-Nonce',
+                      override: true,
+                    },
+                    {
+                      header: 'Access-Control-Expose-Headers',
+                      value: 'X-WP-Total, X-WP-TotalPages',
+                      override: true,
+                    },
+                    {
+                      header: 'Cache-Control',
+                      value: 'public, max-age=300, s-maxage=600',
                       override: true,
                     },
                   ],
@@ -341,6 +482,142 @@ export class WordPressBlogStack extends cdk.Stack {
         comment: 'Cowboy Kimono WordPress Distribution with Enhanced Security',
       }
     );
+
+    // Separate CloudFront distribution for API subdomain
+    const apiCloudFrontDistribution = new cloudfront.Distribution(
+      this,
+      'WordPressAPIDistribution',
+      {
+        defaultBehavior: {
+          origin: new origins.HttpOrigin('api.cowboykimono.com', {
+            protocolPolicy: cloudfront.OriginProtocolPolicy.HTTPS_ONLY,
+            originShieldRegion: this.region,
+            // Add custom headers for WordPress
+            customHeaders: {
+              'X-Forwarded-Host': 'api.cowboykimono.com',
+              'X-Forwarded-Proto': 'https',
+            },
+          }),
+          viewerProtocolPolicy:
+            cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
+          cachePolicy: cloudfront.CachePolicy.CACHING_DISABLED, // Disable caching for API
+          originRequestPolicy: cloudfront.OriginRequestPolicy.ALL_VIEWER,
+          allowedMethods: cloudfront.AllowedMethods.ALLOW_ALL,
+          cachedMethods: cloudfront.CachedMethods.CACHE_GET_HEAD,
+          // Add CORS headers for API
+          responseHeadersPolicy: new cloudfront.ResponseHeadersPolicy(
+            this,
+            'APICORSHeaders',
+            {
+              responseHeadersPolicyName: 'APICORSHeaders',
+              comment: 'CORS headers for WordPress REST API',
+              corsBehavior: {
+                accessControlAllowCredentials: false,
+                accessControlAllowHeaders: ['*'],
+                accessControlAllowMethods: [
+                  'GET',
+                  'POST',
+                  'PUT',
+                  'DELETE',
+                  'OPTIONS',
+                ],
+                accessControlAllowOrigins: ['*'],
+                accessControlExposeHeaders: ['*'],
+                accessControlMaxAge: cdk.Duration.seconds(86400),
+                originOverride: true,
+              },
+              securityHeadersBehavior: {
+                contentTypeOptions: {
+                  override: true,
+                },
+                frameOptions: {
+                  override: true,
+                  frameOption: cloudfront.HeadersFrameOption.DENY,
+                },
+              },
+            }
+          ),
+        },
+        // Add specific behaviors for different API paths
+        additionalBehaviors: {
+          '/wp-admin/*': {
+            origin: new origins.HttpOrigin('admin.cowboykimono.com', {
+              protocolPolicy: cloudfront.OriginProtocolPolicy.HTTPS_ONLY,
+              originShieldRegion: this.region,
+              customHeaders: {
+                'X-Forwarded-Host': 'admin.cowboykimono.com',
+                'X-Forwarded-Proto': 'https',
+              },
+            }),
+            viewerProtocolPolicy:
+              cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
+            cachePolicy: cloudfront.CachePolicy.CACHING_DISABLED,
+            originRequestPolicy: cloudfront.OriginRequestPolicy.ALL_VIEWER,
+            allowedMethods: cloudfront.AllowedMethods.ALLOW_ALL,
+            cachedMethods: cloudfront.CachedMethods.CACHE_GET_HEAD,
+          },
+          '/wp-content/uploads/*': {
+            origin: new origins.HttpOrigin('api.cowboykimono.com', {
+              protocolPolicy: cloudfront.OriginProtocolPolicy.HTTPS_ONLY,
+              originShieldRegion: this.region,
+            }),
+            viewerProtocolPolicy:
+              cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
+            cachePolicy:
+              cloudfront.CachePolicy.CACHING_OPTIMIZED_FOR_UNCOMPRESSED_OBJECTS,
+            originRequestPolicy: cloudfront.OriginRequestPolicy.CORS_S3_ORIGIN,
+            // Add function to rewrite media URLs
+            functionAssociations: [
+              {
+                function: new cloudfront.Function(this, 'MediaURLRewrite', {
+                  code: cloudfront.FunctionCode.fromInline(`
+                function handler(event) {
+                  var request = event.request;
+                  var uri = request.uri;
+                  
+                  // Ensure proper headers for media files
+                  if (uri.startsWith('/wp-content/uploads/')) {
+                    request.headers['cache-control'] = { value: 'public, max-age=31536000' };
+                    request.headers['access-control-allow-origin'] = { value: '*' };
+                  }
+                  
+                  return request;
+                }
+              `),
+                }),
+                eventType: cloudfront.FunctionEventType.VIEWER_REQUEST,
+              },
+            ],
+          },
+        },
+        // Error handling
+        errorResponses: [
+          {
+            httpStatus: 403,
+            responseHttpStatus: 200,
+            responsePagePath: '/404',
+            ttl: cdk.Duration.minutes(5),
+          },
+          {
+            httpStatus: 404,
+            responseHttpStatus: 200,
+            responsePagePath: '/404',
+            ttl: cdk.Duration.minutes(5),
+          },
+          {
+            httpStatus: 500,
+            responseHttpStatus: 200,
+            responsePagePath: '/500',
+            ttl: cdk.Duration.minutes(5),
+          },
+        ],
+        priceClass: cloudfront.PriceClass.PRICE_CLASS_100,
+        comment: 'WordPress API and Admin Distribution',
+      }
+    );
+
+    // Main site CloudFront (Amplify managed)
+    // This is handled by Amplify automatically
 
     // CloudWatch Alarms for monitoring
     const lambdaErrorAlarm = new cdk.aws_cloudwatch.Alarm(

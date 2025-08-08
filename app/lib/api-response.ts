@@ -164,7 +164,7 @@ export class APIResponseBuilder {
 
   // Validation error response with proper typing
   validationError(validationErrors: z.ZodError): NextResponse {
-    const errors = (validationErrors as any).errors.map((err: any) => ({
+    const errors = validationErrors.issues.map((err: z.ZodIssue) => ({
       field: err.path.join('.'),
       message: err.message,
       code: err.code,

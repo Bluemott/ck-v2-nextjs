@@ -53,7 +53,49 @@ if (!envParseResult.success) {
   throw new Error('Invalid environment variables');
 }
 
-export const env = envParseResult.data;
+export const env = {
+  // WordPress Configuration (Lightsail-based)
+  NEXT_PUBLIC_WORDPRESS_REST_URL: process.env.NEXT_PUBLIC_WORDPRESS_REST_URL || 'https://api.cowboykimono.com',
+  NEXT_PUBLIC_WORDPRESS_ADMIN_URL: process.env.NEXT_PUBLIC_WORDPRESS_ADMIN_URL || 'https://admin.cowboykimono.com',
+  
+  // Application Configuration
+  NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL || 'https://cowboykimono.com',
+  NEXT_PUBLIC_SITE_URL: process.env.NEXT_PUBLIC_SITE_URL || 'https://cowboykimono.com',
+  NODE_ENV: process.env.NODE_ENV || 'development',
+  
+  // AWS Configuration (for Lambda functions only)
+  AWS_REGION: process.env.AWS_REGION || 'us-east-1',
+  AWS_ACCESS_KEY_ID: process.env.AWS_ACCESS_KEY_ID,
+  AWS_SECRET_ACCESS_KEY: process.env.AWS_SECRET_ACCESS_KEY,
+  
+  // Lambda API Configuration
+  NEXT_PUBLIC_LAMBDA_RECOMMENDATIONS_URL: process.env.NEXT_PUBLIC_LAMBDA_RECOMMENDATIONS_URL || 'https://0xde6p9ls2.execute-api.us-east-1.amazonaws.com/prod/recommendations',
+  
+  // CloudFront Configuration (for media delivery)
+  NEXT_PUBLIC_CLOUDFRONT_URL: process.env.NEXT_PUBLIC_CLOUDFRONT_URL,
+  CLOUDFRONT_DISTRIBUTION_ID: process.env.CLOUDFRONT_DISTRIBUTION_ID,
+  
+  // Legacy Aurora/S3 Configuration (deprecated - kept for backward compatibility)
+  AWS_DATABASE_SETUP_ENDPOINT: process.env.AWS_DATABASE_SETUP_ENDPOINT,
+  AWS_DATA_IMPORT_ENDPOINT: process.env.AWS_DATA_IMPORT_ENDPOINT,
+  AWS_AURORA_ENDPOINT: process.env.AWS_AURORA_ENDPOINT,
+  S3_BUCKET_NAME: process.env.S3_BUCKET_NAME,
+  
+  // WordPress URLs (Lightsail-based)
+  WORDPRESS_URL: process.env.WORDPRESS_URL || 'https://cowboykimono.com',
+  WORDPRESS_API_URL: process.env.WORDPRESS_API_URL || 'https://api.cowboykimono.com',
+  
+  // Analytics and Monitoring
+  NEXT_PUBLIC_GA_MEASUREMENT_ID: process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID,
+  NEXT_PUBLIC_GTM_ID: process.env.NEXT_PUBLIC_GTM_ID,
+  
+  // Security
+  NEXT_PUBLIC_SITE_VERIFICATION: process.env.NEXT_PUBLIC_SITE_VERIFICATION,
+  
+  // API Configuration
+  API_RATE_LIMIT: process.env.API_RATE_LIMIT || '100',
+  API_TIMEOUT: process.env.API_TIMEOUT || '10000',
+} as const;
 
 // Development check
 export const isDevelopment = env.NODE_ENV === 'development';

@@ -753,6 +753,9 @@ npm run type-check
 npm run lint
 npm run lint:fix
 
+# Basic test hook (used by CI/hooks that call `npm test`)
+npm test
+
 # Comprehensive validation
 npm run validate
 npm run validate:comprehensive
@@ -1076,6 +1079,42 @@ response.headers.set('Link', `<${canonicalUrl}>; rel="canonical"`);
 
 ### **AWS Infrastructure Enhancements**
 
+#### **CloudFront Subdomain Configuration** ✅ **FIXED**
+
+**Status:** Production Ready with Proper Subdomain Routing
+
+**Key Features:**
+
+- **api.cowboykimono.com** - WordPress REST API endpoints with CORS support
+- **admin.cowboykimono.com** - WordPress admin interface with security headers
+- **cowboykimono.com** - Main Next.js application with CloudFront CDN
+- **Enhanced CORS headers** for cross-origin requests
+- **Security headers** for all subdomains
+- **Proper routing** for different content types
+
+**Implementation Details:**
+
+```typescript
+// CloudFront behaviors for different subdomains
+additionalBehaviors: {
+  '/api/*': {
+    origin: 'Amplify API Gateway',
+    cachePolicy: 'CACHING_DISABLED',
+    corsHeaders: true,
+  },
+  '/wp-admin/*': {
+    origin: 'admin.cowboykimono.com',
+    cachePolicy: 'CACHING_DISABLED',
+    securityHeaders: true,
+  },
+  '/wp-json/*': {
+    origin: 'api.cowboykimono.com',
+    cachePolicy: 'CACHING_OPTIMIZED',
+    corsHeaders: true,
+  },
+}
+```
+
 #### **CloudFront Optimization**
 
 - **Enhanced caching policies**
@@ -1129,6 +1168,37 @@ response.headers.set('Link', `<${canonicalUrl}>; rel="canonical"`);
 - **Style source controls**
 - **Frame security policies**
 
+#### **CORS Configuration** ✅ **FIXED**
+
+**Status:** Production Ready with Proper CORS Headers
+
+**Issues Resolved:**
+
+- **Web Vitals API 405/500 errors** - Fixed with proper CORS headers
+- **WordPress API CORS issues** - Added CORS headers to CloudFront
+- **Cross-origin request failures** - Configured proper origins
+- **Preflight request handling** - Added OPTIONS method support
+
+**Implementation:**
+
+```typescript
+// Web Vitals API CORS headers
+headers: {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
+  'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+  'Access-Control-Max-Age': '86400',
+}
+
+// WordPress REST API CORS headers
+headers: {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+  'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Requested-With, X-WP-Nonce',
+  'Access-Control-Expose-Headers': 'X-WP-Total, X-WP-TotalPages',
+}
+```
+
 #### **Rate Limiting**
 
 - **API endpoint protection**
@@ -1168,8 +1238,8 @@ response.headers.set('Link', `<${canonicalUrl}>; rel="canonical"`);
 
 ---
 
-**Documentation Version:** 2.4.0  
+**Documentation Version:** 2.5.0  
 **Last Updated:** 2025-01-25  
-**Status:** Production Ready with Enhanced Performance Optimizations
+**Status:** Production Ready with CloudFront Subdomain Fixes
 
-**Implementation Status:** All major features implemented and tested in production environment.
+**Implementation Status:** All major features implemented and tested in production environment. CloudFront subdomain routing and CORS issues resolved.

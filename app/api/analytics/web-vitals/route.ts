@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { EnhancedMonitoring, monitoring } from '../../../lib/monitoring';
+import { EnhancedMonitoring } from '../../../lib/monitoring';
 
 // Create enhanced monitoring instance
 const enhancedMonitoring = new EnhancedMonitoring({
@@ -17,137 +17,77 @@ const enhancedMonitoring = new EnhancedMonitoring({
 
 export async function POST(request: NextRequest) {
   try {
+    // Handle CORS preflight
+    if (request.method === 'OPTIONS') {
+      return new NextResponse(null, {
+        status: 200,
+        headers: {
+          'Access-Control-Allow-Origin': '*',
+          'Access-Control-Allow-Methods': 'POST, OPTIONS',
+          'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+          'Access-Control-Max-Age': '86400',
+        },
+      });
+    }
+
     const body = await request.json();
-    const {
-      type,
-      value,
-      page,
-      userAgent,
-      timestamp,
-      loadTime,
-      interactionType,
-      duration,
-    } = body;
 
-    // Validate required fields
-    if (!type) {
-      return NextResponse.json(
-        { error: 'Missing required field: type' },
-        { status: 400 }
-      );
-    }
-
-    // Handle different types of metrics
-    switch (type) {
-      case 'LCP':
-      case 'FID':
-      case 'CLS':
-      case 'FCP':
-      case 'TTFB':
-      case 'INP':
-        // Core Web Vitals
-        if (typeof value !== 'number') {
-          return NextResponse.json(
-            { error: 'Invalid value for Core Web Vital' },
-            { status: 400 }
-          );
-        }
-
+    // Log to CloudWatch if in production
+    if (process.env.NODE_ENV === 'production') {
+      try {
         await enhancedMonitoring.trackCoreWebVitals({
-          [type]: value,
-          page: page || 'unknown',
-          userAgent: userAgent || 'unknown',
-          timestamp: timestamp ? new Date(timestamp) : new Date(),
+          ...body,
+          timestamp: new Date(),
+          userAgent: request.headers.get('user-agent') || undefined,
         });
-        break;
-
-      case 'page-load':
-        // Page load metrics
-        if (typeof loadTime !== 'number') {
-          return NextResponse.json(
-            { error: 'Invalid loadTime for page load' },
-            { status: 400 }
-          );
-        }
-
-        await enhancedMonitoring.trackPageLoad(
-          page || 'unknown',
-          loadTime,
-          userAgent || 'unknown'
-        );
-
-        // Also track as performance metric
-        await enhancedMonitoring.trackPerformanceMetric(
-          'PageLoadTime',
-          loadTime,
-          'Milliseconds',
-          {
-            Page: page || 'unknown',
-            UserAgent: userAgent || 'unknown',
-          }
-        );
-        break;
-
-      case 'user-interaction':
-        // User interaction metrics
-        if (typeof duration !== 'number' || !interactionType) {
-          return NextResponse.json(
-            { error: 'Invalid interaction data' },
-            { status: 400 }
-          );
-        }
-
-        await enhancedMonitoring.trackUserInteraction(
-          interactionType,
-          duration,
-          page || 'unknown'
-        );
-        break;
-
-      default:
-        return NextResponse.json(
-          { error: `Unknown metric type: ${type}` },
-          { status: 400 }
-        );
+      } catch (monitoringError) {
+        console.warn('Failed to log to CloudWatch:', monitoringError);
+      }
     }
 
-    // Log the metric for debugging
-    await monitoring.info('Web Vitals metric received', {
-      type,
-      value,
-      page,
-      userAgent,
-      timestamp,
-    });
-
+    // Return success response with proper headers
     return NextResponse.json(
-      { success: true, message: 'Metric tracked successfully' },
-      { status: 200 }
+      { success: true, timestamp: new Date().toISOString() },
+      {
+        status: 200,
+        headers: {
+          'Access-Control-Allow-Origin': '*',
+          'Access-Control-Allow-Methods': 'POST, OPTIONS',
+          'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+        },
+      }
     );
   } catch (error) {
-    console.error('Error processing web vitals:', error);
-
-    // Log the error
-    await monitoring.error('Web Vitals processing error', {
-      error: (error as Error).message,
-      stack: (error as Error).stack,
-    });
-
+    console.error('Web Vitals Error:', error);
     return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
+      {
+        error: 'Failed to process web vitals',
+        message: error instanceof Error ? error.message : 'Unknown error',
+        timestamp: new Date().toISOString(),
+      },
+      {
+        status: 500,
+        headers: {
+          'Access-Control-Allow-Origin': '*',
+          'Access-Control-Allow-Methods': 'POST, OPTIONS',
+          'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+        },
+      }
     );
   }
 }
 
-// Handle OPTIONS for CORS
 export async function OPTIONS(_request: NextRequest) {
   return new NextResponse(null, {
     status: 200,
     headers: {
       'Access-Control-Allow-Origin': '*',
       'Access-Control-Allow-Methods': 'POST, OPTIONS',
-      'Access-Control-Allow-Headers': 'Content-Type',
+      'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+      'Access-Control-Max-Age': '86400',
+      'Cache-Control': 'no-cache, no-store, must-revalidate',
     },
   });
 }

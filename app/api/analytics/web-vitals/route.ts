@@ -1,6 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { EnhancedMonitoring } from '../../../lib/monitoring';
 
+// Ensure Node.js runtime (not Edge) and no static optimization
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 // Create enhanced monitoring instance
 const enhancedMonitoring = new EnhancedMonitoring({
   region: process.env.AWS_REGION || 'us-east-1',
@@ -17,19 +22,6 @@ const enhancedMonitoring = new EnhancedMonitoring({
 
 export async function POST(request: NextRequest) {
   try {
-    // Handle CORS preflight
-    if (request.method === 'OPTIONS') {
-      return new NextResponse(null, {
-        status: 200,
-        headers: {
-          'Access-Control-Allow-Origin': '*',
-          'Access-Control-Allow-Methods': 'POST, OPTIONS',
-          'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-          'Access-Control-Max-Age': '86400',
-        },
-      });
-    }
-
     const body = await request.json();
 
     // Log to CloudWatch if in production
@@ -90,4 +82,23 @@ export async function OPTIONS(_request: NextRequest) {
       'Cache-Control': 'no-cache, no-store, must-revalidate',
     },
   });
+}
+
+// Explicit GET handler to avoid 405 from intermediaries that probe with GET
+export async function GET() {
+  return new NextResponse(
+    JSON.stringify({ message: 'Web Vitals endpoint - use POST method' }),
+    {
+      status: 200,
+      headers: {
+        'Content-Type': 'application/json',
+        Allow: 'POST, OPTIONS, GET',
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Methods': 'POST, OPTIONS, GET',
+        'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+        'Access-Control-Max-Age': '86400',
+        'Cache-Control': 'no-cache, no-store, must-revalidate',
+      },
+    }
+  );
 }

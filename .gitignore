@@ -37,6 +37,7 @@ lerna-debug.log*
 # env files (can opt-in for committing if needed)
 .env*
 !.env.example
+!.env.local.example
 
 # vercel
 .vercel
@@ -49,12 +50,18 @@ next-env.d.ts
 infrastructure/cdk.out/
 infrastructure/node_modules/
 infrastructure/.env
+infrastructure/outputs.json
+infrastructure/test-*.json
 
 # Lambda
 lambda/**/node_modules/
 lambda/**/dist/
 lambda/**/*.zip
 lambda/**/package-lock.json
+lambda/**/*.mjs
+lambda/**/debug-*.js
+lambda/**/test-*.js
+lambda/**/fix-*.js
 
 # Migration artifacts  
 chunk-*.json
@@ -213,3 +220,51 @@ test-payload.json
 
 # AWS configuration files (if sensitive)
 aws-config.js
+
+# Additional AWS and deployment files
+cert-verification.json
+fix-dns-records.json
+update-dns-new-cloudfront.json
+aws-amplify-redirect-config.json
+amplify-redirect-rules.json
+
+# Disabled files
+middleware.ts.disabled
+
+# Status files
+tatus
+
+# Prettier
+.prettierrc
+.prettierignore
+
+# Additional TypeScript build artifacts
+*.tsbuildinfo
+
+# Additional test and debug files
+*-debug.js
+*-test.js
+debug-*.js
+test-*.js
+fix-*.js
+
+# Additional log files
+*.log.*
+error-*.log
+access-*.log
+
+# Additional temporary files
+*.tmp
+*.temp
+*.bak
+*.backup
+
+# Additional IDE files
+*.code-workspace
+.vscode/settings.json
+.vscode/launch.json
+.vscode/tasks.json
+
+# Additional OS files
+desktop.ini
+$RECYCLE.BIN/

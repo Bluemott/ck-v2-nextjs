@@ -100,7 +100,6 @@ export class WordPressBlogStack extends cdk.Stack {
             customHeaders: {
               'X-Forwarded-Host': 'api.cowboykimono.com',
               'X-CloudFront-Origin': 'api',
-              Host: 'api.cowboykimono.com',
             },
           }),
           viewerProtocolPolicy:
@@ -236,26 +235,6 @@ export class WordPressBlogStack extends cdk.Stack {
                 customHeadersBehavior: {
                   customHeaders: [
                     {
-                      header: 'Access-Control-Allow-Origin',
-                      value: '*',
-                      override: true,
-                    },
-                    {
-                      header: 'Access-Control-Allow-Methods',
-                      value: 'GET, POST, PUT, DELETE, OPTIONS',
-                      override: true,
-                    },
-                    {
-                      header: 'Access-Control-Allow-Headers',
-                      value: 'Content-Type, Authorization, X-Requested-With',
-                      override: true,
-                    },
-                    {
-                      header: 'Access-Control-Max-Age',
-                      value: '86400',
-                      override: true,
-                    },
-                    {
                       header: 'Cache-Control',
                       value: 'no-cache, no-store, must-revalidate',
                       override: true,
@@ -342,7 +321,6 @@ export class WordPressBlogStack extends cdk.Stack {
               customHeaders: {
                 'X-Forwarded-Host': 'wp-origin.cowboykimono.com',
                 'X-CloudFront-Origin': 'wordpress',
-                Host: 'wp-origin.cowboykimono.com',
               },
             }),
             viewerProtocolPolicy:
@@ -391,27 +369,6 @@ export class WordPressBlogStack extends cdk.Stack {
                 },
                 customHeadersBehavior: {
                   customHeaders: [
-                    {
-                      header: 'Access-Control-Allow-Origin',
-                      value: '*',
-                      override: true,
-                    },
-                    {
-                      header: 'Access-Control-Allow-Methods',
-                      value: 'GET, POST, PUT, DELETE, OPTIONS',
-                      override: true,
-                    },
-                    {
-                      header: 'Access-Control-Allow-Headers',
-                      value:
-                        'Content-Type, Authorization, X-Requested-With, X-WP-Nonce',
-                      override: true,
-                    },
-                    {
-                      header: 'Access-Control-Expose-Headers',
-                      value: 'X-WP-Total, X-WP-TotalPages',
-                      override: true,
-                    },
                     {
                       header: 'Cache-Control',
                       value: 'public, max-age=300, s-maxage=600',
@@ -485,231 +442,15 @@ export class WordPressBlogStack extends cdk.Stack {
       }
     );
 
-    // CloudFront distribution for api.cowboykimono.com (WordPress REST API)
-    const apiCloudFrontDistribution = new cloudfront.Distribution(
-      this,
-      'WordPressAPIDistribution',
-      {
-        domainNames: ['api.cowboykimono.com'],
-        defaultBehavior: {
-          origin: new origins.HttpOrigin('wp-origin.cowboykimono.com', {
-            protocolPolicy: cloudfront.OriginProtocolPolicy.HTTPS_ONLY,
-            originShieldRegion: this.region,
-            customHeaders: {
-              'X-Forwarded-Host': 'api.cowboykimono.com',
-              'X-Forwarded-Proto': 'https',
-              Host: 'wp-origin.cowboykimono.com',
-            },
-          }),
-          viewerProtocolPolicy:
-            cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
-          cachePolicy: cloudfront.CachePolicy.CACHING_DISABLED, // Disable caching for API
-          originRequestPolicy: cloudfront.OriginRequestPolicy.ALL_VIEWER,
-          allowedMethods: cloudfront.AllowedMethods.ALLOW_ALL,
-          cachedMethods: cloudfront.CachedMethods.CACHE_GET_HEAD,
-          // Add CORS headers for API
-          responseHeadersPolicy: new cloudfront.ResponseHeadersPolicy(
-            this,
-            'APICORSHeaders',
-            {
-              responseHeadersPolicyName: 'APICORSHeaders',
-              comment: 'CORS headers for WordPress REST API',
-              corsBehavior: {
-                accessControlAllowCredentials: false,
-                accessControlAllowHeaders: ['*'],
-                accessControlAllowMethods: [
-                  'GET',
-                  'POST',
-                  'PUT',
-                  'DELETE',
-                  'OPTIONS',
-                ],
-                accessControlAllowOrigins: ['*'],
-                accessControlExposeHeaders: ['*'],
-                accessControlMaxAge: cdk.Duration.seconds(86400),
-                originOverride: true,
-              },
-              securityHeadersBehavior: {
-                contentTypeOptions: {
-                  override: true,
-                },
-                frameOptions: {
-                  override: true,
-                  frameOption: cloudfront.HeadersFrameOption.DENY,
-                },
-              },
-            }
-          ),
-        },
-        // Add specific behaviors for different API paths
-        additionalBehaviors: {
-          '/wp-admin/*': {
-            origin: new origins.HttpOrigin('admin.cowboykimono.com', {
-              protocolPolicy: cloudfront.OriginProtocolPolicy.HTTPS_ONLY,
-              originShieldRegion: this.region,
-              customHeaders: {
-                'X-Forwarded-Host': 'admin.cowboykimono.com',
-                'X-Forwarded-Proto': 'https',
-              },
-            }),
-            viewerProtocolPolicy:
-              cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
-            cachePolicy: cloudfront.CachePolicy.CACHING_DISABLED,
-            originRequestPolicy: cloudfront.OriginRequestPolicy.ALL_VIEWER,
-            allowedMethods: cloudfront.AllowedMethods.ALLOW_ALL,
-            cachedMethods: cloudfront.CachedMethods.CACHE_GET_HEAD,
-          },
-          '/wp-content/uploads/*': {
-            origin: new origins.HttpOrigin('api.cowboykimono.com', {
-              protocolPolicy: cloudfront.OriginProtocolPolicy.HTTPS_ONLY,
-              originShieldRegion: this.region,
-            }),
-            viewerProtocolPolicy:
-              cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
-            cachePolicy:
-              cloudfront.CachePolicy.CACHING_OPTIMIZED_FOR_UNCOMPRESSED_OBJECTS,
-            originRequestPolicy: cloudfront.OriginRequestPolicy.CORS_S3_ORIGIN,
-            // Add function to rewrite media URLs
-            functionAssociations: [
-              {
-                function: new cloudfront.Function(this, 'MediaURLRewrite', {
-                  code: cloudfront.FunctionCode.fromInline(`
-                function handler(event) {
-                  var request = event.request;
-                  var uri = request.uri;
-                  
-                  // Ensure proper headers for media files
-                  if (uri.startsWith('/wp-content/uploads/')) {
-                    request.headers['cache-control'] = { value: 'public, max-age=31536000' };
-                    request.headers['access-control-allow-origin'] = { value: '*' };
-                  }
-                  
-                  return request;
-                }
-              `),
-                }),
-                eventType: cloudfront.FunctionEventType.VIEWER_REQUEST,
-              },
-            ],
-          },
-        },
-        // Error handling
-        errorResponses: [
-          {
-            httpStatus: 403,
-            responseHttpStatus: 200,
-            responsePagePath: '/404',
-            ttl: cdk.Duration.minutes(5),
-          },
-          {
-            httpStatus: 404,
-            responseHttpStatus: 200,
-            responsePagePath: '/404',
-            ttl: cdk.Duration.minutes(5),
-          },
-          {
-            httpStatus: 500,
-            responseHttpStatus: 200,
-            responsePagePath: '/500',
-            ttl: cdk.Duration.minutes(5),
-          },
-        ],
-        priceClass: cloudfront.PriceClass.PRICE_CLASS_100,
-        comment: 'WordPress API Distribution',
-      }
-    );
+    // Note: api.cowboykimono.com and admin.cowboykimono.com CloudFront distributions exist but are managed manually
+    // admin.cowboykimono.com Distribution ID: ESC0JXOXVWX4J
+    // To fix the WordPress admin login issue, manually update the origin configuration
+    // to remove X-Forwarded-Host headers and set origin to wp-origin.cowboykimono.com
 
-    // CloudFront distribution for admin.cowboykimono.com (WordPress Admin)
-    const adminCloudFrontDistribution = new cloudfront.Distribution(
-      this,
-      'WordPressAdminDistribution',
-      {
-        domainNames: ['admin.cowboykimono.com'],
-        defaultBehavior: {
-          origin: new origins.HttpOrigin('wp-origin.cowboykimono.com', {
-            protocolPolicy: cloudfront.OriginProtocolPolicy.HTTPS_ONLY,
-            originShieldRegion: this.region,
-            customHeaders: {
-              'X-Forwarded-Host': 'admin.cowboykimono.com',
-              'X-Forwarded-Proto': 'https',
-              Host: 'wp-origin.cowboykimono.com',
-            },
-          }),
-          viewerProtocolPolicy:
-            cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
-          cachePolicy: cloudfront.CachePolicy.CACHING_DISABLED,
-          originRequestPolicy: cloudfront.OriginRequestPolicy.ALL_VIEWER,
-          allowedMethods: cloudfront.AllowedMethods.ALLOW_ALL,
-          cachedMethods: cloudfront.CachedMethods.CACHE_GET_HEAD,
-          responseHeadersPolicy: new cloudfront.ResponseHeadersPolicy(
-            this,
-            'AdminCORSHeaders',
-            {
-              responseHeadersPolicyName: 'AdminCORSHeaders',
-              comment: 'CORS headers for WordPress Admin',
-              corsBehavior: {
-                accessControlAllowCredentials: true,
-                accessControlAllowHeaders: ['*'],
-                accessControlAllowMethods: [
-                  'GET',
-                  'POST',
-                  'PUT',
-                  'DELETE',
-                  'OPTIONS',
-                ],
-                accessControlAllowOrigins: ['https://admin.cowboykimono.com'],
-                accessControlExposeHeaders: ['*'],
-                accessControlMaxAge: cdk.Duration.seconds(86400),
-                originOverride: true,
-              },
-              securityHeadersBehavior: {
-                contentTypeOptions: {
-                  override: true,
-                },
-                frameOptions: {
-                  override: true,
-                  frameOption: cloudfront.HeadersFrameOption.SAMEORIGIN,
-                },
-              },
-            }
-          ),
-        },
-        // Add specific behaviors for WordPress admin
-        additionalBehaviors: {
-          '/wp-admin/*': {
-            origin: new origins.HttpOrigin('wp-origin.cowboykimono.com', {
-              protocolPolicy: cloudfront.OriginProtocolPolicy.HTTPS_ONLY,
-              customHeaders: {
-                'X-Forwarded-Host': 'admin.cowboykimono.com',
-                'X-Forwarded-Proto': 'https',
-                Host: 'wp-origin.cowboykimono.com',
-              },
-            }),
-            viewerProtocolPolicy:
-              cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
-            cachePolicy: cloudfront.CachePolicy.CACHING_DISABLED,
-            originRequestPolicy: cloudfront.OriginRequestPolicy.ALL_VIEWER,
-            allowedMethods: cloudfront.AllowedMethods.ALLOW_ALL,
-            cachedMethods: cloudfront.CachedMethods.CACHE_GET_HEAD,
-          },
-          '/wp-content/*': {
-            origin: new origins.HttpOrigin('wp-origin.cowboykimono.com', {
-              protocolPolicy: cloudfront.OriginProtocolPolicy.HTTPS_ONLY,
-              customHeaders: {
-                'X-Forwarded-Host': 'admin.cowboykimono.com',
-                Host: 'wp-origin.cowboykimono.com',
-              },
-            }),
-            viewerProtocolPolicy:
-              cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
-            cachePolicy: cloudfront.CachePolicy.CACHING_OPTIMIZED,
-            originRequestPolicy: cloudfront.OriginRequestPolicy.CORS_S3_ORIGIN,
-          },
-        },
-        priceClass: cloudfront.PriceClass.PRICE_CLASS_100,
-        comment: 'WordPress Admin Distribution',
-      }
-    );
+    // Note: admin.cowboykimono.com CloudFront distribution exists but is managed manually
+    // Distribution ID: ESC0JXOXVWX4J
+    // To fix the WordPress admin login issue, manually update the origin configuration
+    // to remove X-Forwarded-Host headers and set origin to wp-origin.cowboykimono.com
 
     // Main site CloudFront (Amplify managed)
     // This is handled by Amplify automatically

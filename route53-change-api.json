@@ -1,0 +1,18 @@
+{
+  "Comment": "Update api.cowboykimono.com to point directly to wp-origin.cowboykimono.com",
+  "Changes": [
+    {
+      "Action": "UPSERT",
+      "ResourceRecordSet": {
+        "Name": "api.cowboykimono.com",
+        "Type": "CNAME",
+        "TTL": 300,
+        "ResourceRecords": [
+          {
+            "Value": "wp-origin.cowboykimono.com"
+          }
+        ]
+      }
+    }
+  ]
+}

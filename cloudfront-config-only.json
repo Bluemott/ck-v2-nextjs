@@ -1,0 +1,413 @@
+{
+  "CallerReference": "ab9c6768-c876-463c-1747-be2bc561ef56",
+  "Aliases": {
+    "Quantity": 0
+  },
+  "DefaultRootObject": "",
+  "Origins": {
+    "Quantity": 4,
+    "Items": [
+      {
+        "Id": "WordPressBlogStackWordPressDistributionOrigin2EC4CDC00",
+        "DomainName": "0xde6p9ls2.execute-api.us-east-1.amazonaws.com",
+        "OriginPath": "/prod",
+        "CustomHeaders": {
+          "Quantity": 2,
+          "Items": [
+            {
+              "HeaderName": "X-CloudFront-Origin",
+              "HeaderValue": "amplify"
+            },
+            {
+              "HeaderName": "X-Forwarded-Host",
+              "HeaderValue": "cowboykimono.com"
+            }
+          ]
+        },
+        "CustomOriginConfig": {
+          "HTTPPort": 80,
+          "HTTPSPort": 443,
+          "OriginProtocolPolicy": "https-only",
+          "OriginSslProtocols": {
+            "Quantity": 1,
+            "Items": [
+              "TLSv1.2"
+            ]
+          },
+          "OriginReadTimeout": 30,
+          "OriginKeepaliveTimeout": 5
+        },
+        "ConnectionAttempts": 3,
+        "ConnectionTimeout": 10,
+        "OriginShield": {
+          "Enabled": false
+        },
+        "OriginAccessControlId": ""
+      },
+      {
+        "Id": "WordPressBlogStackWordPressDistributionOrigin17277B3EF",
+        "DomainName": "api.cowboykimono.com",
+        "OriginPath": "",
+        "CustomHeaders": {
+          "Quantity": 2,
+          "Items": [
+            {
+              "HeaderName": "X-Forwarded-Host",
+              "HeaderValue": "api.cowboykimono.com"
+            },
+            {
+              "HeaderName": "X-CloudFront-Origin",
+              "HeaderValue": "api"
+            }
+          ]
+        },
+        "CustomOriginConfig": {
+          "HTTPPort": 80,
+          "HTTPSPort": 443,
+          "OriginProtocolPolicy": "https-only",
+          "OriginSslProtocols": {
+            "Quantity": 1,
+            "Items": [
+              "TLSv1.2"
+            ]
+          },
+          "OriginReadTimeout": 30,
+          "OriginKeepaliveTimeout": 5
+        },
+        "ConnectionAttempts": 3,
+        "ConnectionTimeout": 10,
+        "OriginShield": {
+          "Enabled": true,
+          "OriginShieldRegion": "us-east-1"
+        },
+        "OriginAccessControlId": ""
+      },
+      {
+        "Id": "WordPressBlogStackWordPressDistributionOrigin36B82F212",
+        "DomainName": "admin.cowboykimono.com",
+        "OriginPath": "",
+        "CustomHeaders": {
+          "Quantity": 2,
+          "Items": [
+            {
+              "HeaderName": "X-CloudFront-Origin",
+              "HeaderValue": "admin"
+            },
+            {
+              "HeaderName": "X-Forwarded-Host",
+              "HeaderValue": "admin.cowboykimono.com"
+            }
+          ]
+        },
+        "CustomOriginConfig": {
+          "HTTPPort": 80,
+          "HTTPSPort": 443,
+          "OriginProtocolPolicy": "https-only",
+          "OriginSslProtocols": {
+            "Quantity": 1,
+            "Items": [
+              "TLSv1.2"
+            ]
+          },
+          "OriginReadTimeout": 30,
+          "OriginKeepaliveTimeout": 5
+        },
+        "ConnectionAttempts": 3,
+        "ConnectionTimeout": 10,
+        "OriginShield": {
+          "Enabled": true,
+          "OriginShieldRegion": "us-east-1"
+        },
+        "OriginAccessControlId": ""
+      },
+      {
+        "Id": "WordPressBlogStackWordPressDistributionOrigin4B9B573CF",
+        "DomainName": "wp-origin.cowboykimono.com",
+        "OriginPath": "",
+        "CustomHeaders": {
+          "Quantity": 2,
+          "Items": [
+            {
+              "HeaderName": "X-CloudFront-Origin",
+              "HeaderValue": "wordpress"
+            },
+            {
+              "HeaderName": "X-Forwarded-Host",
+              "HeaderValue": "wp-origin.cowboykimono.com"
+            }
+          ]
+        },
+        "CustomOriginConfig": {
+          "HTTPPort": 80,
+          "HTTPSPort": 443,
+          "OriginProtocolPolicy": "https-only",
+          "OriginSslProtocols": {
+            "Quantity": 1,
+            "Items": [
+              "TLSv1.2"
+            ]
+          },
+          "OriginReadTimeout": 30,
+          "OriginKeepaliveTimeout": 5
+        },
+        "ConnectionAttempts": 3,
+        "ConnectionTimeout": 10,
+        "OriginShield": {
+          "Enabled": false
+        },
+        "OriginAccessControlId": ""
+      }
+    ]
+  },
+  "OriginGroups": {
+    "Quantity": 0
+  },
+  "DefaultCacheBehavior": {
+    "TargetOriginId": "WordPressBlogStackWordPressDistributionOrigin4B9B573CF",
+    "TrustedSigners": {
+      "Enabled": false,
+      "Quantity": 0
+    },
+    "TrustedKeyGroups": {
+      "Enabled": false,
+      "Quantity": 0
+    },
+    "ViewerProtocolPolicy": "redirect-to-https",
+    "AllowedMethods": {
+      "Quantity": 2,
+      "Items": [
+        "HEAD",
+        "GET"
+      ],
+      "CachedMethods": {
+        "Quantity": 2,
+        "Items": [
+          "HEAD",
+          "GET"
+        ]
+      }
+    },
+    "SmoothStreaming": false,
+    "Compress": true,
+    "LambdaFunctionAssociations": {
+      "Quantity": 0
+    },
+    "FunctionAssociations": {
+      "Quantity": 0
+    },
+    "FieldLevelEncryptionId": "",
+    "CachePolicyId": "658327ea-f89d-4fab-a63d-7e88639e58f6",
+    "OriginRequestPolicyId": "216adef6-5c7f-47e4-b989-5492eafa07d3",
+    "ResponseHeadersPolicyId": "a39fe61b-6e98-47cf-8386-3d4ef16f2ba9",
+    "GrpcConfig": {
+      "Enabled": false
+    }
+  },
+  "CacheBehaviors": {
+    "Quantity": 3,
+    "Items": [
+      {
+        "PathPattern": "/api/*",
+        "TargetOriginId": "WordPressBlogStackWordPressDistributionOrigin2EC4CDC00",
+        "TrustedSigners": {
+          "Enabled": false,
+          "Quantity": 0
+        },
+        "TrustedKeyGroups": {
+          "Enabled": false,
+          "Quantity": 0
+        },
+        "ViewerProtocolPolicy": "redirect-to-https",
+        "AllowedMethods": {
+          "Quantity": 7,
+          "Items": [
+            "HEAD",
+            "DELETE",
+            "POST",
+            "GET",
+            "OPTIONS",
+            "PUT",
+            "PATCH"
+          ],
+          "CachedMethods": {
+            "Quantity": 2,
+            "Items": [
+              "HEAD",
+              "GET"
+            ]
+          }
+        },
+        "SmoothStreaming": false,
+        "Compress": true,
+        "LambdaFunctionAssociations": {
+          "Quantity": 0
+        },
+        "FunctionAssociations": {
+          "Quantity": 0
+        },
+        "FieldLevelEncryptionId": "",
+        "CachePolicyId": "4135ea2d-6df8-44a3-9df3-4b5a84be39ad",
+        "OriginRequestPolicyId": "216adef6-5c7f-47e4-b989-5492eafa07d3",
+        "ResponseHeadersPolicyId": "e79f7862-6815-47df-abba-ddc896cfa7fa",
+        "GrpcConfig": {
+          "Enabled": false
+        }
+      },
+      {
+        "PathPattern": "/wp-admin/*",
+        "TargetOriginId": "WordPressBlogStackWordPressDistributionOrigin36B82F212",
+        "TrustedSigners": {
+          "Enabled": false,
+          "Quantity": 0
+        },
+        "TrustedKeyGroups": {
+          "Enabled": false,
+          "Quantity": 0
+        },
+        "ViewerProtocolPolicy": "redirect-to-https",
+        "AllowedMethods": {
+          "Quantity": 7,
+          "Items": [
+            "HEAD",
+            "DELETE",
+            "POST",
+            "GET",
+            "OPTIONS",
+            "PUT",
+            "PATCH"
+          ],
+          "CachedMethods": {
+            "Quantity": 2,
+            "Items": [
+              "HEAD",
+              "GET"
+            ]
+          }
+        },
+        "SmoothStreaming": false,
+        "Compress": true,
+        "LambdaFunctionAssociations": {
+          "Quantity": 0
+        },
+        "FunctionAssociations": {
+          "Quantity": 0
+        },
+        "FieldLevelEncryptionId": "",
+        "CachePolicyId": "4135ea2d-6df8-44a3-9df3-4b5a84be39ad",
+        "OriginRequestPolicyId": "216adef6-5c7f-47e4-b989-5492eafa07d3",
+        "ResponseHeadersPolicyId": "59c8e1ae-416c-468b-ad05-9f0a2756ad54",
+        "GrpcConfig": {
+          "Enabled": false
+        }
+      },
+      {
+        "PathPattern": "/wp-json/*",
+        "TargetOriginId": "WordPressBlogStackWordPressDistributionOrigin4B9B573CF",
+        "TrustedSigners": {
+          "Enabled": false,
+          "Quantity": 0
+        },
+        "TrustedKeyGroups": {
+          "Enabled": false,
+          "Quantity": 0
+        },
+        "ViewerProtocolPolicy": "redirect-to-https",
+        "AllowedMethods": {
+          "Quantity": 7,
+          "Items": [
+            "HEAD",
+            "DELETE",
+            "POST",
+            "GET",
+            "OPTIONS",
+            "PUT",
+            "PATCH"
+          ],
+          "CachedMethods": {
+            "Quantity": 2,
+            "Items": [
+              "HEAD",
+              "GET"
+            ]
+          }
+        },
+        "SmoothStreaming": false,
+        "Compress": true,
+        "LambdaFunctionAssociations": {
+          "Quantity": 0
+        },
+        "FunctionAssociations": {
+          "Quantity": 0
+        },
+        "FieldLevelEncryptionId": "",
+        "CachePolicyId": "658327ea-f89d-4fab-a63d-7e88639e58f6",
+        "OriginRequestPolicyId": "216adef6-5c7f-47e4-b989-5492eafa07d3",
+        "ResponseHeadersPolicyId": "7abbf4ba-91cc-4d7e-8a77-831efd569b0b",
+        "GrpcConfig": {
+          "Enabled": false
+        }
+      }
+    ]
+  },
+  "CustomErrorResponses": {
+    "Quantity": 5,
+    "Items": [
+      {
+        "ErrorCode": 403,
+        "ResponsePagePath": "/404",
+        "ResponseCode": "200",
+        "ErrorCachingMinTTL": 300
+      },
+      {
+        "ErrorCode": 404,
+        "ResponsePagePath": "/404",
+        "ResponseCode": "200",
+        "ErrorCachingMinTTL": 300
+      },
+      {
+        "ErrorCode": 500,
+        "ResponsePagePath": "/500",
+        "ResponseCode": "200",
+        "ErrorCachingMinTTL": 300
+      },
+      {
+        "ErrorCode": 502,
+        "ResponsePagePath": "/500",
+        "ResponseCode": "200",
+        "ErrorCachingMinTTL": 300
+      },
+      {
+        "ErrorCode": 503,
+        "ResponsePagePath": "/500",
+        "ResponseCode": "200",
+        "ErrorCachingMinTTL": 300
+      }
+    ]
+  },
+  "Comment": "Cowboy Kimono WordPress Distribution with Enhanced Security",
+  "Logging": {
+    "Enabled": true,
+    "IncludeCookies": false,
+    "Bucket": "wordpressblogstack-cloudfrontlogs13cb081e-ouqsysu32wx8.s3.us-east-1.amazonaws.com",
+    "Prefix": ""
+  },
+  "PriceClass": "PriceClass_100",
+  "Enabled": true,
+  "ViewerCertificate": {
+    "CloudFrontDefaultCertificate": true,
+    "SSLSupportMethod": "vip",
+    "MinimumProtocolVersion": "TLSv1",
+    "CertificateSource": "cloudfront"
+  },
+  "Restrictions": {
+    "GeoRestriction": {
+      "RestrictionType": "none",
+      "Quantity": 0
+    }
+  },
+  "WebACLId": "",
+  "HttpVersion": "http2",
+  "IsIPV6Enabled": true,
+  "ContinuousDeploymentPolicyId": "",
+  "Staging": false
+}

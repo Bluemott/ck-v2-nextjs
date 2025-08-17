@@ -550,6 +550,20 @@ export async function searchPosts(
 }
 
 /**
+ * Convert WordPress image URLs to use the correct domain for CORS
+ */
+export function convertImageUrl(url: string): string {
+  if (!url || typeof url !== 'string') return url;
+
+  // Convert wp-origin URLs to api URLs for proper CORS handling
+  if (url.includes('wp-origin.cowboykimono.com')) {
+    return url.replace('wp-origin.cowboykimono.com', 'api.cowboykimono.com');
+  }
+
+  return url;
+}
+
+/**
  * Decode HTML entities
  */
 export function decodeHtmlEntities(text: string): string {
@@ -671,7 +685,7 @@ export async function fetchMediaById(mediaId: number): Promise<{
 
     const media = await response.json();
     return {
-      source_url: media.source_url,
+      source_url: convertImageUrl(media.source_url),
       alt_text: media.alt_text || '',
     };
   } catch (error) {
@@ -693,7 +707,19 @@ export function getFeaturedImageUrl(post: BlogPost): string | null {
   if (post._embedded?.['wp:featuredmedia']?.[0]) {
     const media = post._embedded['wp:featuredmedia'][0];
     if (media.source_url) {
-      return media.source_url;
+      return convertImageUrl(media.source_url);
+    }
+  }
+
+  // Also check for media_details URLs (different image sizes)
+  if (post._embedded?.['wp:featuredmedia']?.[0]?.media_details?.sizes) {
+    const sizes = post._embedded['wp:featuredmedia'][0].media_details.sizes;
+    // Try to get the largest available size
+    const sizeOrder = ['full', 'large', 'medium_large', 'medium', 'thumbnail'];
+    for (const size of sizeOrder) {
+      if (sizes[size]?.source_url) {
+        return convertImageUrl(sizes[size].source_url);
+      }
     }
   }
 

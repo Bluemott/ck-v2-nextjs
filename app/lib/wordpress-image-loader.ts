@@ -12,8 +12,8 @@ interface LoaderOptions {
 
 export function wordpressImageLoader({
   src,
-  width,
-  quality,
+  width: _width,
+  quality: _quality,
 }: LoaderOptions): string {
   // If it's already a complete WordPress URL, return as-is
   if (src.startsWith('https://api.cowboykimono.com/wp-content/uploads/')) {

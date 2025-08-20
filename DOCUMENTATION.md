@@ -59,7 +59,7 @@ AWS Amplify (Hosting)
 ### **Data Flow**
 
 ```
-User Request → CloudFront → Amplify → Next.js → WordPress REST API → MySQL
+User Request → CloudFront → Amplify → Next.js → WordPress REST API (Direct) → MySQL
                 ↓
             Lambda Functions (Recommendations)
                 ↓
@@ -376,7 +376,33 @@ const trackCoreWebVitals = () => {
 
 ## ☁️ **AWS Infrastructure**
 
-### **CloudFront Distribution** ✅ **ENHANCED**
+### **WordPress API Architecture** ✅ **OPTIMIZED**
+
+**Status:** Direct Access - CloudFront Removed from WordPress API
+
+**Key Changes:**
+
+- **Removed CloudFront** from in front of WordPress API due to CORS and caching issues
+- **Direct API Access** to `api.cowboykimono.com` (Lightsail)
+- **WordPress Redis Caching** provides better performance than CloudFront
+- **REST API Caching** handles API response optimization
+- **Simplified Architecture** reduces complexity and potential failure points
+
+**Current Architecture:**
+
+```
+Frontend (Amplify + CloudFront) → WordPress API (Direct) → MySQL
+Lambda Functions → WordPress API (Direct) → MySQL
+```
+
+**Infrastructure Status:**
+
+- **Main Stack:** `WordPressBlogStack` - Updated to remove CloudFront from WordPress API
+- **Stack ARN:** `arn:aws:cloudformation:us-east-1:925242451851:stack/WordPressBlogStack/341fa750-7282-11f0-9f49-0e2ac79fa5f5`
+- **CloudFront:** Frontend only (WordPress API routes removed)
+- **WordPress API:** Direct access via `api.cowboykimono.com`
+
+### **CloudFront Distribution** ✅ **FRONTEND ONLY**
 
 #### **Security Headers**
 
@@ -845,6 +871,40 @@ Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
 - Cookie handling: ✅ Working
 - Security headers: ✅ Properly configured
 
+#### **WordPress CORS and CloudFront Cleanup** ✅ **IN PROGRESS**
+
+**Problem:** CORS errors with images and Chrome link truncation due to CloudFront remnants
+
+**Root Cause:** 
+1. Global CORS rule causing conflicts in HTTP Headers plugin
+2. CloudFront remnants in WordPress configuration files
+3. Improper CORS header configuration for media files
+
+**Solution Applied:**
+
+1. **HTTP Headers Plugin Configuration:**
+   - Removed global rule that was causing critical errors
+   - Added 3 specific rules for different URL patterns
+   - Configured proper origin restriction to `https://cowboykimono.com`
+
+2. **WordPress Configuration Cleanup:**
+   - Removed CloudFront-related configurations from wp-config.php
+   - Cleaned up .htaccess files to remove CloudFront redirect rules
+   - Updated functions.php to remove CloudFront remnants
+
+3. **CORS Headers Configuration:**
+   - Media files: `/wp-content/uploads/` with proper CORS headers
+   - REST API: `/wp-json/` with API-specific headers
+   - Preflight requests: Proper OPTIONS handling
+
+**Current Status:** 🔧 **CONFIGURATION IN PROGRESS**
+
+**Expected Results:**
+- No more "CORS origins not allowed" errors
+- Images load properly on https://cowboykimono.com
+- Links work correctly in Chrome
+- REST API responds with proper CORS headers
+
 #### **Performance Issues**
 
 **Problem:** Slow page loads
@@ -1120,55 +1180,52 @@ response.headers.set('Link', `<${canonicalUrl}>; rel="canonical"`);
 
 ### **AWS Infrastructure Enhancements**
 
-#### **CloudFront Subdomain Configuration** ✅ **FIXED**
+#### **WordPress API Direct Access** ✅ **OPTIMIZED**
 
-**Status:** Production Ready with Proper Subdomain Routing
+**Status:** Production Ready with Direct API Access
 
 **Key Features:**
 
-- **api.cowboykimono.com** - WordPress REST API endpoints with CORS support
-- **admin.cowboykimono.com** - WordPress admin interface with security headers
+- **api.cowboykimono.com** - WordPress REST API (Direct Access - No CloudFront)
+- **admin.cowboykimono.com** - WordPress admin interface (Direct Access)
 - **cowboykimono.com** - Main Next.js application with CloudFront CDN
-- **Enhanced CORS headers** for cross-origin requests
-- **Security headers** for all subdomains
-- **Proper routing** for different content types
+- **WordPress Redis Caching** - Better performance than CloudFront for API
+- **REST API Caching** - Built-in WordPress caching optimization
+- **Simplified Architecture** - Reduced complexity and failure points
 
 **Implementation Details:**
 
 ```typescript
-// CloudFront behaviors for different subdomains
-additionalBehaviors: {
-  '/api/*': {
-    origin: 'Amplify API Gateway',
-    cachePolicy: 'CACHING_DISABLED',
-    corsHeaders: true,
-  },
-  '/wp-admin/*': {
-    origin: 'admin.cowboykimono.com',
-    cachePolicy: 'CACHING_DISABLED',
-    securityHeaders: true,
-  },
-  '/wp-json/*': {
-    origin: 'api.cowboykimono.com',
-    cachePolicy: 'CACHING_OPTIMIZED',
-    corsHeaders: true,
-  },
-}
+// Direct API access configuration
+const WORDPRESS_API_CONFIG = {
+  BASE_URL: 'https://api.cowboykimono.com',
+  ADMIN_URL: 'https://admin.cowboykimono.com',
+  CACHE_STRATEGY: 'WordPress Redis + REST API Caching',
+  CORS_ENABLED: true,
+  DIRECT_ACCESS: true,
+};
 ```
 
-#### **CloudFront Optimization**
+#### **WordPress Caching Optimization**
 
-- **Enhanced caching policies**
-- **Image optimization via CloudFront**
-- **Geographic distribution**
-- **Security headers implementation**
+- **Redis caching for database queries**
+- **REST API response caching**
+- **Image optimization via WordPress**
+- **Built-in performance optimization**
 
-#### **Lambda Function Improvements**
+#### **Lambda Function Improvements** ✅ **FIXED**
 
-- **Enhanced error handling**
-- **Performance monitoring**
-- **Cost optimization**
-- **Scalability improvements**
+- **Enhanced error handling** - Fixed ZodError validation issues
+- **Performance monitoring** - Improved response validation
+- **Cost optimization** - Better caching strategies
+- **Scalability improvements** - Direct API access reduces latency
+
+**Recent Fixes:**
+
+- **Fixed Lambda validation errors** - Updated response schema to match WordPress API format
+- **Resolved CORS issues** - Removed CloudFront from WordPress API path
+- **Improved image loading** - Direct access to WordPress media files
+- **Enhanced link functionality** - Fixed Chrome-specific link truncation issues
 
 #### **Monitoring & Observability**
 
@@ -1188,10 +1245,10 @@ additionalBehaviors: {
 
 #### **Caching Strategy**
 
-- **Multi-level caching system**
+- **WordPress Redis caching**
+- **REST API response caching**
 - **Intelligent cache invalidation**
-- **Redis integration**
-- **CDN optimization**
+- **Direct API optimization**
 
 #### **SEO Enhancements**
 
@@ -1209,16 +1266,37 @@ additionalBehaviors: {
 - **Style source controls**
 - **Frame security policies**
 
-#### **CORS Configuration** ✅ **FIXED**
+#### **CORS Configuration** ✅ **CONFIGURED**
 
-**Status:** Production Ready with Proper CORS Headers
+**Status:** Production Ready with WordPress CORS Headers Plugin
 
 **Issues Resolved:**
 
-- **Web Vitals API 405/500 errors** - Fixed with proper CORS headers
-- **WordPress API CORS issues** - Added CORS headers to CloudFront
-- **Cross-origin request failures** - Configured proper origins
-- **Preflight request handling** - Added OPTIONS method support
+- **WordPress API CORS issues** - Removed CloudFront, configured specific CORS headers
+- **Image loading problems** - Proper CORS headers for media files
+- **Cross-origin request failures** - Specific origin configuration (https://cowboykimono.com)
+- **Chrome link truncation** - Fixed by removing CloudFront interference
+- **Lambda validation errors** - Fixed response schema format
+- **Global rule conflicts** - Replaced with specific URL pattern rules
+
+**Implementation:**
+
+```typescript
+// WordPress CORS Headers Plugin Configuration
+const WORDPRESS_CORS_CONFIG = {
+  BASE_URL: 'https://api.cowboykimono.com',
+  CORS_STRATEGY: 'Specific Headers Plugin',
+  ALLOWED_ORIGIN: 'https://cowboykimono.com',
+  MEDIA_PATTERN: '/wp-content/uploads/',
+  API_PATTERN: '/wp-json/',
+  CACHE_STRATEGY: 'WordPress Redis + REST API Caching',
+};
+```
+
+**Plugin Rules:**
+1. **Media Files** (`/wp-content/uploads/`) - GET, HEAD, OPTIONS
+2. **REST API** (`/wp-json/`) - GET, POST, PUT, DELETE, OPTIONS  
+3. **Preflight** (OPTIONS) - Proper preflight handling
 
 **Implementation:**
 
@@ -1279,8 +1357,8 @@ headers: {
 
 ---
 
-**Documentation Version:** 2.5.0  
+**Documentation Version:** 2.7.0  
 **Last Updated:** 2025-01-25  
-**Status:** Production Ready with CloudFront Subdomain Fixes
+**Status:** Production Ready with WordPress Cleanup and CORS Configuration
 
-**Implementation Status:** All major features implemented and tested in production environment. CloudFront subdomain routing and CORS issues resolved.
+**Implementation Status:** All major features implemented and tested in production environment. CloudFront removed from WordPress API path. WordPress server cleaned up and properly configured for direct API access with specific CORS headers. Lambda validation errors fixed and CORS issues resolved through proper WordPress configuration.

@@ -551,6 +551,7 @@ export async function searchPosts(
 
 /**
  * Convert WordPress image URLs to use the correct domain for CORS
+ * Remove any CloudFront remnants and ensure direct WordPress API access
  */
 export function convertImageUrl(url: string): string {
   if (!url || typeof url !== 'string') return url;
@@ -558,6 +559,26 @@ export function convertImageUrl(url: string): string {
   // Convert wp-origin URLs to api URLs for proper CORS handling
   if (url.includes('wp-origin.cowboykimono.com')) {
     return url.replace('wp-origin.cowboykimono.com', 'api.cowboykimono.com');
+  }
+
+  // Remove any CloudFront URLs and use direct WordPress API
+  if (url.includes('cloudfront.net')) {
+    // Extract the WordPress path and use direct API URL
+    const pathMatch = url.match(/\/wp-content\/uploads\/.*$/);
+    if (pathMatch) {
+      return `https://api.cowboykimono.com${pathMatch[0]}`;
+    }
+  }
+
+  // Ensure all WordPress images use direct API access
+  if (
+    url.includes('/wp-content/uploads/') &&
+    !url.includes('api.cowboykimono.com')
+  ) {
+    const pathMatch = url.match(/\/wp-content\/uploads\/.*$/);
+    if (pathMatch) {
+      return `https://api.cowboykimono.com${pathMatch[0]}`;
+    }
   }
 
   return url;

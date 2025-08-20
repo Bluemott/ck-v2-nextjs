@@ -227,8 +227,8 @@ exports.handler = async (event) => {
       .slice(0, limit)
       .map((post) => ({
         id: post.id,
-        title: post.title.rendered,
-        excerpt: post.excerpt.rendered,
+        title: { rendered: post.title.rendered },
+        excerpt: { rendered: post.excerpt.rendered },
         slug: post.slug,
         date: post.date,
         featured_media: post.featured_media,

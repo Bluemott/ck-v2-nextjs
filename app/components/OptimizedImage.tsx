@@ -1,5 +1,9 @@
 import Image from 'next/image';
 import { useState } from 'react';
+import {
+  isWordPressImage,
+  wordpressImageLoader,
+} from '../lib/wordpress-image-loader';
 
 interface OptimizedImageProps {
   src: string;
@@ -109,6 +113,10 @@ export default function OptimizedImage({
     transition-all duration-300 ease-in-out
   `.trim();
 
+  // Use custom loader for WordPress images to prevent URL modifications
+  const useCustomLoader = isWordPressImage(src);
+  const imageLoader = useCustomLoader ? wordpressImageLoader : undefined;
+
   return (
     <>
       {fill ? (
@@ -133,6 +141,8 @@ export default function OptimizedImage({
             className={imageClassName}
             onLoad={handleLoad}
             onError={handleError}
+            loader={imageLoader}
+            unoptimized={useCustomLoader}
           />
         </div>
       ) : (
@@ -149,6 +159,8 @@ export default function OptimizedImage({
           className={`${imageClassName} ${className}`}
           onLoad={handleLoad}
           onError={handleError}
+          loader={imageLoader}
+          unoptimized={useCustomLoader}
         />
       )}
     </>

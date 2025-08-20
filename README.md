@@ -24,18 +24,18 @@ npm run performance-check
 - **Language:** TypeScript 5
 - **Styling:** Tailwind CSS 4
 - **CMS:** WordPress on AWS Lightsail (headless)
-- **Deployment:** AWS Amplify with CloudFront CDN
+- **Deployment:** AWS Amplify with CloudFront CDN (Frontend Only)
 - **Infrastructure:** AWS Lambda, API Gateway, CloudWatch
-- **Performance:** Enhanced caching, bundle optimization, CDN
+- **Performance:** WordPress Redis caching, REST API caching, bundle optimization
 
 ## 🏗️ Architecture
 
 ```
-Frontend (Next.js) ←→ WordPress REST API ←→ MySQL Database
+Frontend (Next.js + CloudFront) ←→ WordPress REST API (Direct) ←→ MySQL Database
        ↓
    AWS Lambda (Recommendations)
        ↓
-   Enhanced Caching System
+   WordPress Redis + REST API Caching
        ↓
    Performance Monitoring
 ```

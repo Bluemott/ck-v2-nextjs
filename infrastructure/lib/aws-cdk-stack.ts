@@ -314,71 +314,9 @@ export class WordPressBlogStack extends cdk.Stack {
               }
             ),
           },
-          // WordPress REST API routes - point to wp-origin for proper WordPress functionality
-          '/wp-json/*': {
-            origin: new origins.HttpOrigin('wp-origin.cowboykimono.com', {
-              protocolPolicy: cloudfront.OriginProtocolPolicy.HTTPS_ONLY,
-              customHeaders: {
-                'X-Forwarded-Host': 'wp-origin.cowboykimono.com',
-                'X-CloudFront-Origin': 'wordpress',
-              },
-            }),
-            viewerProtocolPolicy:
-              cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
-            cachePolicy: cloudfront.CachePolicy.CACHING_OPTIMIZED,
-            originRequestPolicy: cloudfront.OriginRequestPolicy.ALL_VIEWER,
-            allowedMethods: cloudfront.AllowedMethods.ALLOW_ALL,
-            cachedMethods: cloudfront.CachedMethods.CACHE_GET_HEAD,
-            // Add CORS headers for REST API
-            responseHeadersPolicy: new cloudfront.ResponseHeadersPolicy(
-              this,
-              'RESTAPISecurityHeaders',
-              {
-                responseHeadersPolicyName: 'RESTAPISecurityHeaders',
-                comment: 'Security headers for REST API responses with CORS',
-                securityHeadersBehavior: {
-                  contentSecurityPolicy: {
-                    override: true,
-                    contentSecurityPolicy:
-                      "default-src 'self'; script-src 'none'; style-src 'none';",
-                  },
-                  strictTransportSecurity: {
-                    override: true,
-                    accessControlMaxAge: cdk.Duration.days(2 * 365),
-                    includeSubdomains: true,
-                    preload: true,
-                  },
-                  contentTypeOptions: {
-                    override: true,
-                  },
-                  frameOptions: {
-                    override: true,
-                    frameOption: cloudfront.HeadersFrameOption.DENY,
-                  },
-                  referrerPolicy: {
-                    override: true,
-                    referrerPolicy:
-                      cloudfront.HeadersReferrerPolicy
-                        .STRICT_ORIGIN_WHEN_CROSS_ORIGIN,
-                  },
-                  xssProtection: {
-                    override: true,
-                    protection: true,
-                    modeBlock: true,
-                  },
-                },
-                customHeadersBehavior: {
-                  customHeaders: [
-                    {
-                      header: 'Cache-Control',
-                      value: 'public, max-age=300, s-maxage=600',
-                      override: true,
-                    },
-                  ],
-                },
-              }
-            ),
-          },
+          // WordPress REST API routes - REMOVED for direct access
+          // Direct access to api.cowboykimono.com for better performance and CORS handling
+          // WordPress Redis caching provides better performance than CloudFront for API
         },
         // Add error pages
         errorResponses: [

@@ -30,7 +30,7 @@ export async function GET() {
     const rssText = await response.text();
 
     // Parse XML using DOMParser (available in Node.js 18+)
-    const { DOMParser } = await import('xmldom');
+    const { DOMParser } = await import('@xmldom/xmldom');
     const parser = new DOMParser();
     const xmlDoc = parser.parseFromString(rssText, 'text/xml');
 

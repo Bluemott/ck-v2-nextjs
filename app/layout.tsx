@@ -19,21 +19,21 @@ const playfair = Playfair_Display({
 
 export const metadata: Metadata = {
   title: {
-    default: 'Cowboy Kimono - Western Fashion & Handcraft Stories',
+    default: 'Cowboy Kimono - Handpainted Denim Apparel',
     template: '%s | Cowboy Kimono',
   },
   description:
-    'Discover western fashion, handcraft stories, and design inspiration from Cowboy Kimono. Explore our blog for creative DIY projects, fashion tips, and western lifestyle content.',
+    'Discover unique handpainted denim jackets and apparel from Cowboy Kimono. Explore our blog for creative DIY projects, fashion tips, and western lifestyle content.',
   keywords: [
     'cowboy kimono',
-    'western fashion',
-    'handcraft stories',
+    'handpainted denim',
+    'handpainted jackets',
     'design inspiration',
     'DIY projects',
     'western lifestyle',
     'artisan clothing',
-    'handmade kimonos',
-    'western robes',
+    'handmade denim',
+    'custom jackets',
     'craft blog',
   ],
   authors: [{ name: 'Cowboy Kimono' }],
@@ -53,24 +53,24 @@ export const metadata: Metadata = {
     locale: 'en_US',
     url: env.NEXT_PUBLIC_SITE_URL,
     siteName: 'Cowboy Kimono',
-    title: 'Cowboy Kimono - Western Fashion & Handcraft Stories',
+    title: 'Cowboy Kimono - Handpainted Denim Apparel',
     description:
-      'Discover western fashion, handcraft stories, and design inspiration from Cowboy Kimono.',
+      'Discover unique handpainted denim jackets and apparel from Cowboy Kimono.',
     images: [
       {
         url: `${env.NEXT_PUBLIC_SITE_URL}/images/CK_Logo_Blog.webp`,
         width: 1200,
         height: 630,
-        alt: 'Cowboy Kimono - Western Fashion & Handcraft Stories',
+        alt: 'Cowboy Kimono - Handpainted Denim Apparel',
         type: 'image/webp',
       },
     ],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Cowboy Kimono - Western Fashion & Handcraft Stories',
+    title: 'Cowboy Kimono - Handpainted Denim Apparel',
     description:
-      'Discover western fashion, handcraft stories, and design inspiration from Cowboy Kimono.',
+      'Discover unique handpainted denim jackets and apparel from Cowboy Kimono.',
     images: [`${env.NEXT_PUBLIC_SITE_URL}/images/CK_Logo_Blog.webp`],
     creator: '@cowboykimono',
     site: '@cowboykimono',

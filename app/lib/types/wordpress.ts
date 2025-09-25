@@ -51,14 +51,16 @@ export interface WPRestPost {
       source_url: string;
       _links: Record<string, unknown>;
     }>;
-    'wp:term'?: Array<Array<{
-      id: number;
-      link: string;
-      name: string;
-      slug: string;
-      taxonomy: string;
-      _links: Record<string, unknown>;
-    }>>;
+    'wp:term'?: Array<
+      Array<{
+        id: number;
+        link: string;
+        name: string;
+        slug: string;
+        taxonomy: string;
+        _links: Record<string, unknown>;
+      }>
+    >;
   };
 }
 
@@ -123,13 +125,16 @@ export interface WPRestMedia {
     width: number;
     height: number;
     file: string;
-    sizes: Record<string, {
-      file: string;
-      width: number;
-      height: number;
-      mime_type: string;
-      source_url: string;
-    }>;
+    sizes: Record<
+      string,
+      {
+        file: string;
+        width: number;
+        height: number;
+        mime_type: string;
+        source_url: string;
+      }
+    >;
     image_meta: {
       aperture: string;
       credit: string;
@@ -148,6 +153,83 @@ export interface WPRestMedia {
   post: number;
   source_url: string;
   _links: Record<string, unknown>;
+}
+
+// WordPress Download Custom Post Type (ACF Fields)
+export interface WPRestDownload {
+  id: number;
+  date: string;
+  date_gmt: string;
+  guid: { rendered: string };
+  modified: string;
+  modified_gmt: string;
+  slug: string;
+  status: string;
+  type: string;
+  link: string;
+  title: { rendered: string };
+  content: { rendered: string; protected: boolean };
+  excerpt: { rendered: string; protected: boolean };
+  author: number;
+  featured_media: number;
+  comment_status: string;
+  ping_status: string;
+  sticky: boolean;
+  template: string;
+  format: string;
+  meta: {
+    download_file?: string | number;
+    download_category?: string;
+    download_thumbnail?: string | number;
+    download_type?: string;
+    download_url?: string;
+    download_description?: string;
+  };
+  // ACF fields might also be directly on the object
+  acf?: {
+    download_file?: string | number;
+    download_category?: string;
+    download_thumbnail?: string | number;
+    download_type?: string;
+    download_url?: string;
+    download_description?: string;
+  };
+  _embedded?: {
+    author?: Array<{
+      id: number;
+      name: string;
+      url: string;
+      description: string;
+      link: string;
+      slug: string;
+      avatar_urls: Record<string, string>;
+    }>;
+    'wp:featuredmedia'?: Array<{
+      id: number;
+      date: string;
+      slug: string;
+      type: string;
+      link: string;
+      title: { rendered: string };
+      author: number;
+      caption: { rendered: string };
+      alt_text: string;
+      media_type: string;
+      mime_type: string;
+      source_url: string;
+      _links: Record<string, unknown>;
+    }>;
+    'wp:term'?: Array<
+      Array<{
+        id: number;
+        link: string;
+        name: string;
+        slug: string;
+        taxonomy: string;
+        _links: Record<string, unknown>;
+      }>
+    >;
+  };
 }
 
 // WordPress REST API Query Parameters
@@ -194,10 +276,10 @@ export interface WPRestResponseHeaders {
   'X-WP-Total': string;
   'X-WP-TotalPages': string;
   'X-WP-Query': string;
-  'Link': string;
+  Link: string;
   'Content-Type': string;
   'Cache-Control': string;
-  'ETag': string;
+  ETag: string;
   'Last-Modified': string;
 }
 
@@ -251,13 +333,13 @@ export const wpRestPostSchema = z.object({
   type: z.string(),
   link: z.string(),
   title: z.object({ rendered: z.string() }),
-  content: z.object({ 
-    rendered: z.string(), 
-    protected: z.boolean() 
+  content: z.object({
+    rendered: z.string(),
+    protected: z.boolean(),
   }),
-  excerpt: z.object({ 
-    rendered: z.string(), 
-    protected: z.boolean() 
+  excerpt: z.object({
+    rendered: z.string(),
+    protected: z.boolean(),
   }),
   author: z.number(),
   featured_media: z.number(),
@@ -267,40 +349,56 @@ export const wpRestPostSchema = z.object({
   template: z.string(),
   format: z.string(),
   meta: z.array(z.unknown()),
-  _embedded: z.object({
-    author: z.array(z.object({
-      id: z.number(),
-      name: z.string(),
-      url: z.string(),
-      description: z.string(),
-      link: z.string(),
-      slug: z.string(),
-      avatar_urls: z.record(z.string(), z.string()),
-    })).optional(),
-    'wp:featuredmedia': z.array(z.object({
-      id: z.number(),
-      date: z.string(),
-      slug: z.string(),
-      type: z.string(),
-      link: z.string(),
-      title: z.object({ rendered: z.string() }),
-      author: z.number(),
-      caption: z.object({ rendered: z.string() }),
-      alt_text: z.string(),
-      media_type: z.string(),
-      mime_type: z.string(),
-      source_url: z.string(),
-      _links: z.record(z.string(), z.unknown()),
-    })).optional(),
-    'wp:term': z.array(z.array(z.object({
-      id: z.number(),
-      link: z.string(),
-      name: z.string(),
-      slug: z.string(),
-      taxonomy: z.string(),
-      _links: z.record(z.string(), z.unknown()),
-    }))).optional(),
-  }).optional(),
+  _embedded: z
+    .object({
+      author: z
+        .array(
+          z.object({
+            id: z.number(),
+            name: z.string(),
+            url: z.string(),
+            description: z.string(),
+            link: z.string(),
+            slug: z.string(),
+            avatar_urls: z.record(z.string(), z.string()),
+          })
+        )
+        .optional(),
+      'wp:featuredmedia': z
+        .array(
+          z.object({
+            id: z.number(),
+            date: z.string(),
+            slug: z.string(),
+            type: z.string(),
+            link: z.string(),
+            title: z.object({ rendered: z.string() }),
+            author: z.number(),
+            caption: z.object({ rendered: z.string() }),
+            alt_text: z.string(),
+            media_type: z.string(),
+            mime_type: z.string(),
+            source_url: z.string(),
+            _links: z.record(z.string(), z.unknown()),
+          })
+        )
+        .optional(),
+      'wp:term': z
+        .array(
+          z.array(
+            z.object({
+              id: z.number(),
+              link: z.string(),
+              name: z.string(),
+              slug: z.string(),
+              taxonomy: z.string(),
+              _links: z.record(z.string(), z.unknown()),
+            })
+          )
+        )
+        .optional(),
+    })
+    .optional(),
 });
 
 export const wpRestCategorySchema = z.object({
@@ -383,6 +481,7 @@ export const WP_REST_ENDPOINTS = {
   TYPES: '/wp-json/wp/v2/types',
   STATUSES: '/wp-json/wp/v2/statuses',
   TAXONOMIES: '/wp-json/wp/v2/taxonomies',
+  DOWNLOADS: '/wp-json/wp/v2/downloads', // Custom post type endpoint
 } as const;
 
 // WordPress REST API status constants
@@ -402,4 +501,5 @@ export const WP_POST_TYPES = {
   REVISION: 'revision',
   NAV_MENU_ITEM: 'nav_menu_item',
   CUSTOM_POST_TYPE: 'custom_post_type',
-} as const; 
+  DOWNLOADS: 'downloads', // Custom post type
+} as const;

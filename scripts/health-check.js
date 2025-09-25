@@ -247,7 +247,7 @@ class HealthChecker {
   async checkAPIConnectivity() {
     try {
       const response = await this.makeRequest(
-        `${API_URL}/wp/v2/posts?per_page=1`
+        `${API_URL}/wp-json/wp/v2/posts?per_page=1`
       );
 
       this.results.checks.apiConnectivity = {

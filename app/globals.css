@@ -39,7 +39,12 @@ body {
 }
 
 /* Global heading styles with serif font */
-h1, h2, h3, h4, h5, h6 {
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
   font-family: var(--font-playfair), serif;
   font-weight: 600;
 }
@@ -97,7 +102,12 @@ select:focus,
   max-width: none;
 }
 
-.prose h1, .prose h2, .prose h3, .prose h4, .prose h5, .prose h6 {
+.prose h1,
+.prose h2,
+.prose h3,
+.prose h4,
+.prose h5,
+.prose h6 {
   color: #111827 !important;
   font-weight: 600;
   margin-top: 1.5em;
@@ -109,7 +119,11 @@ select:focus,
   font-size: 2.25rem;
 }
 
-.prose h2, .prose h3, .prose h4, .prose h5, .prose h6 {
+.prose h2,
+.prose h3,
+.prose h4,
+.prose h5,
+.prose h6 {
   font-family: var(--font-playfair), serif;
 }
 
@@ -150,7 +164,8 @@ select:focus,
   font-style: italic;
 }
 
-.prose ul, .prose ol {
+.prose ul,
+.prose ol {
   margin: 1em 0;
   padding-left: 1.5rem;
 }
@@ -158,4 +173,22 @@ select:focus,
 .prose li {
   color: #111827 !important;
   margin: 0.25em 0;
+}
+
+/* Custom animation for rotating gallery cards */
+@keyframes scroll {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-100%);
+  }
+}
+
+.animate-scroll {
+  animation: scroll 20s linear infinite;
+}
+
+.animate-scroll:hover {
+  animation-play-state: paused;
 }

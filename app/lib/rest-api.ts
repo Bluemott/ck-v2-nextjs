@@ -1,6 +1,7 @@
 import { env } from './env';
 import type {
   WPRestCategory,
+  WPRestDownload,
   WPRestErrorResponse,
   WPRestPagination,
   WPRestPost,
@@ -26,6 +27,7 @@ const WP_ENDPOINTS = {
   TAGS: '/wp-json/wp/v2/tags',
   SEARCH: '/wp-json/wp/v2/search',
   MEDIA: '/wp-json/wp/v2/media',
+  DOWNLOADS: '/wp-json/wp/v2/downloads', // Add this endpoint
 };
 
 // REST API Client with proper type definitions
@@ -381,6 +383,98 @@ export class RestAPIClient {
     }
   }
 
+  // Get downloads with pagination and filtering
+  async getDownloads(
+    params: {
+      page?: number;
+      per_page?: number;
+      search?: string;
+      orderby?: string;
+      order?: 'asc' | 'desc';
+      _embed?: boolean;
+      status?: 'publish' | 'draft' | 'private' | 'trash';
+      meta_key?: string;
+      meta_value?: string;
+    } = {}
+  ): Promise<{
+    downloads: WPRestDownload[];
+    pagination: WPRestPagination;
+  }> {
+    const searchParams = new URLSearchParams();
+
+    if (params.page) searchParams.append('page', params.page.toString());
+    if (params.per_page)
+      searchParams.append('per_page', params.per_page.toString());
+    if (params.search) searchParams.append('search', params.search);
+    if (params.orderby) searchParams.append('orderby', params.orderby);
+    if (params.order) searchParams.append('order', params.order);
+    if (params._embed) searchParams.append('_embed', '1');
+    if (params.status) searchParams.append('status', params.status);
+    if (params.meta_key) searchParams.append('meta_key', params.meta_key);
+    if (params.meta_value) searchParams.append('meta_value', params.meta_value);
+
+    const endpoint = `${WP_ENDPOINTS.DOWNLOADS}?${searchParams.toString()}`;
+
+    try {
+      const { data: downloads, headers } =
+        await this.makeRequestWithHeaders<WPRestDownload[]>(endpoint);
+
+      // Extract pagination information from WordPress REST API headers
+      const totalDownloads = parseInt(headers.get('X-WP-Total') || '0', 10);
+      const totalPages = parseInt(headers.get('X-WP-TotalPages') || '1', 10);
+      const currentPage = parseInt(headers.get('X-WP-CurrentPage') || '1', 10);
+      const perPage = parseInt(headers.get('X-WP-PerPage') || '10', 10);
+
+      const pagination: WPRestPagination = {
+        totalPosts: totalDownloads || downloads.length,
+        totalPages: totalPages || 1,
+        currentPage: currentPage || 1,
+        perPage: perPage || downloads.length,
+        hasNextPage: (currentPage || 1) < (totalPages || 1),
+        hasPreviousPage: (currentPage || 1) > 1,
+      };
+
+      return {
+        downloads,
+        pagination,
+      };
+    } catch (error) {
+      console.error('Error fetching downloads:', error);
+      return {
+        downloads: [],
+        pagination: {
+          totalPosts: 0,
+          totalPages: 1,
+          currentPage: 1,
+          perPage: 0,
+          hasNextPage: false,
+          hasPreviousPage: false,
+        },
+      };
+    }
+  }
+
+  // Get downloads by category
+  async getDownloadsByCategory(category: string): Promise<WPRestDownload[]> {
+    try {
+      // ACF fields are not queryable via meta_key/meta_value in REST API
+      // We need to fetch all downloads and filter client-side
+      const { downloads } = await this.getDownloads({
+        per_page: 100,
+        _embed: true,
+      });
+
+      // Filter by category client-side
+      return downloads.filter((download) => {
+        const acfData = download.acf || download.meta || {};
+        return acfData.download_category === category;
+      });
+    } catch (error) {
+      console.error('Error fetching downloads by category:', error);
+      return [];
+    }
+  }
+
   // Get configuration for debugging
   getConfig() {
     return {
@@ -397,6 +491,7 @@ export const restAPIClient = new RestAPIClient();
 // Export types for backward compatibility
 export type {
   WPRestCategory,
+  WPRestDownload,
   WPRestErrorResponse,
   WPRestPagination,
   WPRestPost,

@@ -1,10 +1,11 @@
-import { MetadataRoute } from 'next'
+import { MetadataRoute } from 'next';
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: 'Cowboy Kimono - Handcrafted Western Apparel',
+    name: 'Cowboy Kimono - Handpainted Denim Apparel',
     short_name: 'Cowboy Kimono',
-    description: 'Discover unique handcrafted cowboy kimonos blending Western and Eastern aesthetics.',
+    description:
+      'Discover unique handpainted denim jackets and apparel blending Western and Eastern aesthetics.',
     start_url: '/',
     display: 'standalone',
     background_color: '#FFEBCD',
@@ -24,9 +25,9 @@ export default function manifest(): MetadataRoute.Manifest {
         src: '/images/CK_Logo_Title-01.webp',
         sizes: '512x512',
         type: 'image/webp',
-      }
+      },
     ],
     orientation: 'portrait',
-    categories: ['shopping', 'lifestyle', 'fashion']
-  }
+    categories: ['shopping', 'lifestyle', 'fashion'],
+  };
 }

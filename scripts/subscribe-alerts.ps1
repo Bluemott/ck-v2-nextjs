@@ -1,5 +1,6 @@
 # Cowboy Kimono v2 - SNS Alert Subscription Script (PowerShell)
 # This script helps you subscribe to CloudWatch alerts via SNS
+# Note: Email notifications are now handled by AWS WorkMail
 
 param(
     [Parameter(Mandatory=$true)]
@@ -80,6 +81,7 @@ try {
     Write-Host ""
     Write-Info "📧 Check your email ($EmailAddress) for a confirmation message"
     Write-Info "📧 Click the confirmation link to start receiving alerts"
+    Write-Info "ℹ️  Note: Email notifications are now handled by AWS WorkMail"
     Write-Host ""
     Write-Info "🔗 CloudWatch Console:"
     Write-Info "  https://console.aws.amazon.com/cloudwatch/home?region=$Region"

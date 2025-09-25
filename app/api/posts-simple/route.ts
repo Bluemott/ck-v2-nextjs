@@ -12,31 +12,51 @@ export async function GET(request: NextRequest) {
 
     // Simple WordPress API call
     const wpUrl = process.env.NEXT_PUBLIC_WORDPRESS_REST_URL;
+
     if (!wpUrl) {
+      console.error('WordPress URL not configured in environment variables');
       return NextResponse.json(
         {
           success: false,
           error: 'WordPress URL not configured',
+          debug: {
+            envVars: Object.keys(process.env).filter((key) =>
+              key.includes('WORDPRESS')
+            ),
+            nodeEnv: process.env.NODE_ENV,
+          },
         },
         { status: 500 }
       );
     }
 
-    const response = await fetch(
-      `${wpUrl}/wp-json/wp/v2/posts?page=${page}&per_page=${perPage}&_embed=1`,
-      {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      }
-    );
+    const apiUrl = `${wpUrl}/wp-json/wp/v2/posts?page=${page}&per_page=${perPage}&_embed=1`;
+
+    const response = await fetch(apiUrl, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
+    // Log response status for debugging (only in development)
+    if (process.env.NODE_ENV === 'development') {
+      console.warn('WordPress API response status:', response.status);
+    }
 
     if (!response.ok) {
+      const errorText = await response.text();
+      console.error('WordPress API error response:', errorText);
       return NextResponse.json(
         {
           success: false,
           error: `WordPress API error: ${response.status} ${response.statusText}`,
+          debug: {
+            url: apiUrl,
+            status: response.status,
+            statusText: response.statusText,
+            responseBody: errorText,
+          },
         },
         { status: response.status }
       );

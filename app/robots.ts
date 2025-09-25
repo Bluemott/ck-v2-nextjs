@@ -1,9 +1,9 @@
-import { MetadataRoute } from 'next'
-import { env } from './lib/env';
+import { MetadataRoute } from 'next';
 
 export default function robots(): MetadataRoute.Robots {
-  const baseUrl = env.NEXT_PUBLIC_SITE_URL;
-  
+  // CRITICAL: Always use non-www to match site redirects and prevent SEO issues
+  const baseUrl = 'https://cowboykimono.com';
+
   return {
     rules: [
       {
@@ -13,6 +13,8 @@ export default function robots(): MetadataRoute.Robots {
           '/blog/',
           '/shop/',
           '/downloads/',
+          '/about/',
+          '/custom-kimonos/',
           '/images/',
           '/sitemap.xml',
         ],
@@ -27,7 +29,6 @@ export default function robots(): MetadataRoute.Robots {
           '/debug/',
           '/shop-1',
           '/kimono-builder',
-          '/about',
           '/contact-2',
           '/search',
           '/error',
@@ -42,6 +43,8 @@ export default function robots(): MetadataRoute.Robots {
           '/blog/',
           '/shop/',
           '/downloads/',
+          '/about/',
+          '/custom-kimonos/',
           '/images/',
           '/sitemap.xml',
         ],
@@ -55,7 +58,6 @@ export default function robots(): MetadataRoute.Robots {
           '/debug/',
           '/shop-1',
           '/kimono-builder',
-          '/about',
           '/contact-2',
           '/search',
           '/error',
@@ -71,6 +73,8 @@ export default function robots(): MetadataRoute.Robots {
           '/blog/',
           '/shop/',
           '/downloads/',
+          '/about/',
+          '/custom-kimonos/',
           '/images/',
           '/sitemap.xml',
         ],
@@ -84,7 +88,6 @@ export default function robots(): MetadataRoute.Robots {
           '/debug/',
           '/shop-1',
           '/kimono-builder',
-          '/about',
           '/contact-2',
           '/search',
           '/error',
@@ -96,5 +99,5 @@ export default function robots(): MetadataRoute.Robots {
     ],
     sitemap: `${baseUrl}/sitemap.xml`,
     host: baseUrl,
-  }
+  };
 }

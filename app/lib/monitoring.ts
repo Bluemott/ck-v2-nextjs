@@ -2,11 +2,8 @@
 import type {
   AWSError,
   CloudWatchLogsPutLogEventsCommandInput,
-  CloudWatchLogsPutLogEventsCommandOutput,
-  CloudWatchPutMetricDataCommandOutput,
   MonitoringConfig,
   XRayPutTraceSegmentsCommandInput,
-  XRayPutTraceSegmentsCommandOutput,
 } from './types/aws';
 
 let CloudWatchClient:
@@ -97,9 +94,13 @@ export interface CoreWebVitalsMetrics {
 
 // Monitoring class with proper AWS SDK types
 export class Monitoring {
-  private cloudwatch: any = null;
-  private xray: any = null;
-  private logs: any = null;
+  private cloudwatch:
+    | import('@aws-sdk/client-cloudwatch').CloudWatchClient
+    | null = null;
+  private xray: import('@aws-sdk/client-xray').XRayClient | null = null;
+  private logs:
+    | import('@aws-sdk/client-cloudwatch-logs').CloudWatchLogsClient
+    | null = null;
   protected config: MonitoringConfig;
   private sequenceToken?: string;
 
@@ -167,11 +168,14 @@ export class Monitoring {
       };
 
       const command = new PutMetricDataCommand(commandInput);
-      const response: CloudWatchPutMetricDataCommandOutput =
-        await this.cloudwatch.send(command);
+      const response = await this.cloudwatch.send(command);
 
       // Check for failed metrics
-      if (response.FailedPutCount && response.FailedPutCount > 0) {
+      if (
+        'FailedPutCount' in response &&
+        typeof response.FailedPutCount === 'number' &&
+        response.FailedPutCount > 0
+      ) {
         console.warn(`Failed to put ${response.FailedPutCount} metrics`);
       }
     } catch (error) {
@@ -330,8 +334,7 @@ export class Monitoring {
       };
 
       const command = new PutLogEventsCommand(commandInput);
-      const response: CloudWatchLogsPutLogEventsCommandOutput =
-        await this.logs.send(command);
+      const response = await this.logs.send(command);
       this.sequenceToken = response.nextSequenceToken;
     } catch (error) {
       console.error('Failed to put log:', error);
@@ -399,8 +402,7 @@ export class Monitoring {
       };
 
       const command = new PutTraceSegmentsCommand(commandInput);
-      const response: XRayPutTraceSegmentsCommandOutput =
-        await this.xray.send(command);
+      const response = await this.xray.send(command);
 
       // Check for unprocessed segments
       if (

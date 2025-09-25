@@ -1,12 +1,18 @@
-import Image from 'next/image';
 import { Metadata } from 'next';
+import Image from 'next/image';
 import { generateSEOMetadata } from '../lib/seo';
 
 export const metadata: Metadata = generateSEOMetadata({
-  title: "About Us",
-  description: "Learn about Cowboy Kimono - our story, craftsmanship, and passion for creating unique western-inspired apparel. Discover the artistry behind our handcrafted robes and kimonos.",
-  keywords: ["about cowboy kimono", "artisan story", "handcrafted clothing", "western fashion history"],
-  canonical: "/about",
+  title: 'About Us',
+  description:
+    'Learn about Cowboy Kimono - our story, craftsmanship, and passion for creating unique western-inspired apparel. Discover the artistry behind our handpainted denim jackets.',
+  keywords: [
+    'about cowboy kimono',
+    'artisan story',
+    'handpainted denim',
+    'western fashion history',
+  ],
+  canonical: '/about',
 });
 
 const AboutPage = () => {

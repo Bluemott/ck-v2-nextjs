@@ -2,6 +2,7 @@
 
 # Cowboy Kimono v2 - SNS Alert Subscription Script (Bash)
 # This script helps you subscribe to CloudWatch alerts via SNS
+# Note: Email notifications are now handled by AWS WorkMail
 
 set -e
 
@@ -103,6 +104,7 @@ print_info "Subscription ARN: $SUBSCRIPTION_ARN"
 echo ""
 print_info "📧 Check your email ($EMAIL_ADDRESS) for a confirmation message"
 print_info "📧 Click the confirmation link to start receiving alerts"
+print_info "ℹ️  Note: Email notifications are now handled by AWS WorkMail"
 echo ""
 print_info "🔗 CloudWatch Console:"
 print_info "  https://console.aws.amazon.com/cloudwatch/home?region=$REGION"

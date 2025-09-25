@@ -1,160 +1,292 @@
 'use client';
 
-import { useState } from 'react';
 import Image from 'next/image';
+import { useState } from 'react';
+
+interface DownloadThumbnail {
+  id: string;
+  title: string;
+  thumbnail: string;
+  downloadUrl: string;
+  type?: string;
+}
 
 interface DownloadItem {
   id: string;
   title: string;
   description: string;
   image: string;
-  thumbnails: {
-    id: string;
-    title: string;
-    thumbnail: string;
-    downloadUrl: string;
-  }[];
+  thumbnails: DownloadThumbnail[];
 }
-
-const downloadSections: DownloadItem[] = [
-  {
-    id: 'patterns',
-    title: 'Coloring Pages',
-    description: 'Free downloadable coloring pages for creating your own western-inspired garments. Includes detailed instructions and sizing guides.',
-    image: '/images/Neon_Coloring_Mock.webp',
-    thumbnails: [
-      {
-        id: 'pattern-1',
-        title: 'ABQ Neon',
-        thumbnail: '/images/Neon_Coloring_Mock.webp',
-        downloadUrl: '/downloads/coloring-pages/ABQ_Neon_W+Color.pdf'
-      },
-      {
-        id: 'pattern-2',
-        title: 'Cover My Back',
-        thumbnail: '/images/CK_Coloring_Button.webp',
-        downloadUrl: '/downloads/coloring-pages/CK_Creativity_Exercise.pdf'
-      }
-    ]
-  },
-  {
-    id: 'templates',
-    title: 'Craft Templates',
-    description: 'Artistic templates and stencils for painting and decorating your own cowboy kimonos. Perfect for customization projects.',
-    image: '/images/CKCraft_Template2.webp',
-    thumbnails: [
-      {
-        id: 'template-1',
-        title: '3 June Bugs Youll Love Immediately',
-        thumbnail: '/images/Craft_June_Bug.webp',
-        downloadUrl: '/downloads/craft-templates/June_Bugs.pdf'
-      },
-      {
-        id: 'template-2',
-        title: 'Year of the OX Irresistible Paper Craft',
-        thumbnail: '/images/Ox_book_corner.webp',
-        downloadUrl: '/downloads/craft-templates/Ox_Book_Corner.pdf'
-      },
-      {
-        id: 'template-3',
-        title: 'Create a Kickass Thank You for Your Mail Carrier',
-        thumbnail: '/images/Kickass_Thanks_Envelope.webp',
-        downloadUrl: '/downloads/craft-templates/Kickass_Thank_You.pdf'
-      },
-      {
-        id: 'template-4',
-        title: 'Your Labor is Loved (Labor Day Craft)',
-        thumbnail: '/images/Labor_is_Loved.webp',
-        downloadUrl: '/downloads/craft-templates/Labor_Day_Love.pdf'
-      },
-      {
-        id: 'template-5',
-        title: 'Yum. Fathers Day Craft',
-        thumbnail: '/images/Father_Day_Muffins.webp',
-        downloadUrl: '/downloads/craft-templates/Fathers_Day_Craft.pdf'
-      },
-      {
-        id: 'template-6',
-        title: 'Jumbo Milagros for Mothers Day',
-        thumbnail: '/images/Jumbo_Milagro.webp', // Replace with actual image path
-        downloadUrl: '/downloads/craft-templates/Milagro_Ornaments_w_instructions.pdf'
-      },
-      {
-        id: 'template-7',
-        title: 'Grocery Bag Bird Ornaments',
-        thumbnail: '/images/Grocery_Bag_Birds_Green.webp',
-        downloadUrl: '/downloads/craft-templates/Grocery_Bag_Birds_with_instructions.pdf'
-      }
-    ]
-  },
-  {
-    id: 'guides',
-    title:'DIY Tutorials',
-    description: 'Comprehensive guides on caring for your handcrafted pieces and styling tips for different occasions.',
-    image: '/images/Jumbo_Milagro.webp',
-    thumbnails: [
-      {
-        id: 'guide-1',
-        title: 'How to Create a Hip Jackalope Display',
-        thumbnail: '/images/Jackalope_Glasses.webp',
-        downloadUrl: '/blog/hip-jackalope-display' // Blog post link
-      },
-      {
-        id: 'guide-2',
-        title: 'Paint a One-of-a-kind Sofa Table',
-        thumbnail: '/images/Sofa_Table.webp',
-        downloadUrl: '/blog/paint-sofa-table' // Blog post link
-      },
-      {
-        id: 'guide-3',
-        title: 'Animated Chalk Art',
-        thumbnail: '/images/Animated_Chalk_Art.webp',
-        downloadUrl: '/blog/animated-chalk-art' // Blog post link
-      },
-      {
-        id: 'guide-4',
-        title: 'Create Scary Silhouettes',
-        thumbnail: '/images/Scary_Silhouette.webp',
-        downloadUrl: '/blog/scary-silhouettes' // Blog post link
-      },
-      {
-        id: 'guide-5',
-        title: 'How to Wash Painted Denim',
-        thumbnail: '/images/CK_Wash_Painted_Denim.webp',
-        downloadUrl: '/downloads/DIY-tutorials/CK_Wash_Painted_Denim.pdf' // Actual download
-      },
-      {
-        id: 'guide-6',
-        title: 'Fabric Paint Saves Stained Pants',
-        thumbnail: '/images/CK_Indigo_Pants.webp',
-        downloadUrl: '/blog/fabric-paint-stained-pants' // Blog post link
-      },
-      {
-        id: 'guide-7',
-        title: 'Hello, Christmas Star (How Long Has it Been?)',
-        thumbnail: '/images/Christmas_Star_SM.webp',
-        downloadUrl: '/blog/christmas-star' // Blog post link
-      },
-      {
-        id: 'guide-8',
-        title: 'Cactus Patch Mail Art',
-        thumbnail: '/images/Cactus_Doodles118.webp',
-        downloadUrl: '/blog/cactus-patch-mail-art' // Blog post link
-      },
-    ]
-  }
-];
 
 const DownloadsClient = () => {
   const [expandedCard, setExpandedCard] = useState<string | null>(null);
+  const [dynamicThumbnails, setDynamicThumbnails] = useState<
+    Record<string, DownloadThumbnail[]>
+  >({});
+  const [loading, setLoading] = useState<Record<string, boolean>>({});
+  const [error, setError] = useState<string | null>(null);
+
+  // Static card configuration (keeping the beautiful design)
+  const staticCards: DownloadItem[] = [
+    {
+      id: 'coloring-pages',
+      title: 'Coloring Pages',
+      description:
+        'Free downloadable coloring pages for creating your own western-inspired garments. Includes detailed instructions and sizing guides.',
+      image: '/images/Neon_Coloring_Mock.webp',
+      thumbnails: [], // Will be populated from API
+    },
+    {
+      id: 'craft-templates',
+      title: 'Craft Templates',
+      description:
+        'Artistic templates and stencils for painting and decorating your own cowboy kimonos. Perfect for customization projects.',
+      image: '/images/CKCraft_Template2.webp',
+      thumbnails: [], // Will be populated from API
+    },
+    {
+      id: 'diy-tutorials',
+      title: 'DIY Tutorials',
+      description:
+        'Comprehensive guides on caring for your handcrafted pieces and styling tips for different occasions.',
+      image: '/images/Jumbo_Milagro.webp',
+      thumbnails: [], // Will be populated from API
+    },
+  ];
+
+  // Fetch downloads for a specific category
+  const fetchDownloadsForCategory = async (category: string) => {
+    if (dynamicThumbnails[category] || loading[category]) {
+      return; // Already loaded or loading
+    }
+
+    setLoading((prev) => ({ ...prev, [category]: true }));
+    setError(null);
+
+    try {
+      const response = await fetch(`/api/downloads?category=${category}`);
+      const data = await response.json();
+
+      // Debug logging (only in development)
+      if (process.env.NODE_ENV === 'development') {
+        console.warn(`API response for ${category}:`, data);
+      }
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to fetch downloads');
+      }
+
+      // Extract thumbnails from the API response
+      let thumbnails = [];
+
+      if (data.downloads && Array.isArray(data.downloads)) {
+        // If downloads is an array of sections
+        const section = data.downloads.find(
+          (section: { id: string }) => section.id === category
+        );
+        thumbnails = section?.thumbnails || [];
+      } else if (data.downloads && Array.isArray(data.downloads.thumbnails)) {
+        // If downloads has thumbnails directly
+        thumbnails = data.downloads.thumbnails;
+      }
+
+      // Ensure thumbnails is an array
+      if (!Array.isArray(thumbnails)) {
+        thumbnails = [];
+      }
+
+      setDynamicThumbnails((prev) => ({ ...prev, [category]: thumbnails }));
+    } catch (err) {
+      console.error(`Error fetching downloads for ${category}:`, err);
+      setError(err instanceof Error ? err.message : 'Failed to load downloads');
+
+      // Fallback to static data if API fails
+      const fallbackThumbnails = getFallbackThumbnails(category);
+      setDynamicThumbnails((prev) => ({
+        ...prev,
+        [category]: fallbackThumbnails,
+      }));
+    } finally {
+      setLoading((prev) => ({ ...prev, [category]: false }));
+    }
+  };
+
+  // Fallback thumbnails for when API is not available
+  const getFallbackThumbnails = (category: string): DownloadThumbnail[] => {
+    const fallbackData: Record<string, DownloadThumbnail[]> = {
+      'coloring-pages': [
+        {
+          id: 'pattern-1',
+          title: 'ABQ Neon',
+          thumbnail: '/images/Neon_Coloring_Mock.webp',
+          downloadUrl: '/downloads/coloring-pages/ABQ_Neon_W+Color.pdf',
+        },
+        {
+          id: 'pattern-2',
+          title: 'Cover My Back',
+          thumbnail: '/images/CK_Coloring_Button.webp',
+          downloadUrl: '/downloads/coloring-pages/CK_Creativity_Exercise.pdf',
+        },
+      ],
+      'craft-templates': [
+        {
+          id: 'template-1',
+          title: '3 June Bugs Youll Love Immediately',
+          thumbnail: '/images/Craft_June_Bug.webp',
+          downloadUrl: '/downloads/craft-templates/June_Bugs.pdf',
+        },
+        {
+          id: 'template-2',
+          title: 'Year of the OX Irresistible Paper Craft',
+          thumbnail: '/images/Ox_book_corner.webp',
+          downloadUrl: '/downloads/craft-templates/Ox_Book_Corner.pdf',
+        },
+        {
+          id: 'template-3',
+          title: 'Create a Kickass Thank You for Your Mail Carrier',
+          thumbnail: '/images/Kickass_Thanks_Envelope.webp',
+          downloadUrl: '/downloads/craft-templates/Kickass_Thank_You.pdf',
+        },
+        {
+          id: 'template-4',
+          title: 'Your Labor is Loved (Labor Day Craft)',
+          thumbnail: '/images/Labor_is_Loved.webp',
+          downloadUrl: '/downloads/craft-templates/Labor_Day_Love.pdf',
+        },
+        {
+          id: 'template-5',
+          title: 'Yum. Fathers Day Craft',
+          thumbnail: '/images/Father_Day_Muffins.webp',
+          downloadUrl: '/downloads/craft-templates/Fathers_Day_Craft.pdf',
+        },
+        {
+          id: 'template-6',
+          title: 'Jumbo Milagros for Mothers Day',
+          thumbnail: '/images/Jumbo_Milagro.webp',
+          downloadUrl:
+            '/downloads/craft-templates/Milagro_Ornaments_w_instructions.pdf',
+        },
+        {
+          id: 'template-7',
+          title: 'Grocery Bag Bird Ornaments',
+          thumbnail: '/images/Grocery_Bag_Birds_Green.webp',
+          downloadUrl:
+            '/downloads/craft-templates/Grocery_Bag_Birds_with_instructions.pdf',
+        },
+      ],
+      'diy-tutorials': [
+        {
+          id: 'guide-1',
+          title: 'How to Create a Hip Jackalope Display',
+          thumbnail: '/images/Jackalope_Glasses.webp',
+          downloadUrl: '/blog/hip-jackalope-display',
+        },
+        {
+          id: 'guide-2',
+          title: 'Paint a One-of-a-kind Sofa Table',
+          thumbnail: '/images/Sofa_Table.webp',
+          downloadUrl: '/blog/paint-sofa-table',
+        },
+        {
+          id: 'guide-3',
+          title: 'Animated Chalk Art',
+          thumbnail: '/images/Animated_Chalk_Art.webp',
+          downloadUrl: '/blog/animated-chalk-art',
+        },
+        {
+          id: 'guide-4',
+          title: 'Create Scary Silhouettes',
+          thumbnail: '/images/Scary_Silhouette.webp',
+          downloadUrl: '/blog/scary-silhouettes',
+        },
+        {
+          id: 'guide-5',
+          title: 'How to Wash Painted Denim',
+          thumbnail: '/images/CK_Wash_Painted_Denim.webp',
+          downloadUrl: '/downloads/DIY-tutorials/CK_Wash_Painted_Denim.pdf',
+        },
+        {
+          id: 'guide-6',
+          title: 'Fabric Paint Saves Stained Pants',
+          thumbnail: '/images/CK_Indigo_Pants.webp',
+          downloadUrl: '/blog/fabric-paint-stained-pants',
+        },
+        {
+          id: 'guide-7',
+          title: 'Hello, Christmas Star (How Long Has it Been?)',
+          thumbnail: '/images/Christmas_Star_SM.webp',
+          downloadUrl: '/blog/christmas-star',
+        },
+        {
+          id: 'guide-8',
+          title: 'Cactus Patch Mail Art',
+          thumbnail: '/images/Cactus_Doodles118.webp',
+          downloadUrl: '/blog/cactus-patch-mail-art',
+        },
+      ],
+    };
+
+    return fallbackData[category] || [];
+  };
 
   const toggleCard = (cardId: string) => {
-    setExpandedCard(expandedCard === cardId ? null : cardId);
+    if (expandedCard === cardId) {
+      setExpandedCard(null);
+    } else {
+      setExpandedCard(cardId);
+      // Fetch downloads when expanding a card
+      fetchDownloadsForCategory(cardId);
+    }
+  };
+
+  // Helper function to determine download type and button text
+  const getDownloadInfo = (downloadUrl: string, downloadType?: string) => {
+    if (!downloadUrl || typeof downloadUrl !== 'string') {
+      return { type: 'unknown', text: 'Download' };
+    }
+
+    // Check if it's a blog post link
+    if (downloadUrl.startsWith('/blog/') || downloadUrl.includes('/blog/')) {
+      return { type: 'blog', text: 'Read Post' };
+    }
+
+    // Check if it's a PDF or file download
+    if (
+      downloadUrl.includes('.pdf') ||
+      downloadUrl.includes('.doc') ||
+      downloadUrl.includes('.docx') ||
+      downloadUrl.includes('.zip') ||
+      downloadUrl.includes('.rar') ||
+      downloadType === 'pdf' ||
+      downloadType === 'file'
+    ) {
+      return { type: 'file', text: 'Download' };
+    }
+
+    // Check if it's an external link
+    if (
+      downloadUrl.startsWith('http') &&
+      !downloadUrl.includes('cowboykimono.com')
+    ) {
+      return { type: 'external', text: 'Visit Link' };
+    }
+
+    // Default to download
+    return { type: 'download', text: 'Download' };
   };
 
   const handleDownload = (downloadUrl: string, title: string) => {
+    // Ensure downloadUrl is a string
+    if (!downloadUrl || typeof downloadUrl !== 'string') {
+      console.error('Invalid download URL:', downloadUrl);
+      return;
+    }
+
+    const downloadInfo = getDownloadInfo(downloadUrl);
+
     // Check if it's a blog post link or actual download
-    if (downloadUrl.startsWith('/blog/')) {
+    if (downloadInfo.type === 'blog') {
       // Navigate to blog post
       window.location.href = downloadUrl;
     } else {
@@ -183,26 +315,28 @@ const DownloadsClient = () => {
             />
           </div>
           <p className="text-gray-600 text-lg">
-            Free resources, patterns, and guides to enhance your cowboy kimono experience
+            Free resources, patterns, and guides to enhance your cowboy kimono
+            experience
           </p>
           <p className="text-sm text-gray-500 mt-2">
-            {downloadSections.length} categories available • Click cards to explore downloads
+            {staticCards.length} categories available • Click cards to explore
+            downloads
           </p>
         </div>
 
         {/* Download Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-10 mb-12">
-          {downloadSections.map((section) => (
+          {staticCards.map((section) => (
             <div
               key={section.id}
               className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1"
             >
               {/* Main Card with Image and Overlay - Square Aspect Ratio */}
-                             <div
-                 className="cursor-pointer relative w-full overflow-hidden group"
-                 style={{ width: '100%', height: 300, background: '#eee' }}
-                 onClick={() => toggleCard(section.id)}
-               >
+              <div
+                className="cursor-pointer relative w-full overflow-hidden group"
+                style={{ width: '100%', height: 300, background: '#eee' }}
+                onClick={() => toggleCard(section.id)}
+              >
                 <Image
                   src={section.image}
                   alt={`${section.title} preview`}
@@ -215,34 +349,37 @@ const DownloadsClient = () => {
                     e.currentTarget.style.display = 'none';
                   }}
                 />
-                                 {/* Dark Overlay - Only visible on hover */}
-                 <div
-                   className="absolute inset-0 transition-all duration-300 opacity-0 group-hover:opacity-100"
-                   style={{ background: 'rgba(0,0,0,0.35)', zIndex: 5 }}
-                 />
-                 {/* Text Content Overlay - Only visible on hover */}
-                 <div
-                   className="absolute inset-0 flex flex-col justify-center items-center text-center p-6 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-                   style={{ zIndex: 10 }}
-                 >
-                   {/* Add a semi-transparent background behind the text for readability */}
-                   <div className="inline-block px-6 py-4 rounded-lg text-center" style={{ background: 'rgba(0,0,0,0.5)' }}>
-                     <h2 className="text-2xl font-bold text-white mb-3 drop-shadow-lg text-center serif">
-                       {section.title}
-                     </h2>
-                     <p className="text-white text-sm leading-relaxed mb-4 drop-shadow-md line-clamp-3 text-center">
-                       {section.description}
-                     </p>
-                     <div className="flex flex-col items-center text-white">
-                       <span className="font-medium mr-2 drop-shadow-md text-center">
-                         View Items
-                       </span>
-                       <span className="transform transition-transform duration-300 drop-shadow-md text-center">
-                         ↓
-                       </span>
-                     </div>
-                   </div>
-                 </div>
+                {/* Dark Overlay - Only visible on hover */}
+                <div
+                  className="absolute inset-0 transition-all duration-300 opacity-0 group-hover:opacity-100"
+                  style={{ background: 'rgba(0,0,0,0.35)', zIndex: 5 }}
+                />
+                {/* Text Content Overlay - Only visible on hover */}
+                <div
+                  className="absolute inset-0 flex flex-col justify-center items-center text-center p-6 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+                  style={{ zIndex: 10 }}
+                >
+                  {/* Add a semi-transparent background behind the text for readability */}
+                  <div
+                    className="inline-block px-6 py-4 rounded-lg text-center"
+                    style={{ background: 'rgba(0,0,0,0.5)' }}
+                  >
+                    <h2 className="text-2xl font-bold text-white mb-3 drop-shadow-lg text-center serif">
+                      {section.title}
+                    </h2>
+                    <p className="text-white text-sm leading-relaxed mb-4 drop-shadow-md line-clamp-3 text-center">
+                      {section.description}
+                    </p>
+                    <div className="flex flex-col items-center text-white">
+                      <span className="font-medium mr-2 drop-shadow-md text-center">
+                        View Items
+                      </span>
+                      <span className="transform transition-transform duration-300 drop-shadow-md text-center">
+                        ↓
+                      </span>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           ))}
@@ -253,7 +390,10 @@ const DownloadsClient = () => {
           <div className="bg-white rounded-lg shadow-md p-6 mb-8">
             <div className="flex justify-between items-center mb-6">
               <h3 className="text-2xl font-bold text-gray-800 serif">
-                {downloadSections.find(section => section.id === expandedCard)?.title}
+                {
+                  staticCards.find((section) => section.id === expandedCard)
+                    ?.title
+                }
               </h3>
               <button
                 onClick={() => setExpandedCard(null)}
@@ -262,45 +402,103 @@ const DownloadsClient = () => {
                 ×
               </button>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              {downloadSections
-                .find(section => section.id === expandedCard)
-                ?.thumbnails.map((item) => (
-                <div
-                  key={item.id}
-                  className="bg-gray-50 rounded-lg shadow-sm overflow-hidden hover:shadow-md transition-all duration-300 transform hover:-translate-y-1 flex flex-col items-center text-center"
-                >
-                  {/* Thumbnail Image */}
-                  <div className="aspect-square relative w-full">
-                    <Image
-                      src={item.thumbnail}
-                      alt={item.title}
-                      fill
-                      className="object-cover"
-                      onError={(e) => {
-                        console.error('Thumbnail failed to load:', item.thumbnail);
-                        e.currentTarget.style.display = 'none';
-                      }}
-                    />
-                  </div>
-                  {/* Download Info */}
-                  <div className="p-4 flex flex-col items-center text-center w-full">
-                    <h4 className="font-semibold text-gray-800 mb-2 text-center text-sm line-clamp-2 w-full">
-                      {item.title}
-                    </h4>
-                    <button
-                      onClick={() => handleDownload(item.downloadUrl, item.title)}
-                      className={`px-4 py-2 rounded-md transition-colors font-medium flex items-center justify-center text-sm w-full max-w-[180px] bg-[#1e2939] hover:bg-[#2a3441] text-white`}
-                    >
-                      <span className="mr-2">
-                        {item.downloadUrl.startsWith('/blog/') ? '📖' : '↓'}
-                      </span>
-                      {item.downloadUrl.startsWith('/blog/') ? 'Read Post' : 'Download PDF'}
-                    </button>
-                  </div>
+
+            {/* Loading State */}
+            {loading[expandedCard] && (
+              <div className="text-center py-8">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#1e2939] mx-auto mb-4"></div>
+                <p className="text-gray-600">Loading downloads...</p>
+              </div>
+            )}
+
+            {/* Error State */}
+            {error && !loading[expandedCard] && (
+              <div className="text-center py-8">
+                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4">
+                  <p className="text-yellow-800 text-sm">
+                    Using fallback content. WordPress integration not available.
+                  </p>
                 </div>
-              ))}
-            </div>
+              </div>
+            )}
+
+            {/* Dynamic Content */}
+            {!loading[expandedCard] && (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                {(dynamicThumbnails[expandedCard] || [])
+                  .filter(
+                    (item) =>
+                      item && typeof item === 'object' && item.id && item.title
+                  )
+                  .map((item) => (
+                    <div
+                      key={item.id}
+                      className="bg-gray-50 rounded-lg shadow-sm overflow-hidden hover:shadow-md transition-all duration-300 transform hover:-translate-y-1 flex flex-col items-center text-center"
+                    >
+                      {/* Thumbnail Image */}
+                      <div className="aspect-square relative w-full">
+                        {item.thumbnail &&
+                        item.thumbnail !== '' &&
+                        item.thumbnail !== '#' ? (
+                          <Image
+                            src={item.thumbnail}
+                            alt={item.title || 'Download'}
+                            fill
+                            className="object-cover"
+                            sizes="(max-width: 768px) 50vw, (max-width: 1024px) 25vw, 20vw"
+                            onError={(e) => {
+                              console.error(
+                                'Thumbnail failed to load:',
+                                item.thumbnail
+                              );
+                              e.currentTarget.style.display = 'none';
+                            }}
+                          />
+                        ) : (
+                          <div className="w-full h-full bg-gray-200 flex items-center justify-center">
+                            <span className="text-gray-500 text-sm">
+                              No Image
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                      {/* Download Info */}
+                      <div className="p-4 flex flex-col items-center text-center w-full">
+                        <h4 className="font-semibold text-gray-800 mb-2 text-center text-sm line-clamp-2 w-full">
+                          {item.title || 'Untitled Download'}
+                        </h4>
+                        {item.downloadUrl &&
+                        item.downloadUrl !== '' &&
+                        item.downloadUrl !== '#' ? (
+                          (() => {
+                            const downloadInfo = getDownloadInfo(
+                              item.downloadUrl,
+                              item.type
+                            );
+                            return (
+                              <button
+                                onClick={() =>
+                                  handleDownload(
+                                    item.downloadUrl,
+                                    item.title || 'Download'
+                                  )
+                                }
+                                className={`px-4 py-2 rounded-md transition-colors font-medium flex items-center justify-center text-sm w-full max-w-[180px] bg-[#1e2939] hover:bg-[#2a3441] text-white`}
+                              >
+                                {downloadInfo.text}
+                              </button>
+                            );
+                          })()
+                        ) : (
+                          <div className="px-4 py-2 rounded-md bg-gray-300 text-gray-600 text-sm text-center w-full max-w-[180px]">
+                            Coming Soon
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+              </div>
+            )}
           </div>
         )}
       </div>
@@ -308,4 +506,4 @@ const DownloadsClient = () => {
   );
 };
 
-export default DownloadsClient; 
+export default DownloadsClient;

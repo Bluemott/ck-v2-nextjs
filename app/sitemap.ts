@@ -1,6 +1,5 @@
 import { MetadataRoute } from 'next';
 import { fetchCategories, fetchPosts, fetchTags } from './lib/api';
-import { env } from './lib/env';
 
 // Enhanced sitemap configuration
 const SITEMAP_CONFIG = {
@@ -11,15 +10,12 @@ const SITEMAP_CONFIG = {
   PRIORITY_DECAY: 0.1, // How much priority decreases for older posts
 };
 
-// Ensure canonical URL (currently www, will be updated when redirects are fixed)
+// Ensure canonical URL (non-www as per site redirects)
 function getCanonicalUrl(url: string): string {
   try {
     const parsed = new URL(url);
-    // Currently using www as canonical (temporary until redirects are fixed)
-    // TODO: Change to non-www when redirects are properly configured
-    if (!parsed.hostname.startsWith('www.')) {
-      parsed.hostname = `www.${parsed.hostname}`;
-    }
+    // Force non-www domain to match site redirects
+    parsed.hostname = parsed.hostname.replace(/^www\./, '');
     return parsed.toString();
   } catch {
     return url;
@@ -28,8 +24,10 @@ function getCanonicalUrl(url: string): string {
 
 // Enhanced sitemap generation with proper canonicalization
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  // Ensure we're using the canonical URL (currently www)
-  const baseUrl = getCanonicalUrl(env.NEXT_PUBLIC_SITE_URL);
+  // Force canonical URL (non-www) regardless of environment variable
+  // This ensures all sitemap URLs are non-www to prevent redirect loops
+  // CRITICAL: Always use non-www to match site redirects and prevent SEO issues
+  const baseUrl = 'https://cowboykimono.com';
 
   // High priority core pages
   const corePages: MetadataRoute.Sitemap = [
@@ -62,6 +60,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       lastModified: new Date(),
       changeFrequency: 'monthly' as const,
       priority: 0.7,
+    },
+    {
+      url: `${baseUrl}/custom-kimonos`,
+      lastModified: new Date(),
+      changeFrequency: 'weekly' as const,
+      priority: 0.8,
     },
   ];
 
@@ -193,7 +197,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     ...downloadUrls,
   ];
 
-  // Ensure all URLs are canonical (currently www, will be updated when redirects are fixed)
+  // Ensure all URLs are canonical (non-www)
   const canonicalUrls = allUrls.map((entry) => ({
     ...entry,
     url: getCanonicalUrl(entry.url),

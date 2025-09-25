@@ -1,6 +1,6 @@
 # Cowboy Kimono v2 - Next.js Website
 
-A modern, headless WordPress-powered website for Cowboy Kimono, featuring a blog, shop, and downloads section with advanced SEO optimization, social media integration, and AWS serverless infrastructure with comprehensive performance optimizations.
+A modern, headless WordPress-powered website for Cowboy Kimono, featuring handpainted denim apparel, blog, shop, and downloads section with advanced SEO optimization, social media integration, and AWS serverless infrastructure with comprehensive performance optimizations.
 
 ## 🚀 Quick Start
 
@@ -99,8 +99,32 @@ npm run performance-check      # Run performance analysis
 npm run health-check          # Check application health
 npm run test:web-vitals       # Test Core Web Vitals implementation
 npm run test:rss-feed         # Test RSS feed implementation
+npm run test:structured-data-comprehensive # Test structured data schemas
 npm run deploy:infrastructure # Deploy AWS infrastructure
 ```
+
+## 🔧 WordPress Redis Cache Management
+
+### Update Redis Object Cache Drop-in
+
+```bash
+# Linux/macOS
+sudo ./scripts/update-redis-dropin.sh
+
+# Windows PowerShell (Run as Administrator)
+.\scripts\update-redis-dropin.ps1
+
+# Test Redis cache functionality
+./scripts/test-redis-cache.sh
+```
+
+### Redis Cache Features
+
+- **Latest Drop-in Version:** Redis Object Cache v2.4.3 with enhanced error handling
+- **Automated Deployment:** Bash and PowerShell scripts for seamless updates
+- **Comprehensive Testing:** Full test suite for Redis cache functionality
+- **Backup System:** Automatic backup of existing drop-in before updates
+- **Performance Monitoring:** Built-in metrics and logging
 
 ## 🔗 Key URLs
 
@@ -110,6 +134,22 @@ npm run deploy:infrastructure # Deploy AWS infrastructure
 - **Documentation:** [DOCUMENTATION.md](./DOCUMENTATION.md)
 
 ## 🚀 Performance Optimizations
+
+### ✅ Recent Fixes Applied
+
+#### **Health Check WordPress API Connectivity** ✅ **COMPLETED**
+
+- **Issue:** Health check script showing WordPress API connectivity issue (404) despite API working correctly
+- **Solution:** Fixed health check script to use correct WordPress REST API endpoint with `/wp-json` prefix
+- **Result:** Health check score improved from 75/100 to 83/100, API connectivity now shows 200 status
+- **Impact:** Accurate health monitoring and eliminates false positive API connectivity issues
+
+#### **Sitemap WWW URLs Fixed** ✅ **COMPLETED**
+
+- **Issue:** Sitemap contained 66 WWW URLs that should be non-www
+- **Solution:** Hardcoded canonical base URL to prevent environment variable conflicts
+- **Result:** All sitemap URLs now use `https://cowboykimono.com` (non-www format)
+- **Impact:** Eliminates redirect loops and improves SEO consistency
 
 ### ✅ Implemented Optimizations
 
@@ -151,7 +191,7 @@ npm run deploy:infrastructure # Deploy AWS infrastructure
 - Lambda functions with proper memory allocation
 - API Gateway with rate limiting and caching
 - CloudWatch monitoring with dashboards and alarms
-- SNS notifications for critical alerts
+- SNS notifications for critical alerts (email handled by AWS WorkMail)
 
 #### **Input Sanitization**
 
@@ -242,7 +282,7 @@ cd infrastructure && cdk deploy WordPressBlogStack --require-approval never
 
 - **CloudWatch Dashboards:** Application metrics and infrastructure health
 - **CloudWatch Alarms:** Automated alerts for errors, performance, and availability
-- **SNS Notifications:** Email alerts for critical issues
+- **SNS Notifications:** Alerts for critical issues (email handled by AWS WorkMail)
 - **Custom Metrics:** Application-specific performance tracking
 
 **Current Deployed Resources:**

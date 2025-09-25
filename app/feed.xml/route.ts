@@ -1,23 +1,7 @@
 import { NextRequest } from 'next/server';
 import { enhancedCache } from '../lib/cache';
-import { env } from '../lib/env';
-import { EnhancedMonitoring } from '../lib/monitoring';
 import { restAPIClient } from '../lib/rest-api';
 import type { WPRestPost as WordPressPost } from '../lib/types/wordpress';
-
-// Create enhanced monitoring instance for RSS feed
-const enhancedMonitoring = new EnhancedMonitoring({
-  region: process.env.AWS_REGION || 'us-east-1',
-  logGroupName: '/aws/wordpress/application',
-  enableXRay: process.env.NODE_ENV === 'production',
-  enableMetrics: process.env.NODE_ENV === 'production',
-  enableLogs: process.env.NODE_ENV === 'production',
-  environment:
-    (process.env.NODE_ENV as 'development' | 'production' | 'test') ||
-    'development',
-  maxRetries: 3,
-  timeout: 10000,
-});
 
 // RSS Feed Configuration
 const RSS_CONFIG = {
@@ -51,7 +35,8 @@ interface RSSItem {
 
 // Generate RSS XML content
 function generateRSSXML(items: RSSItem[], lastBuildDate: string): string {
-  const baseUrl = env.NEXT_PUBLIC_SITE_URL;
+  // CRITICAL: Always use non-www to match site redirects and prevent SEO issues
+  const baseUrl = 'https://cowboykimono.com';
 
   return `<?xml version="1.0" encoding="UTF-8"?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/">
@@ -148,8 +133,8 @@ export async function GET(request: NextRequest) {
   const requestId = `rss-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
 
   try {
-    // Track RSS feed request
-    await enhancedMonitoring.info('RSS feed request', {
+    // Simple logging without monitoring to avoid timeout issues
+    console.warn('RSS feed request:', {
       requestId,
       userAgent: request.headers.get('user-agent') || 'unknown',
       ip:
@@ -158,23 +143,34 @@ export async function GET(request: NextRequest) {
         'unknown',
     });
 
-    // Check cache first
-    const cachedRSS = await enhancedCache.getWithRedis(RSS_CONFIG.CACHE_KEY);
-    if (cachedRSS && typeof cachedRSS === 'string') {
-      await enhancedMonitoring.info('RSS feed cache hit', { requestId });
+    // Try to get from cache with timeout
+    let cachedRSS: string | null = null;
+    try {
+      const cachePromise = enhancedCache.getWithRedis(RSS_CONFIG.CACHE_KEY);
+      const timeoutPromise = new Promise<null>((_, reject) =>
+        setTimeout(() => reject(new Error('Cache timeout')), 2000)
+      );
+      cachedRSS = (await Promise.race([cachePromise, timeoutPromise])) as
+        | string
+        | null;
 
-      return new Response(cachedRSS, {
-        headers: {
-          'Content-Type': 'application/xml; charset=utf-8',
-          'Cache-Control': 'public, max-age=3600, s-maxage=3600',
-          'X-Cache': 'HIT',
-          'X-Request-ID': requestId,
-        },
-      });
+      if (cachedRSS && typeof cachedRSS === 'string') {
+        console.warn('RSS feed cache hit:', { requestId });
+        return new Response(cachedRSS, {
+          headers: {
+            'Content-Type': 'application/xml; charset=utf-8',
+            'Cache-Control': 'public, max-age=3600, s-maxage=3600',
+            'X-Cache': 'HIT',
+            'X-Request-ID': requestId,
+          },
+        });
+      }
+    } catch (cacheError) {
+      console.warn('Cache error (continuing without cache):', cacheError);
     }
 
-    // Fetch posts from WordPress REST API
-    const { posts } = await restAPIClient.getPosts({
+    // Fetch posts from WordPress REST API with timeout
+    const postsPromise = restAPIClient.getPosts({
       per_page: RSS_CONFIG.MAX_ITEMS,
       _embed: true,
       status: 'publish',
@@ -182,12 +178,19 @@ export async function GET(request: NextRequest) {
       order: 'desc',
     });
 
+    const timeoutPromise = new Promise<never>((_, reject) =>
+      setTimeout(() => reject(new Error('WordPress API timeout')), 8000)
+    );
+
+    const { posts } = await Promise.race([postsPromise, timeoutPromise]);
+
     if (!posts || !Array.isArray(posts)) {
       throw new Error('Failed to fetch posts for RSS feed');
     }
 
     // Convert posts to RSS items
-    const baseUrl = env.NEXT_PUBLIC_SITE_URL;
+    // CRITICAL: Always use non-www to match site redirects and prevent SEO issues
+    const baseUrl = 'https://cowboykimono.com';
     const rssItems: RSSItem[] = posts
       .filter((post) => post && post.status === 'publish' && post.slug)
       .map((post) => convertPostToRSSItem(post, baseUrl));
@@ -196,15 +199,23 @@ export async function GET(request: NextRequest) {
     const lastBuildDate = new Date().toUTCString();
     const rssXML = generateRSSXML(rssItems, lastBuildDate);
 
-    // Cache the RSS feed
-    await enhancedCache.setWithRedis(
-      RSS_CONFIG.CACHE_KEY,
-      rssXML,
-      RSS_CONFIG.CACHE_TTL
-    );
+    // Try to cache with timeout (don't wait for it)
+    try {
+      const cachePromise = enhancedCache.setWithRedis(
+        RSS_CONFIG.CACHE_KEY,
+        rssXML,
+        RSS_CONFIG.CACHE_TTL
+      );
+      const timeoutPromise = new Promise<never>((_, reject) =>
+        setTimeout(() => reject(new Error('Cache timeout')), 1000)
+      );
+      await Promise.race([cachePromise, timeoutPromise]);
+      console.warn('RSS feed cached successfully');
+    } catch (cacheError) {
+      console.warn('Cache set error (continuing):', cacheError);
+    }
 
-    // Track successful generation
-    await enhancedMonitoring.info('RSS feed generated successfully', {
+    console.warn('RSS feed generated successfully:', {
       requestId,
       itemsCount: rssItems.length,
       totalPosts: posts.length,
@@ -224,30 +235,25 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     console.error('RSS feed generation error:', error);
 
-    // Track error
-    await enhancedMonitoring.error('RSS feed generation error', {
-      requestId,
-      error: error instanceof Error ? error.message : String(error),
-      generationTime: Date.now() - startTime,
-    });
-
     // Return fallback RSS feed
+    // CRITICAL: Always use non-www to match site redirects and prevent SEO issues
+    const fallbackBaseUrl = 'https://cowboykimono.com';
     const fallbackRSS = `<?xml version="1.0" encoding="UTF-8"?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
     <title><![CDATA[${RSS_CONFIG.TITLE}]]></title>
-    <link>${env.NEXT_PUBLIC_SITE_URL}</link>
+    <link>${fallbackBaseUrl}</link>
     <description><![CDATA[${RSS_CONFIG.DESCRIPTION}]]></description>
     <language>${RSS_CONFIG.LANGUAGE}</language>
     <lastBuildDate>${new Date().toUTCString()}</lastBuildDate>
     <generator>${RSS_CONFIG.GENERATOR}</generator>
     <ttl>${RSS_CONFIG.TTL}</ttl>
     <category>${RSS_CONFIG.CATEGORY}</category>
-    <atom:link href="${env.NEXT_PUBLIC_SITE_URL}/feed.xml" rel="self" type="application/rss+xml" />
+    <atom:link href="${fallbackBaseUrl}/feed.xml" rel="self" type="application/rss+xml" />
     <item>
       <title><![CDATA[Feed temporarily unavailable]]></title>
-      <link>${env.NEXT_PUBLIC_SITE_URL}/blog</link>
-      <guid>${env.NEXT_PUBLIC_SITE_URL}/blog</guid>
+      <link>${fallbackBaseUrl}/blog</link>
+      <guid>${fallbackBaseUrl}/blog</guid>
       <pubDate>${new Date().toUTCString()}</pubDate>
       <description><![CDATA[The RSS feed is temporarily unavailable. Please visit our blog directly.]]></description>
     </item>

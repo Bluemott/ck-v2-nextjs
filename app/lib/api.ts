@@ -115,7 +115,17 @@ export async function fetchPosts(
     // Validate search parameters
     const validatedParams = searchParamsSchema.parse(params);
 
-    let result: { posts: WPRestPost[] };
+    let result: {
+      posts: WPRestPost[];
+      pagination?: {
+        totalPosts: number;
+        totalPages: number;
+        currentPage: number;
+        perPage: number;
+        hasNextPage: boolean;
+        hasPreviousPage: boolean;
+      };
+    };
 
     // Use cached posts if available (server-side only)
     if (cacheManager) {
@@ -130,18 +140,65 @@ export async function fetchPosts(
         _embed: true,
       });
     } else {
-      // Fallback to direct API call for client-side
-      const posts = await restAPIClient.getPosts({
-        page: validatedParams.page,
-        per_page: validatedParams.per_page || 12,
-        search: validatedParams.search,
-        categories: validatedParams.categories,
-        tags: validatedParams.tags,
-        orderby: validatedParams.orderby || 'date',
-        order: validatedParams.order || 'desc',
-        _embed: true,
-      });
-      result = posts;
+      // For client-side, use Next.js API routes to avoid CORS issues
+      const isClient = typeof window !== 'undefined';
+
+      if (isClient) {
+        // Use Next.js API route for client-side requests
+        const searchParams = new URLSearchParams();
+        if (validatedParams.page)
+          searchParams.append('page', validatedParams.page.toString());
+        if (validatedParams.per_page)
+          searchParams.append('per_page', validatedParams.per_page.toString());
+        if (validatedParams.search)
+          searchParams.append('search', validatedParams.search);
+        if (validatedParams.categories)
+          searchParams.append(
+            'categories',
+            validatedParams.categories.join(',')
+          );
+        if (validatedParams.tags)
+          searchParams.append('tags', validatedParams.tags.join(','));
+        if (validatedParams.orderby)
+          searchParams.append('orderby', validatedParams.orderby);
+        if (validatedParams.order)
+          searchParams.append('order', validatedParams.order);
+
+        const response = await fetch(
+          `/api/posts-simple?${searchParams.toString()}`
+        );
+        if (!response.ok) {
+          throw new Error(
+            `API request failed: ${response.status} ${response.statusText}`
+          );
+        }
+
+        const apiResult = await response.json();
+        result = {
+          posts: apiResult.data.posts,
+          pagination: {
+            totalPosts: apiResult.data.totalPosts,
+            totalPages: apiResult.data.totalPages,
+            currentPage: apiResult.data.currentPage,
+            perPage: apiResult.data.perPage,
+            hasNextPage: apiResult.data.currentPage < apiResult.data.totalPages,
+            hasPreviousPage: apiResult.data.currentPage > 1,
+          },
+        };
+      } else {
+        // Server-side: use direct API call
+        const posts = await restAPIClient.getPosts({
+          page: validatedParams.page,
+          per_page: validatedParams.per_page || 12,
+          search: validatedParams.search,
+          categories: validatedParams.categories,
+          tags: validatedParams.tags,
+          orderby: validatedParams.orderby || 'date',
+          order: validatedParams.order || 'desc',
+          _embed: true,
+        });
+        result = posts;
+      }
     }
 
     // Transform and validate each post
@@ -202,18 +259,61 @@ export async function fetchPostsWithPagination(
         _embed: true,
       });
     } else {
-      // Fallback to direct API call for client-side
-      const posts = await restAPIClient.getPosts({
-        page: validatedParams.page,
-        per_page: validatedParams.per_page || 12,
-        search: validatedParams.search,
-        categories: validatedParams.categories,
-        tags: validatedParams.tags,
-        orderby: validatedParams.orderby || 'date',
-        order: validatedParams.order || 'desc',
-        _embed: true,
-      });
-      result = posts;
+      // For client-side, use Next.js API routes to avoid CORS issues
+      const isClient = typeof window !== 'undefined';
+
+      if (isClient) {
+        // Use Next.js API route for client-side requests
+        const searchParams = new URLSearchParams();
+        if (validatedParams.page)
+          searchParams.append('page', validatedParams.page.toString());
+        if (validatedParams.per_page)
+          searchParams.append('per_page', validatedParams.per_page.toString());
+        if (validatedParams.search)
+          searchParams.append('search', validatedParams.search);
+        if (validatedParams.categories)
+          searchParams.append(
+            'categories',
+            validatedParams.categories.join(',')
+          );
+        if (validatedParams.tags)
+          searchParams.append('tags', validatedParams.tags.join(','));
+        if (validatedParams.orderby)
+          searchParams.append('orderby', validatedParams.orderby);
+        if (validatedParams.order)
+          searchParams.append('order', validatedParams.order);
+
+        const response = await fetch(
+          `/api/posts-simple?${searchParams.toString()}`
+        );
+        if (!response.ok) {
+          throw new Error(
+            `API request failed: ${response.status} ${response.statusText}`
+          );
+        }
+
+        const apiResult = await response.json();
+        result = {
+          posts: apiResult.data.posts,
+          pagination: {
+            totalPosts: apiResult.data.totalPosts,
+            totalPages: apiResult.data.totalPages,
+          },
+        };
+      } else {
+        // Server-side: use direct API call
+        const posts = await restAPIClient.getPosts({
+          page: validatedParams.page,
+          per_page: validatedParams.per_page || 12,
+          search: validatedParams.search,
+          categories: validatedParams.categories,
+          tags: validatedParams.tags,
+          orderby: validatedParams.orderby || 'date',
+          order: validatedParams.order || 'desc',
+          _embed: true,
+        });
+        result = posts;
+      }
     }
 
     // Transform and validate posts
@@ -301,8 +401,24 @@ export async function fetchCategories(): Promise<WPRestCategory[]> {
     if (cacheManager) {
       return await cacheManager.getCachedCategories();
     } else {
-      // Fallback to direct API call
-      return await restAPIClient.getCategories();
+      // For client-side, use Next.js API routes to avoid CORS issues
+      const isClient = typeof window !== 'undefined';
+
+      if (isClient) {
+        // Use Next.js API route for client-side requests
+        const response = await fetch('/api/categories');
+        if (!response.ok) {
+          throw new Error(
+            `API request failed: ${response.status} ${response.statusText}`
+          );
+        }
+
+        const apiResult = await response.json();
+        return apiResult.data?.data || [];
+      } else {
+        // Server-side: use direct API call
+        return await restAPIClient.getCategories();
+      }
     }
   } catch (error) {
     console.error('Error fetching categories:', error);
@@ -343,8 +459,24 @@ export async function fetchTags(): Promise<WPRestTag[]> {
     if (cacheManager) {
       return await cacheManager.getCachedTags();
     } else {
-      // Fallback to direct API call
-      return await restAPIClient.getTags();
+      // For client-side, use Next.js API routes to avoid CORS issues
+      const isClient = typeof window !== 'undefined';
+
+      if (isClient) {
+        // Use Next.js API route for client-side requests
+        const response = await fetch('/api/tags');
+        if (!response.ok) {
+          throw new Error(
+            `API request failed: ${response.status} ${response.statusText}`
+          );
+        }
+
+        const apiResult = await response.json();
+        return apiResult.data?.data || [];
+      } else {
+        // Server-side: use direct API call
+        return await restAPIClient.getTags();
+      }
     }
   } catch (error) {
     console.error('Error fetching tags:', error);

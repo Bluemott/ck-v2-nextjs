@@ -17,6 +17,8 @@ frontend:
         - ls -la .next/
         - echo "Checking for required-server-files.json..."
         - test -f .next/required-server-files.json && echo "File found" || echo "File missing"
+        - echo "Copying required-server-files.json to root for Amplify..."
+        - cp .next/required-server-files.json ./
   artifacts:
     baseDirectory: .
     files:
@@ -24,3 +26,4 @@ frontend:
       - 'public/**/*'
       - 'package.json'
       - 'package-lock.json'
+      - 'required-server-files.json'

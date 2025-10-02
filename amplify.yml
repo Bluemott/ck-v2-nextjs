@@ -17,13 +17,14 @@ frontend:
         - ls -la .next/
         - echo "Checking for required-server-files.json..."
         - test -f .next/required-server-files.json && echo "File found" || echo "File missing"
-        - echo "Copying required-server-files.json to root for Amplify..."
-        - cp .next/required-server-files.json ./
+        - echo "Setting up _next directory for Amplify..."
+        - cp -r .next _next
+        - cp -r public _next/
+        - echo "Verifying _next directory structure..."
+        - ls -la _next/
+        - echo "Checking for required-server-files.json in _next..."
+        - test -f _next/required-server-files.json && echo "File found in _next" || echo "File missing in _next"
   artifacts:
-    baseDirectory: .
+    baseDirectory: _next
     files:
-      - '.next/**/*'
-      - 'public/**/*'
-      - 'package.json'
-      - 'package-lock.json'
-      - 'required-server-files.json'
+      - '**/*'

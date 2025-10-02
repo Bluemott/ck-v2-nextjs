@@ -13,6 +13,10 @@ frontend:
         - echo "Building Next.js application"
         - npm run build
         - echo "Build completed"
+        - echo "Verifying build output..."
+        - ls -la .next/
+        - echo "Checking for required-server-files.json..."
+        - test -f .next/required-server-files.json && echo "File found" || echo "File missing"
   artifacts:
     baseDirectory: .
     files:
@@ -20,6 +24,3 @@ frontend:
       - 'public/**/*'
       - 'package.json'
       - 'package-lock.json'
-  cache:
-    paths:
-      - node_modules/**/*

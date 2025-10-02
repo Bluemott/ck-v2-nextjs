@@ -50,6 +50,16 @@
     "status": "301"
   },
   {
+    "source": "https://www.cowboykimono.com/custom-kimonos",
+    "target": "https://cowboykimono.com/custom-kimonos",
+    "status": "301"
+  },
+  {
+    "source": "https://www.cowboykimono.com/custom-kimonos/",
+    "target": "https://cowboykimono.com/custom-kimonos/",
+    "status": "301"
+  },
+  {
     "source": "https://www.cowboykimono.com/sitemap.xml",
     "target": "https://cowboykimono.com/sitemap.xml",
     "status": "301"

@@ -19,12 +19,18 @@ frontend:
         - test -f .next/required-server-files.json && echo "File found" || echo "File missing"
         - echo "Setting up _next directory for Amplify..."
         - cp -r .next _next
-        - cp -r public _next/
+        - echo "Copying public directory to root level for static assets..."
+        - cp -r public ./
         - echo "Verifying _next directory structure..."
         - ls -la _next/
+        - echo "Verifying public directory structure..."
+        - ls -la public/
         - echo "Checking for required-server-files.json in _next..."
         - test -f _next/required-server-files.json && echo "File found in _next" || echo "File missing in _next"
   artifacts:
-    baseDirectory: _next
+    baseDirectory: .
     files:
-      - '**/*'
+      - '_next/**/*'
+      - 'public/**/*'
+      - 'package.json'
+      - 'package-lock.json'

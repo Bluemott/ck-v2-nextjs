@@ -3,28 +3,15 @@ frontend:
   phases:
     preBuild:
       commands:
-        - echo "Starting Amplify build"
-        - node --version
-        - npm --version
-        - export NODE_ENV=production
-        - export NEXT_TELEMETRY_DISABLED=1
-        - export NODE_OPTIONS="--max-old-space-size=4096"
         - npm ci --legacy-peer-deps --include=dev
     build:
       commands:
-        - echo "Building Next.js application"
         - npm run build
-        - echo "Verifying build output"
-        - ls -la .next/
-        - test -f .next/required-server-files.json && echo "required-server-files.json exists" || echo "ERROR required-server-files.json NOT FOUND"
-        - cat .next/required-server-files.json
-        - echo "Build complete"
   artifacts:
-    baseDirectory: .
+    baseDirectory: .next
     files:
-      - '.next/**/*'
-      - 'node_modules/**/*'
-      - 'public/**/*'
-      - 'package.json'
-      - 'package-lock.json'
-      - 'next.config.ts'
+      - '**/*'
+  cache:
+    paths:
+      - node_modules/**/*
+      - .next/cache/**/*

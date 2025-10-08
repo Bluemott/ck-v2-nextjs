@@ -40,8 +40,6 @@ frontend:
         - test -d .next/server && echo "✓ Server directory found" || echo "⚠ Warning Server directory missing"
         - echo "Setting up _next directory for Amplify"
         - cp -r .next _next
-        - echo "Copying public directory"
-        - cp -r public ./
         - echo "Verifying final structure"
         - ls -la _next/ | head -20
         - ls -la public/ | head -20

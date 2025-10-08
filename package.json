@@ -37,6 +37,7 @@
     "test:structured-data": "node scripts/test-structured-data.js",
     "test:structured-data-comprehensive": "node scripts/test-structured-data-comprehensive.js",
     "verify:amplify-redirects": "node scripts/verify-amplify-redirects.js",
+    "verify:amplify-deployment": "node scripts/verify-amplify-deployment.js",
     "deploy:infrastructure": "cd infrastructure && npm run deploy",
     "build:workspaces": "npm run build --workspaces",
     "prepare": "husky"

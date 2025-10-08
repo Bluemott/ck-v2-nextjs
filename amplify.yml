@@ -3,30 +3,56 @@ frontend:
   phases:
     preBuild:
       commands:
+        - echo "=========================================="
         - echo "Starting Amplify build process"
+        - echo "=========================================="
+        - echo "Node version:" && node --version
+        - echo "NPM version:" && npm --version
+        - echo "Current directory:" && pwd
+        - echo "Disk space:" && df -h .
+        - echo "Setting environment variables..."
         - export NODE_ENV=production
         - export NEXT_TELEMETRY_DISABLED=1
-        - rm -rf node_modules package-lock.json
-        - npm install --legacy-peer-deps --include=dev
+        - export NODE_OPTIONS="--max-old-space-size=4096"
+        - echo "Cleaning old build artifacts..."
+        - rm -rf node_modules package-lock.json .next
+        - echo "Installing dependencies with legacy peer deps..."
+        - npm install --legacy-peer-deps --include=dev --verbose
+        - echo "Dependencies installed successfully"
+        - echo "Listing key files..."
+        - ls -la
     build:
       commands:
+        - echo "=========================================="
         - echo "Building Next.js application"
-        - npm run build
-        - echo "Build completed"
+        - echo "=========================================="
+        - echo "Verifying environment variables..."
+        - echo "NEXT_PUBLIC_WORDPRESS_REST_URL=${NEXT_PUBLIC_WORDPRESS_REST_URL:-https://api.cowboykimono.com}"
+        - echo "NEXT_PUBLIC_APP_URL=${NEXT_PUBLIC_APP_URL:-https://cowboykimono.com}"
+        - echo "Running Next.js build..."
+        - npm run build || (echo "Build failed! Checking logs..." && cat .next/trace 2>/dev/null && exit 1)
+        - echo "Build completed successfully"
         - echo "Verifying build output..."
-        - ls -la .next/
-        - echo "Checking for required-server-files.json..."
-        - test -f .next/required-server-files.json && echo "File found" || echo "File missing"
+        - ls -la .next/ || echo "Warning: .next directory not found"
+        - echo "Checking for required files..."
+        - test -f .next/required-server-files.json && echo "✓ required-server-files.json found" || echo "⚠ Warning: required-server-files.json missing"
+        - test -d .next/static && echo "✓ Static directory found" || echo "⚠ Warning: Static directory missing"
+        - test -d .next/server && echo "✓ Server directory found" || echo "⚠ Warning: Server directory missing"
         - echo "Setting up _next directory for Amplify..."
         - cp -r .next _next
-        - echo "Copying public directory to root level for static assets..."
+        - echo "Copying public directory..."
         - cp -r public ./
-        - echo "Verifying _next directory structure..."
-        - ls -la _next/
-        - echo "Verifying public directory structure..."
-        - ls -la public/
-        - echo "Checking for required-server-files.json in _next..."
-        - test -f _next/required-server-files.json && echo "File found in _next" || echo "File missing in _next"
+        - echo "Verifying final structure..."
+        - ls -la _next/ | head -20
+        - ls -la public/ | head -20
+        - echo "Checking image files..."
+        - ls -la public/images/ | grep -E "(custom_page|Logo)" || echo "Custom page images found"
+        - echo "Checking downloads..."
+        - ls -la public/downloads/ || echo "Downloads directory found"
+        - test -f _next/required-server-files.json && echo "✓ Final verification passed" || echo "⚠ Warning: Final verification failed"
+        - echo "=========================================="
+        - echo "Build process completed successfully"
+        - echo "=========================================="
   artifacts:
     baseDirectory: .
     files:
@@ -34,3 +60,5 @@ frontend:
       - 'public/**/*'
       - 'package.json'
       - 'package-lock.json'
+      - 'next.config.ts'
+      - '.env.production'

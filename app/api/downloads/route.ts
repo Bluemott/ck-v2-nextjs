@@ -5,7 +5,8 @@ const STATIC_DOWNLOADS = {
   'coloring-pages': {
     id: 'coloring-pages',
     title: 'Coloring Pages',
-    description: 'Free downloadable coloring pages for creating your own western-inspired garments.',
+    description:
+      'Free downloadable coloring pages for creating your own western-inspired garments.',
     image: '/images/Neon_Coloring_Mock.webp',
     thumbnails: [
       {
@@ -36,7 +37,8 @@ const STATIC_DOWNLOADS = {
         id: 'holiday-craft-templates',
         title: 'Holiday Craft Templates',
         thumbnail: '/images/CKCraft_Template2.webp',
-        downloadUrl: '/downloads/coloring-pages/CK_Holiday_Craft_Templates_1.pdf',
+        downloadUrl:
+          '/downloads/coloring-pages/CK_Holiday_Craft_Templates_1.pdf',
         description: 'Holiday-themed craft templates',
         type: 'pdf',
       },
@@ -45,12 +47,13 @@ const STATIC_DOWNLOADS = {
   'craft-templates': {
     id: 'craft-templates',
     title: 'Craft Templates',
-    description: 'Artistic templates and stencils for painting and decorating your own cowboy kimonos.',
+    description:
+      'Artistic templates and stencils for painting and decorating your own cowboy kimonos.',
     image: '/images/CKCraft_Template2.webp',
     thumbnails: [
       {
         id: 'june-bugs',
-        title: '3 June Bugs You\'ll Love Immediately',
+        title: "3 June Bugs You'll Love Immediately",
         thumbnail: '/images/Craft_June_Bug.webp',
         downloadUrl: '/downloads/craft-templates/June_Bugs.pdf',
         description: 'Adorable June bug craft template',
@@ -85,22 +88,24 @@ const STATIC_DOWNLOADS = {
         title: 'Yum. Fathers Day Craft',
         thumbnail: '/images/Father_Day_Muffins.webp',
         downloadUrl: '/downloads/craft-templates/Fathers_Day_Craft.pdf',
-        description: 'Father\'s Day craft template',
+        description: "Father's Day craft template",
         type: 'pdf',
       },
       {
         id: 'milagro-ornaments',
         title: 'Jumbo Milagros for Mothers Day',
         thumbnail: '/images/Jumbo_Milagro.webp',
-        downloadUrl: '/downloads/craft-templates/Milagro_Ornaments_w_instructions.pdf',
-        description: 'Mother\'s Day milagro ornament craft',
+        downloadUrl:
+          '/downloads/craft-templates/Milagro_Ornaments_w_instructions.pdf',
+        description: "Mother's Day milagro ornament craft",
         type: 'pdf',
       },
       {
         id: 'grocery-bag-birds',
         title: 'Grocery Bag Bird Ornaments',
         thumbnail: '/images/Grocery_Bag_Birds_Green.webp',
-        downloadUrl: '/downloads/craft-templates/Grocery_Bag_Birds_with_instructions.pdf',
+        downloadUrl:
+          '/downloads/craft-templates/Grocery_Bag_Birds_with_instructions.pdf',
         description: 'Recycled grocery bag bird craft',
         type: 'pdf',
       },
@@ -109,7 +114,8 @@ const STATIC_DOWNLOADS = {
   'diy-tutorials': {
     id: 'diy-tutorials',
     title: 'DIY Tutorials',
-    description: 'Comprehensive guides on caring for your handcrafted pieces and styling tips.',
+    description:
+      'Comprehensive guides on caring for your handcrafted pieces and styling tips.',
     image: '/images/Jumbo_Milagro.webp',
     thumbnails: [
       {
@@ -187,10 +193,15 @@ export async function GET(request: Request) {
 
     let responseData;
 
-    if (category && STATIC_DOWNLOADS[category as keyof typeof STATIC_DOWNLOADS]) {
+    if (
+      category &&
+      STATIC_DOWNLOADS[category as keyof typeof STATIC_DOWNLOADS]
+    ) {
       // Return specific category
       responseData = {
-        downloads: [STATIC_DOWNLOADS[category as keyof typeof STATIC_DOWNLOADS]],
+        downloads: [
+          STATIC_DOWNLOADS[category as keyof typeof STATIC_DOWNLOADS],
+        ],
         pagination: {
           totalPosts: 1,
           totalPages: 1,

@@ -1,26 +1,21 @@
 version: 1
 frontend:
-  # Enable build caching for faster builds
   phases:
     preBuild:
       commands:
-        - echo "🚀 Starting Amplify build process"
-        - echo "Node version" && node --version
-        - echo "NPM version" && npm --version
+        - echo "Starting Amplify build"
+        - node --version
+        - npm --version
         - export NODE_ENV=production
         - export NEXT_TELEMETRY_DISABLED=1
         - export NODE_OPTIONS="--max-old-space-size=4096"
-        - echo "Installing dependencies (with caching)"
         - npm ci --legacy-peer-deps --include=dev
     build:
       commands:
-        - echo "🔨 Building Next.js application"
-        - 'echo "Environment NEXT_PUBLIC_WORDPRESS_REST_URL=${NEXT_PUBLIC_WORDPRESS_REST_URL:-https://api.cowboykimono.com}"'
+        - echo "Building Next.js application"
         - npm run build
-        - echo "📦 Preparing Amplify deployment structure"
-        -  # Copy .next to _next for Amplify SSR compatibility
         - cp -r .next _next
-        - echo "✅ Build artifacts prepared"
+        - echo "Build complete"
   artifacts:
     baseDirectory: .
     files:

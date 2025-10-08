@@ -7,6 +7,13 @@ frontend:
     build:
       commands:
         - npm run build
+        - cp -r public .next/public
+        - cp -r public/images .next/standalone/public/images || true
+        - cp -r public/downloads .next/standalone/public/downloads || true
+  artifacts:
+    baseDirectory: .next
+    files:
+      - '**/*'
   cache:
     paths:
       - node_modules/**/*

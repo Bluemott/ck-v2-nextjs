@@ -14,11 +14,12 @@ frontend:
       commands:
         - echo "Building Next.js application"
         - npm run build
-        - cp -r .next _next
         - echo "Build complete"
   artifacts:
     baseDirectory: .
     files:
-      - '_next/**/*'
+      - '.next/**/*'
+      - 'node_modules/**/*'
       - 'public/**/*'
       - 'package.json'
+      - 'next.config.ts'

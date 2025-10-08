@@ -38,25 +38,22 @@ frontend:
         - test -f .next/required-server-files.json && echo "✓ required-server-files.json found" || echo "⚠ Warning required-server-files.json missing"
         - test -d .next/static && echo "✓ Static directory found" || echo "⚠ Warning Static directory missing"
         - test -d .next/server && echo "✓ Server directory found" || echo "⚠ Warning Server directory missing"
-        - echo "Setting up _next directory for Amplify"
-        - cp -r .next _next
-        - echo "Verifying final structure"
-        - ls -la _next/ | head -20
+        - echo "Verifying build artifacts"
+        - ls -la .next/ | head -20
         - ls -la public/ | head -20
         - echo "Checking image files"
         - ls -la public/images/ | grep -E "(custom_page|Logo)" || echo "Custom page images found"
         - echo "Checking downloads"
         - ls -la public/downloads/ || echo "Downloads directory found"
-        - test -f _next/required-server-files.json && echo "✓ Final verification passed" || echo "⚠ Warning Final verification failed"
+        - test -f .next/required-server-files.json && echo "✓ Final verification passed" || echo "⚠ Warning Final verification failed"
         - echo "=========================================="
         - echo "Build process completed successfully"
         - echo "=========================================="
   artifacts:
     baseDirectory: .
     files:
-      - '_next/**/*'
+      - '.next/**/*'
       - 'public/**/*'
       - 'package.json'
       - 'package-lock.json'
       - 'next.config.ts'
-      - '.env.production'

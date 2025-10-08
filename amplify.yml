@@ -15,7 +15,7 @@ frontend:
     build:
       commands:
         - echo "🔨 Building Next.js application"
-        - echo "Environment: NEXT_PUBLIC_WORDPRESS_REST_URL=${NEXT_PUBLIC_WORDPRESS_REST_URL:-https://api.cowboykimono.com}"
+        - echo "Environment NEXT_PUBLIC_WORDPRESS_REST_URL=${NEXT_PUBLIC_WORDPRESS_REST_URL:-https://api.cowboykimono.com}"
         - npm run build
         - echo "📦 Preparing Amplify deployment structure"
         - # Copy .next to _next for Amplify SSR compatibility

@@ -7,13 +7,16 @@ frontend:
     build:
       commands:
         - npm run build
-        - cp -r public .next/public
-        - cp -r public/images .next/standalone/public/images || true
-        - cp -r public/downloads .next/standalone/public/downloads || true
+        - ls -la .next/
+        - test -f .next/required-server-files.json && echo "SSR files OK" || echo "ERROR No SSR files"
   artifacts:
-    baseDirectory: .next
     files:
-      - '**/*'
+      - '.next/**/*'
+      - 'public/**/*'
+      - 'node_modules/**/*'
+      - 'package.json'
+      - 'next.config.ts'
+      - '.next/required-server-files.json'
   cache:
     paths:
       - node_modules/**/*

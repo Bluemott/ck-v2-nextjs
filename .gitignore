@@ -205,6 +205,14 @@ deployment-*.zip
 *.webp
 Screenshot*.png
 
+# BUT allow public images (whitelist)
+!public/images/**/*.png
+!public/images/**/*.jpg
+!public/images/**/*.jpeg
+!public/images/**/*.gif
+!public/images/**/*.webp
+!public/images/**/*.svg
+
 # Test and temporary files
 simple-test.js
 test-hooks-fix.js

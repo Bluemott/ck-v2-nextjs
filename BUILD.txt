@@ -1,0 +1,500 @@
+2025-10-09T10:59:07.533Z [INFO]: # Build environment configured with Standard build compute type: 8GiB Memory, 4vCPUs, 128GB Disk Space
+2025-10-09T10:59:08.055Z [INFO]: # Cloning repository: git@github.com:Bluemott/ck-v2-nextjs.git
+2025-10-09T10:59:09.393Z [INFO]: 
+2025-10-09T10:59:09.393Z [INFO]: Cloning into 'ck-v2-nextjs'...
+2025-10-09T10:59:09.394Z [INFO]: # Switching to commit: 7eec3a40b936f6b5060644134a499b4ee865a72b
+2025-10-09T10:59:09.511Z [INFO]: Note: switching to '7eec3a40b936f6b5060644134a499b4ee865a72b'.
+                                 You are in 'detached HEAD' state. You can look around, make experimental
+                                 changes and commit them, and you can discard any commits you make in this
+                                 state without impacting any branches by switching back to a branch.
+                                 If you want to create a new branch to retain commits you create, you may
+                                 do so (now or later) by using -c with the switch command. Example:
+                                 git switch -c <new-branch-name>
+                                 Or undo this operation with:
+                                 git switch -
+                                 Turn off this advice by setting config variable advice.detachedHead to false
+                                 HEAD is now at 7eec3a4 errors with string conversion.
+2025-10-09T10:59:09.550Z [INFO]: Successfully cleaned up Git credentials
+2025-10-09T10:59:09.550Z [INFO]: # Checking for Git submodules at: /codebuild/output/src1851502043/src/ck-v2-nextjs/.gitmodules
+2025-10-09T10:59:09.558Z [INFO]: # Retrieving environment cache...
+2025-10-09T10:59:09.624Z [WARNING]: ! Unable to write cache: {"code":"ERR_BAD_REQUEST","message":"Request failed with status code 404"})}
+2025-10-09T10:59:09.624Z [INFO]: ---- Setting Up SSM Secrets ----
+2025-10-09T10:59:09.624Z [INFO]: SSM params {"Path":"/amplify/d1crrnsi5h4ht1/master/","WithDecryption":true}
+2025-10-09T10:59:09.673Z [WARNING]: !Failed to set up process.env.secrets
+2025-10-09T10:59:10.399Z [INFO]: # No package override configuration found.
+2025-10-09T10:59:10.403Z [INFO]: # Retrieving cache...
+2025-10-09T10:59:28.587Z [INFO]: # Extracting cache...
+2025-10-09T10:59:41.934Z [INFO]: # Extraction completed
+2025-10-09T10:59:42.178Z [INFO]: # Retrieved cache
+2025-10-09T10:59:46.280Z [INFO]: ## Starting Backend Build
+                                 ## Checking for associated backend environment...
+                                 ## No backend environment association found, continuing...
+                                 ## Completed Backend Build
+2025-10-09T10:59:46.287Z [INFO]: ## Starting Frontend Build
+                                 # Starting phase: preBuild
+2025-10-09T10:59:46.287Z [INFO]: # Executing command: npm ci --legacy-peer-deps --include=dev
+2025-10-09T11:00:09.972Z [WARNING]: npm warn deprecated querystring@0.2.0: The querystring API is considered Legacy. new code should use the URLSearchParams API instead.
+2025-10-09T11:00:24.624Z [INFO]: > ck-v2-nextjs@0.1.0 prepare
+                                 > husky
+2025-10-09T11:00:24.685Z [INFO]: added 901 packages, and audited 940 packages in 34s
+2025-10-09T11:00:24.685Z [INFO]: 223 packages are looking for funding
+                                 run `npm fund` for details
+2025-10-09T11:00:24.686Z [INFO]: found 0 vulnerabilities
+2025-10-09T11:00:24.715Z [INFO]: # Completed phase: preBuild
+                                 # Starting phase: build
+                                 # Executing command: npm run build
+2025-10-09T11:00:24.816Z [INFO]: > ck-v2-nextjs@0.1.0 build
+                                 > next build
+2025-10-09T11:00:25.726Z [INFO]: ▲ Next.js 15.5.4
+2025-10-09T11:00:25.726Z [INFO]: - Experiments (use with caution):
+                                 · optimizePackageImports
+2025-10-09T11:00:25.763Z [INFO]: Creating an optimized production build ...
+2025-10-09T11:00:39.055Z [INFO]: ✓ Compiled successfully in 13.1s
+2025-10-09T11:00:39.061Z [INFO]: Linting and checking validity of types ...
+2025-10-09T11:00:51.385Z [INFO]: Collecting page data ...
+2025-10-09T11:00:52.410Z [WARNING]: Redis not available, falling back to memory cache: Error: connect ECONNREFUSED 127.0.0.1:6379
+                                    at <unknown> (Error: connect ECONNREFUSED 127.0.0.1:6379) {
+                                    errno: -111,
+                                    code: 'ECONNREFUSED',
+                                    syscall: 'connect',
+                                    address: '127.0.0.1',
+                                    port: 6379
+                                    }
+2025-10-09T11:00:52.693Z [WARNING]: Redis not available, falling back to memory cache: Error: connect ECONNREFUSED 127.0.0.1:6379
+                                    at <unknown> (Error: connect ECONNREFUSED 127.0.0.1:6379) {
+                                    errno: -111,
+                                    code: 'ECONNREFUSED',
+                                    syscall: 'connect',
+                                    address: '127.0.0.1',
+                                    port: 6379
+                                    }
+                                    Redis not available, falling back to memory cache: Error: connect ECONNREFUSED 127.0.0.1:6379
+                                    at <unknown> (Error: connect ECONNREFUSED 127.0.0.1:6379) {
+                                    errno: -111,
+                                    code: 'ECONNREFUSED',
+                                    syscall: 'connect',
+                                    address: '127.0.0.1',
+                                    port: 6379
+                                    }
+2025-10-09T11:00:53.424Z [WARNING]: Pagination info from headers: {
+                                    totalPosts: 44,
+                                    totalPages: 1,
+                                    currentPage: 1,
+                                    perPage: 10,
+                                    'X-WP-Total': '44',
+                                    'X-WP-TotalPages': '1',
+                                    'X-WP-Query': null
+                                    }
+2025-10-09T11:00:53.424Z [WARNING]: CloudWatch not available, skipping metric
+2025-10-09T11:00:55.276Z [INFO]: Generating static pages (0/78) ...
+2025-10-09T11:00:56.432Z [WARNING]: Redis not available, falling back to memory cache: Error: connect ECONNREFUSED 127.0.0.1:6379
+                                    at <unknown> (Error: connect ECONNREFUSED 127.0.0.1:6379) {
+                                    errno: -111,
+                                    code: 'ECONNREFUSED',
+                                    syscall: 'connect',
+                                    address: '127.0.0.1',
+                                    port: 6379
+                                    }
+                                    CloudWatch not available, skipping metric
+                                    CloudWatch not available, skipping metric
+                                    CloudWatch not available, skipping metric
+                                    CloudWatch not available, skipping metric
+                                    CloudWatch not available, skipping metric
+                                    CloudWatch not available, skipping metric
+                                    CloudWatch not available, skipping metric
+                                    CloudWatch not available, skipping metric
+                                    CloudWatch not available, skipping metric
+                                    CloudWatch not available, skipping metric
+                                    CloudWatch not available, skipping metric
+                                    CloudWatch not available, skipping metric
+                                    CloudWatch not available, skipping metric
+                                    CloudWatch not available, skipping metric
+                                    CloudWatch not available, skipping metric
+                                    CloudWatch not available, skipping metric
+2025-10-09T11:00:56.522Z [WARNING]: Redis not available, falling back to memory cache: Error: connect ECONNREFUSED 127.0.0.1:6379
+                                    at <unknown> (Error: connect ECONNREFUSED 127.0.0.1:6379) {
+                                    errno: -111,
+                                    code: 'ECONNREFUSED',
+                                    syscall: 'connect',
+                                    address: '127.0.0.1',
+                                    port: 6379
+                                    }
+2025-10-09T11:00:56.553Z [WARNING]: Pagination info from headers: {
+                                    totalPosts: 44,
+                                    totalPages: 1,
+                                    currentPage: 1,
+                                    perPage: 10,
+                                    'X-WP-Total': '44',
+                                    'X-WP-TotalPages': '1',
+                                    'X-WP-Query': null
+                                    }
+                                    CloudWatch not available, skipping metric
+                                    Pagination info from headers: {
+                                    totalPosts: 44,
+                                    totalPages: 1,
+                                    currentPage: 1,
+                                    perPage: 10,
+                                    'X-WP-Total': '44',
+                                    'X-WP-TotalPages': '1',
+                                    'X-WP-Query': null
+                                    }
+2025-10-09T11:00:56.597Z [INFO]: Generating static pages (19/78)
+2025-10-09T11:00:56.666Z [WARNING]: CloudWatch not available, skipping metric
+2025-10-09T11:00:57.030Z [WARNING]: Pagination info from headers: {
+                                    totalPosts: 44,
+                                    totalPages: 1,
+                                    currentPage: 1,
+                                    perPage: 10,
+                                    'X-WP-Total': '44',
+                                    'X-WP-TotalPages': '1',
+                                    'X-WP-Query': null
+                                    }
+                                    CloudWatch not available, skipping metric
+                                    Pagination info from headers: {
+                                    totalPosts: 44,
+                                    totalPages: 1,
+                                    currentPage: 1,
+                                    perPage: 10,
+                                    'X-WP-Total': '44',
+                                    'X-WP-TotalPages': '1',
+                                    'X-WP-Query': null
+                                    }
+2025-10-09T11:00:57.523Z [WARNING]: CloudWatch not available, skipping metric
+                                    Pagination info from headers: {
+                                    totalPosts: 44,
+                                    totalPages: 1,
+                                    currentPage: 1,
+                                    perPage: 10,
+                                    'X-WP-Total': '44',
+                                    'X-WP-TotalPages': '1',
+                                    'X-WP-Query': null
+                                    }
+                                    CloudWatch not available, skipping metric
+                                    Pagination info from headers: {
+                                    totalPosts: 44,
+                                    totalPages: 1,
+                                    currentPage: 1,
+                                    perPage: 10,
+                                    'X-WP-Total': '44',
+                                    'X-WP-TotalPages': '1',
+                                    'X-WP-Query': null
+                                    }
+                                    CloudWatch not available, skipping metric
+                                    Pagination info from headers: {
+                                    totalPosts: 44,
+                                    totalPages: 1,
+                                    currentPage: 1,
+                                    perPage: 10,
+                                    'X-WP-Total': '44',
+                                    'X-WP-TotalPages': '1',
+                                    'X-WP-Query': null
+                                    }
+                                    CloudWatch not available, skipping metric
+                                    Pagination info from headers: {
+                                    totalPosts: 44,
+                                    totalPages: 1,
+                                    currentPage: 1,
+                                    perPage: 10,
+                                    'X-WP-Total': '44',
+                                    'X-WP-TotalPages': '1',
+                                    'X-WP-Query': null
+                                    }
+                                    CloudWatch not available, skipping metric
+2025-10-09T11:00:57.524Z [WARNING]: Pagination info from headers: {
+                                    totalPosts: 44,
+                                    totalPages: 1,
+                                    currentPage: 1,
+                                    perPage: 10,
+                                    'X-WP-Total': '44',
+                                    'X-WP-TotalPages': '1',
+                                    'X-WP-Query': null
+                                    }
+                                    CloudWatch not available, skipping metric
+                                    CloudWatch not available, skipping metric
+                                    CloudWatch not available, skipping metric
+2025-10-09T11:00:57.759Z [WARNING]: Redis not available, falling back to memory cache: Error: connect ECONNREFUSED 127.0.0.1:6379
+                                    at <unknown> (Error: connect ECONNREFUSED 127.0.0.1:6379) {
+                                    errno: -111,
+                                    code: 'ECONNREFUSED',
+                                    syscall: 'connect',
+                                    address: '127.0.0.1',
+                                    port: 6379
+                                    }
+                                    Redis not available, falling back to memory cache: Error: connect ECONNREFUSED 127.0.0.1:6379
+                                    at <unknown> (Error: connect ECONNREFUSED 127.0.0.1:6379) {
+                                    errno: -111,
+                                    code: 'ECONNREFUSED',
+                                    syscall: 'connect',
+                                    address: '127.0.0.1',
+                                    port: 6379
+                                    }
+                                    Pagination info from headers: {
+                                    totalPosts: 44,
+                                    totalPages: 9,
+                                    currentPage: 1,
+                                    perPage: 10,
+                                    'X-WP-Total': '44',
+                                    'X-WP-TotalPages': '9',
+                                    'X-WP-Query': null
+                                    }
+                                    CloudWatch not available, skipping metric
+                                    CloudWatch not available, skipping metric
+                                    CloudWatch not available, skipping metric
+                                    CloudWatch not available, skipping metric
+                                    CloudWatch not available, skipping metric
+                                    CloudWatch not available, skipping metric
+                                    CloudWatch not available, skipping metric
+                                    CloudWatch not available, skipping metric
+                                    CloudWatch not available, skipping metric
+                                    CloudWatch not available, skipping metric
+                                    CloudWatch not available, skipping metric
+                                    CloudWatch not available, skipping metric
+                                    CloudWatch not available, skipping metric
+                                    CloudWatch not available, skipping metric
+                                    CloudWatch not available, skipping metric
+                                    CloudWatch not available, skipping metric
+                                    CloudWatch not available, skipping metric
+2025-10-09T11:00:57.780Z [WARNING]: Redis not available, falling back to memory cache: Error: connect ECONNREFUSED 127.0.0.1:6379
+                                    at <unknown> (Error: connect ECONNREFUSED 127.0.0.1:6379) {
+                                    errno: -111,
+                                    code: 'ECONNREFUSED',
+                                    syscall: 'connect',
+                                    address: '127.0.0.1',
+                                    port: 6379
+                                    }
+2025-10-09T11:00:57.841Z [INFO]: Generating static pages (38/78)
+2025-10-09T11:00:57.841Z [WARNING]: Pagination info from headers: {
+                                    totalPosts: 44,
+                                    totalPages: 1,
+                                    currentPage: 1,
+                                    perPage: 10,
+                                    'X-WP-Total': '44',
+                                    'X-WP-TotalPages': '1',
+                                    'X-WP-Query': null
+                                    }
+                                    CloudWatch not available, skipping metric
+                                    Pagination info from headers: {
+                                    totalPosts: 44,
+                                    totalPages: 1,
+                                    currentPage: 1,
+                                    perPage: 10,
+                                    'X-WP-Total': '44',
+                                    'X-WP-TotalPages': '1',
+                                    'X-WP-Query': null
+                                    }
+2025-10-09T11:00:57.885Z [WARNING]: CloudWatch not available, skipping metric
+                                    CloudWatch not available, skipping metric
+                                    CloudWatch not available, skipping metric
+                                    CloudWatch not available, skipping metric
+                                    CloudWatch not available, skipping metric
+                                    CloudWatch not available, skipping metric
+                                    CloudWatch not available, skipping metric
+                                    CloudWatch not available, skipping metric
+                                    CloudWatch not available, skipping metric
+                                    CloudWatch not available, skipping metric
+                                    CloudWatch not available, skipping metric
+                                    CloudWatch not available, skipping metric
+                                    CloudWatch not available, skipping metric
+                                    CloudWatch not available, skipping metric
+                                    CloudWatch not available, skipping metric
+                                    CloudWatch not available, skipping metric
+                                    CloudWatch not available, skipping metric
+                                    CloudWatch not available, skipping metric
+                                    CloudWatch not available, skipping metric
+                                    CloudWatch not available, skipping metric
+                                    CloudWatch not available, skipping metric
+2025-10-09T11:00:57.886Z [WARNING]: CloudWatch not available, skipping metric
+2025-10-09T11:00:58.046Z [WARNING]: Pagination info from headers: {
+                                    totalPosts: 44,
+                                    totalPages: 1,
+                                    currentPage: 1,
+                                    perPage: 10,
+                                    'X-WP-Total': '44',
+                                    'X-WP-TotalPages': '1',
+                                    'X-WP-Query': null
+                                    }
+                                    CloudWatch not available, skipping metric
+                                    Pagination info from headers: {
+                                    totalPosts: 44,
+                                    totalPages: 1,
+                                    currentPage: 1,
+                                    perPage: 10,
+                                    'X-WP-Total': '44',
+                                    'X-WP-TotalPages': '1',
+                                    'X-WP-Query': null
+                                    }
+                                    CloudWatch not available, skipping metric
+                                    Pagination info from headers: {
+                                    totalPosts: 44,
+                                    totalPages: 1,
+                                    currentPage: 1,
+                                    perPage: 10,
+                                    'X-WP-Total': '44',
+                                    'X-WP-TotalPages': '1',
+                                    'X-WP-Query': null
+                                    }
+                                    CloudWatch not available, skipping metric
+                                    Pagination info from headers: {
+                                    totalPosts: 44,
+                                    totalPages: 1,
+                                    currentPage: 1,
+                                    perPage: 10,
+                                    'X-WP-Total': '44',
+                                    'X-WP-TotalPages': '1',
+                                    'X-WP-Query': null
+                                    }
+                                    CloudWatch not available, skipping metric
+                                    Pagination info from headers: {
+                                    totalPosts: 44,
+                                    totalPages: 1,
+                                    currentPage: 1,
+                                    perPage: 10,
+                                    'X-WP-Total': '44',
+                                    'X-WP-TotalPages': '1',
+                                    'X-WP-Query': null
+                                    }
+                                    CloudWatch not available, skipping metric
+                                    Pagination info from headers: {
+                                    totalPosts: 44,
+                                    totalPages: 1,
+                                    currentPage: 1,
+                                    perPage: 10,
+                                    'X-WP-Total': '44',
+                                    'X-WP-TotalPages': '1',
+                                    'X-WP-Query': null
+                                    }
+                                    CloudWatch not available, skipping metric
+2025-10-09T11:00:58.047Z [WARNING]: CloudWatch not available, skipping metric
+                                    CloudWatch not available, skipping metric
+                                    CloudWatch not available, skipping metric
+2025-10-09T11:00:58.674Z [INFO]: Generating static pages (58/78)
+2025-10-09T11:00:58.684Z [WARNING]: CloudWatch not available, skipping metric
+                                    CloudWatch not available, skipping metric
+                                    CloudWatch not available, skipping metric
+                                    CloudWatch not available, skipping metric
+                                    CloudWatch not available, skipping metric
+                                    CloudWatch not available, skipping metric
+                                    CloudWatch not available, skipping metric
+                                    CloudWatch not available, skipping metric
+                                    CloudWatch not available, skipping metric
+                                    CloudWatch not available, skipping metric
+                                    CloudWatch not available, skipping metric
+                                    CloudWatch not available, skipping metric
+                                    CloudWatch not available, skipping metric
+                                    CloudWatch not available, skipping metric
+                                    CloudWatch not available, skipping metric
+                                    CloudWatch not available, skipping metric
+                                    CloudWatch not available, skipping metric
+                                    CloudWatch not available, skipping metric
+                                    CloudWatch not available, skipping metric
+                                    CloudWatch not available, skipping metric
+                                    CloudWatch not available, skipping metric
+                                    CloudWatch not available, skipping metric
+                                    CloudWatch not available, skipping metric
+                                    CloudWatch not available, skipping metric
+                                    CloudWatch not available, skipping metric
+                                    CloudWatch not available, skipping metric
+                                    CloudWatch not available, skipping metric
+                                    CloudWatch not available, skipping metric
+                                    CloudWatch not available, skipping metric
+                                    CloudWatch not available, skipping metric
+2025-10-09T11:00:58.750Z [INFO]: ✓ Generating static pages (78/78)
+2025-10-09T11:00:58.751Z [WARNING]: CloudWatch not available, skipping metric
+                                    CloudWatch not available, skipping metric
+                                    CloudWatch not available, skipping metric
+                                    CloudWatch not available, skipping metric
+                                    CloudWatch not available, skipping metric
+                                    CloudWatch not available, skipping metric
+                                    CloudWatch not available, skipping metric
+                                    CloudWatch not available, skipping metric
+                                    CloudWatch not available, skipping metric
+                                    CloudWatch not available, skipping metric
+                                    CloudWatch not available, skipping metric
+                                    CloudWatch not available, skipping metric
+                                    CloudWatch not available, skipping metric
+                                    CloudWatch not available, skipping metric
+                                    CloudWatch not available, skipping metric
+                                    CloudWatch not available, skipping metric
+                                    CloudWatch not available, skipping metric
+                                    CloudWatch not available, skipping metric
+                                    CloudWatch not available, skipping metric
+                                    CloudWatch not available, skipping metric
+                                    CloudWatch not available, skipping metric
+                                    CloudWatch not available, skipping metric
+                                    CloudWatch not available, skipping metric
+                                    CloudWatch not available, skipping metric
+                                    CloudWatch not available, skipping metric
+                                    CloudWatch not available, skipping metric
+                                    CloudWatch not available, skipping metric
+                                    CloudWatch not available, skipping metric
+                                    CloudWatch not available, skipping metric
+                                    CloudWatch not available, skipping metric
+2025-10-09T11:00:59.502Z [INFO]: Finalizing page optimization ...
+                                 Collecting build traces ...
+2025-10-09T11:01:27.208Z [INFO]: 
+2025-10-09T11:01:27.223Z [INFO]: Route (app)                                                 Size  First Load JS
+                                 ┌ ○ /                                                    2.08 kB         263 kB
+                                 ├ ○ /_not-found                                            114 B         261 kB
+                                 ├ ○ /about                                                 114 B         261 kB
+                                 ├ ○ /admin                                                 114 B         261 kB
+                                 ├ ƒ /api/analytics/web-vitals                              113 B         261 kB
+                                 ├ ƒ /api/categories                                        114 B         261 kB
+                                 ├ ƒ /api/docs                                              114 B         261 kB
+                                 ├ ƒ /api/downloads                                         114 B         261 kB
+                                 ├ ƒ /api/env-test                                          114 B         261 kB
+                                 ├ ƒ /api/health                                            114 B         261 kB
+                                 ├ ƒ /api/health-simple                                     114 B         261 kB
+                                 ├ ƒ /api/indexnow                                          114 B         261 kB
+                                 ├ ƒ /api/media/upload                                      114 B         261 kB
+                                 ├ ƒ /api/middleware-test                                   114 B         261 kB
+                                 ├ ƒ /api/minimal-test                                      114 B         261 kB
+                                 ├ ƒ /api/posts                                             114 B         261 kB
+                                 ├ ƒ /api/posts-simple                                      114 B         261 kB
+                                 ├ ƒ /api/posts/[slug]                                      114 B         261 kB
+                                 ├ ƒ /api/recommendations                                   114 B         261 kB
+                                 ├ ƒ /api/search                                            114 B         261 kB
+                                 ├ ƒ /api/shop/etsy                                         114 B         261 kB
+                                 ├ ƒ /api/tags                                              114 B         261 kB
+                                 ├ ƒ /api/test                                              114 B         261 kB
+                                 ├ ƒ /api/test-downloads                                    114 B         261 kB
+                                 ├ ƒ /api/wordpress-webhook                                 114 B         261 kB
+                                 ├ ○ /blog                                                  168 B         261 kB
+                                 ├ ● /blog/[slug]                                         5.71 kB         267 kB
+                                 ├   ├ /blog/diy-fish-ornaments-recycled-paper
+                                 ├   ├ /blog/diy-hand-painted-upholstery-sunburst-chairs
+                                 ├   ├ /blog/shell-yeah-my-trees-still-up
+                                 ├   └ [+41 more paths]
+                                 ├ ƒ /blog/category/[slug]                                  114 B         261 kB
+                                 ├ ƒ /blog/tag/[slug]                                       114 B         261 kB
+                                 ├ ○ /custom-kimonos                                        113 B         261 kB
+                                 ├ ○ /downloads                                           2.72 kB         264 kB
+                                 ├ ƒ /feed.xml                                              114 B         261 kB
+                                 ├ ○ /manifest.webmanifest                                  114 B         261 kB
+                                 ├ ○ /robots.txt                                            114 B         261 kB
+                                 ├ ○ /shop                                                1.65 kB         263 kB
+                                 ├ ○ /sitemap.xml                                           114 B         261 kB
+                                 └ ○ /test-thumbnails                                       156 B         261 kB
+                                 + First Load JS shared by all                             261 kB
+                                 ├ chunks/common-f4c118c4b27a6287.js                    11.1 kB
+                                 └ chunks/vendors-42f051adf61433d8.js                    248 kB
+                                 └ other shared chunks (total)                          1.91 kB
+                                 ƒ Middleware                                             40.7 kB
+                                 ○  (Static)   prerendered as static content
+                                 ●  (SSG)      prerendered as static HTML (uses generateStaticParams)
+                                 ƒ  (Dynamic)  server-rendered on demand
+2025-10-09T11:01:27.285Z [INFO]: # Executing command: echo "Build complete"
+                                 Build complete
+                                 # Completed phase: build
+2025-10-09T11:01:27.285Z [INFO]: ## Completed Frontend Build
+2025-10-09T11:01:27.348Z [INFO]: ## Build completed successfully
+2025-10-09T11:01:27.349Z [INFO]: # Starting caching...
+2025-10-09T11:01:27.353Z [INFO]: # Creating cache artifact...
+2025-10-09T11:01:38.040Z [INFO]: # Created cache artifact
+2025-10-09T11:01:38.129Z [INFO]: # Uploading cache artifact...
+2025-10-09T11:01:47.821Z [INFO]: # Uploaded cache artifact
+2025-10-09T11:01:47.922Z [INFO]: # Caching completed
+2025-10-09T11:01:47.926Z [INFO]: Found customHttp.yml, applying custom headers...
+2025-10-09T11:01:47.926Z [INFO]: # Found custom headers config file.
+2025-10-09T11:02:19.835Z [INFO]: # Starting environment caching...
+2025-10-09T11:02:19.945Z [INFO]: # Environment caching completed
+

@@ -97,7 +97,7 @@ export default function CustomKimonosPage() {
                   {/* Card 1 - Catherine's Jacket */}
                   <div className="flex-shrink-0 w-64 h-80 bg-gray-200 rounded-lg shadow-lg overflow-hidden">
                     <Image
-                      src="/images/Catherine's_Jacket_custom_page.webp"
+                      src="/images/Catherines_Jacket_custom_page.webp"
                       alt="Catherine's custom painted jacket"
                       width={256}
                       height={320}
@@ -109,7 +109,7 @@ export default function CustomKimonosPage() {
                   {/* Card 2 - Diane's Jacket */}
                   <div className="flex-shrink-0 w-64 h-80 bg-gray-200 rounded-lg shadow-lg overflow-hidden">
                     <Image
-                      src="/images/Diane's_Jacket_custom_page.webp"
+                      src="/images/Dianes_Jacket_custom_page.webp"
                       alt="Diane's custom painted jacket"
                       width={256}
                       height={320}
@@ -121,7 +121,7 @@ export default function CustomKimonosPage() {
                   {/* Card 3 - Doreen's Mom Jacket */}
                   <div className="flex-shrink-0 w-64 h-80 bg-gray-200 rounded-lg shadow-lg overflow-hidden">
                     <Image
-                      src="/images/Doreen's MomJacket_custom_page.webp"
+                      src="/images/Doreens_MomJacket_custom_page.webp"
                       alt="Doreen's Mom custom painted jacket"
                       width={256}
                       height={320}
@@ -157,7 +157,7 @@ export default function CustomKimonosPage() {
                   {/* Duplicate cards for seamless loop */}
                   <div className="flex-shrink-0 w-64 h-80 bg-gray-200 rounded-lg shadow-lg overflow-hidden">
                     <Image
-                      src="/images/Catherine's_Jacket_custom_page.webp"
+                      src="/images/Catherines_Jacket_custom_page.webp"
                       alt="Catherine's custom painted jacket"
                       width={256}
                       height={320}
@@ -168,7 +168,7 @@ export default function CustomKimonosPage() {
 
                   <div className="flex-shrink-0 w-64 h-80 bg-gray-200 rounded-lg shadow-lg overflow-hidden">
                     <Image
-                      src="/images/Diane's_Jacket_custom_page.webp"
+                      src="/images/Dianes_Jacket_custom_page.webp"
                       alt="Diane's custom painted jacket"
                       width={256}
                       height={320}

@@ -253,7 +253,7 @@ async function fetchMediaDetails(mediaId: number): Promise<string> {
       {
         signal: AbortSignal.timeout(5000), // 5 second timeout
         headers: {
-          'Accept': 'application/json',
+          Accept: 'application/json',
         },
       }
     );
@@ -276,28 +276,39 @@ async function transformDownloadsData(
 ): Promise<DownloadSection[]> {
   // Group downloads by category
   const groupedDownloads: Record<string, TransformedDownload[]> = {};
-  
+
   // Collect all media IDs that need to be fetched
   const mediaIdsToFetch = new Set<number>();
-  
+
   for (const download of wpDownloads) {
     const acfData = download.acf || download.meta || {};
-    
+
     // Collect thumbnail IDs
-    if (acfData.download_thumbnail && typeof acfData.download_thumbnail === 'number') {
+    if (
+      acfData.download_thumbnail &&
+      typeof acfData.download_thumbnail === 'number'
+    ) {
       mediaIdsToFetch.add(acfData.download_thumbnail);
-    } else if (acfData.download_thumbnail && /^\d+$/.test(acfData.download_thumbnail)) {
+    } else if (
+      acfData.download_thumbnail &&
+      typeof acfData.download_thumbnail === 'string' &&
+      /^\d+$/.test(acfData.download_thumbnail)
+    ) {
       mediaIdsToFetch.add(parseInt(acfData.download_thumbnail, 10));
     }
-    
+
     // Collect file IDs
     if (acfData.download_file && typeof acfData.download_file === 'number') {
       mediaIdsToFetch.add(acfData.download_file);
-    } else if (acfData.download_file && /^\d+$/.test(acfData.download_file)) {
+    } else if (
+      acfData.download_file &&
+      typeof acfData.download_file === 'string' &&
+      /^\d+$/.test(acfData.download_file)
+    ) {
       mediaIdsToFetch.add(parseInt(acfData.download_file, 10));
     }
   }
-  
+
   // Batch fetch all media details
   const mediaCache: Record<number, string> = {};
   await Promise.all(
@@ -330,8 +341,12 @@ async function transformDownloadsData(
       const mediaId =
         typeof acfData.download_thumbnail === 'number'
           ? acfData.download_thumbnail
-          : parseInt(acfData.download_thumbnail, 10);
-      thumbnailUrl = mediaCache[mediaId] || '';
+          : typeof acfData.download_thumbnail === 'string'
+            ? parseInt(acfData.download_thumbnail, 10)
+            : 0;
+      if (mediaId > 0) {
+        thumbnailUrl = mediaCache[mediaId] || '';
+      }
     }
 
     // Get download URL
@@ -346,8 +361,12 @@ async function transformDownloadsData(
       const mediaId =
         typeof acfData.download_file === 'number'
           ? acfData.download_file
-          : parseInt(acfData.download_file, 10);
-      downloadUrl = mediaCache[mediaId] || '';
+          : typeof acfData.download_file === 'string'
+            ? parseInt(acfData.download_file, 10)
+            : 0;
+      if (mediaId > 0) {
+        downloadUrl = mediaCache[mediaId] || '';
+      }
     }
 
     // Skip items without valid download URLs

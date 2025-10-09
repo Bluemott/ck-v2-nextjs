@@ -101,134 +101,17 @@ const DownloadsClient = () => {
       console.error(`Error fetching downloads for ${category}:`, err);
       setError(err instanceof Error ? err.message : 'Failed to load downloads');
 
-      // Fallback to static data if API fails
-      const fallbackThumbnails = getFallbackThumbnails(category);
+      // Set empty array on error - no fallback to local files
       setDynamicThumbnails((prev) => ({
         ...prev,
-        [category]: fallbackThumbnails,
+        [category]: [],
       }));
     } finally {
       setLoading((prev) => ({ ...prev, [category]: false }));
     }
   };
 
-  // Fallback thumbnails for when API is not available
-  const getFallbackThumbnails = (category: string): DownloadThumbnail[] => {
-    const fallbackData: Record<string, DownloadThumbnail[]> = {
-      'coloring-pages': [
-        {
-          id: 'pattern-1',
-          title: 'ABQ Neon',
-          thumbnail: '/images/Neon_Coloring_Mock.webp',
-          downloadUrl: '/downloads/coloring-pages/ABQ_Neon_W+Color.pdf',
-        },
-        {
-          id: 'pattern-2',
-          title: 'Cover My Back',
-          thumbnail: '/images/CK_Coloring_Button.webp',
-          downloadUrl: '/downloads/coloring-pages/CK_Creativity_Exercise.pdf',
-        },
-      ],
-      'craft-templates': [
-        {
-          id: 'template-1',
-          title: '3 June Bugs Youll Love Immediately',
-          thumbnail: '/images/Craft_June_Bug.webp',
-          downloadUrl: '/downloads/craft-templates/June_Bugs.pdf',
-        },
-        {
-          id: 'template-2',
-          title: 'Year of the OX Irresistible Paper Craft',
-          thumbnail: '/images/Ox_book_corner.webp',
-          downloadUrl: '/downloads/craft-templates/Ox_Book_Corner.pdf',
-        },
-        {
-          id: 'template-3',
-          title: 'Create a Kickass Thank You for Your Mail Carrier',
-          thumbnail: '/images/Kickass_Thanks_Envelope.webp',
-          downloadUrl: '/downloads/craft-templates/Kickass_Thank_You.pdf',
-        },
-        {
-          id: 'template-4',
-          title: 'Your Labor is Loved (Labor Day Craft)',
-          thumbnail: '/images/Labor_is_Loved.webp',
-          downloadUrl: '/downloads/craft-templates/Labor_Day_Love.pdf',
-        },
-        {
-          id: 'template-5',
-          title: 'Yum. Fathers Day Craft',
-          thumbnail: '/images/Father_Day_Muffins.webp',
-          downloadUrl: '/downloads/craft-templates/Fathers_Day_Craft.pdf',
-        },
-        {
-          id: 'template-6',
-          title: 'Jumbo Milagros for Mothers Day',
-          thumbnail: '/images/Jumbo_Milagro.webp',
-          downloadUrl:
-            '/downloads/craft-templates/Milagro_Ornaments_w_instructions.pdf',
-        },
-        {
-          id: 'template-7',
-          title: 'Grocery Bag Bird Ornaments',
-          thumbnail: '/images/Grocery_Bag_Birds_Green.webp',
-          downloadUrl:
-            '/downloads/craft-templates/Grocery_Bag_Birds_with_instructions.pdf',
-        },
-      ],
-      'diy-tutorials': [
-        {
-          id: 'guide-1',
-          title: 'How to Create a Hip Jackalope Display',
-          thumbnail: '/images/Jackalope_Glasses.webp',
-          downloadUrl: '/blog/hip-jackalope-display',
-        },
-        {
-          id: 'guide-2',
-          title: 'Paint a One-of-a-kind Sofa Table',
-          thumbnail: '/images/Sofa_Table.webp',
-          downloadUrl: '/blog/paint-sofa-table',
-        },
-        {
-          id: 'guide-3',
-          title: 'Animated Chalk Art',
-          thumbnail: '/images/Animated_Chalk_Art.webp',
-          downloadUrl: '/blog/animated-chalk-art',
-        },
-        {
-          id: 'guide-4',
-          title: 'Create Scary Silhouettes',
-          thumbnail: '/images/Scary_Silhouette.webp',
-          downloadUrl: '/blog/scary-silhouettes',
-        },
-        {
-          id: 'guide-5',
-          title: 'How to Wash Painted Denim',
-          thumbnail: '/images/CK_Wash_Painted_Denim.webp',
-          downloadUrl: '/downloads/DIY-tutorials/CK_Wash_Painted_Denim.pdf',
-        },
-        {
-          id: 'guide-6',
-          title: 'Fabric Paint Saves Stained Pants',
-          thumbnail: '/images/CK_Indigo_Pants.webp',
-          downloadUrl: '/blog/fabric-paint-stained-pants',
-        },
-        {
-          id: 'guide-7',
-          title: 'Hello, Christmas Star (How Long Has it Been?)',
-          thumbnail: '/images/Christmas_Star_SM.webp',
-          downloadUrl: '/blog/christmas-star',
-        },
-        {
-          id: 'guide-8',
-          title: 'Cactus Patch Mail Art',
-          thumbnail: '/images/Cactus_Doodles118.webp',
-          downloadUrl: '/blog/cactus-patch-mail-art',
-        },
-      ],
-    };
-
-    return fallbackData[category] || [];
-  };
+  // No fallback - WordPress API only
 
   const toggleCard = (cardId: string) => {
     if (expandedCard === cardId) {

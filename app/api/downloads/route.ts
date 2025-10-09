@@ -252,14 +252,20 @@ async function fetchMediaDetails(mediaId: number): Promise<string> {
       `https://api.cowboykimono.com/wp-json/wp/v2/media/${mediaId}`,
       {
         signal: AbortSignal.timeout(5000), // 5 second timeout
+        headers: {
+          'Accept': 'application/json',
+        },
       }
     );
     if (response.ok) {
       const media = await response.json();
-      return media.source_url || '';
+      // Return the source URL or media URL
+      return media.source_url || media.guid?.rendered || '';
+    } else {
+      console.warn(`Failed to fetch media ${mediaId}: ${response.status}`);
     }
   } catch (error) {
-    console.error('Error fetching media details:', error);
+    console.error(`Error fetching media details for ID ${mediaId}:`, error);
   }
   return '';
 }
@@ -270,6 +276,38 @@ async function transformDownloadsData(
 ): Promise<DownloadSection[]> {
   // Group downloads by category
   const groupedDownloads: Record<string, TransformedDownload[]> = {};
+  
+  // Collect all media IDs that need to be fetched
+  const mediaIdsToFetch = new Set<number>();
+  
+  for (const download of wpDownloads) {
+    const acfData = download.acf || download.meta || {};
+    
+    // Collect thumbnail IDs
+    if (acfData.download_thumbnail && typeof acfData.download_thumbnail === 'number') {
+      mediaIdsToFetch.add(acfData.download_thumbnail);
+    } else if (acfData.download_thumbnail && /^\d+$/.test(acfData.download_thumbnail)) {
+      mediaIdsToFetch.add(parseInt(acfData.download_thumbnail, 10));
+    }
+    
+    // Collect file IDs
+    if (acfData.download_file && typeof acfData.download_file === 'number') {
+      mediaIdsToFetch.add(acfData.download_file);
+    } else if (acfData.download_file && /^\d+$/.test(acfData.download_file)) {
+      mediaIdsToFetch.add(parseInt(acfData.download_file, 10));
+    }
+  }
+  
+  // Batch fetch all media details
+  const mediaCache: Record<number, string> = {};
+  await Promise.all(
+    Array.from(mediaIdsToFetch).map(async (mediaId) => {
+      const url = await fetchMediaDetails(mediaId);
+      if (url) {
+        mediaCache[mediaId] = url;
+      }
+    })
+  );
 
   for (const download of wpDownloads) {
     // ACF fields might be in download.meta or download.acf
@@ -287,18 +325,13 @@ async function transformDownloadsData(
       download.featured_media
     );
 
-    // If thumbnail is empty and we have a media ID, fetch the details
-    if (
-      !thumbnailUrl &&
-      acfData.download_thumbnail &&
-      (typeof acfData.download_thumbnail === 'number' ||
-        /^\d+$/.test(acfData.download_thumbnail))
-    ) {
+    // If thumbnail is empty and we have a media ID, use cached media
+    if (!thumbnailUrl && acfData.download_thumbnail) {
       const mediaId =
         typeof acfData.download_thumbnail === 'number'
           ? acfData.download_thumbnail
           : parseInt(acfData.download_thumbnail, 10);
-      thumbnailUrl = await fetchMediaDetails(mediaId);
+      thumbnailUrl = mediaCache[mediaId] || '';
     }
 
     // Get download URL
@@ -308,25 +341,26 @@ async function transformDownloadsData(
       acfData.download_file
     );
 
-    // If download URL is empty and we have a file media ID, fetch the details
-    if (
-      !downloadUrl &&
-      acfData.download_file &&
-      (typeof acfData.download_file === 'number' ||
-        /^\d+$/.test(acfData.download_file))
-    ) {
+    // If download URL is empty and we have a file media ID, use cached media
+    if (!downloadUrl && acfData.download_file) {
       const mediaId =
         typeof acfData.download_file === 'number'
           ? acfData.download_file
           : parseInt(acfData.download_file, 10);
-      downloadUrl = await fetchMediaDetails(mediaId);
+      downloadUrl = mediaCache[mediaId] || '';
+    }
+
+    // Skip items without valid download URLs
+    if (!downloadUrl || downloadUrl === '#') {
+      console.warn(`Skipping download ${download.id}: No valid download URL`);
+      continue;
     }
 
     // Transform individual download item
     const downloadItem = {
       id: `download-${download.id}`,
       title: download.title.rendered,
-      thumbnail: thumbnailUrl,
+      thumbnail: thumbnailUrl || '/images/placeholder.svg',
       downloadUrl,
       description:
         acfData.download_description || download.excerpt?.rendered || '',
@@ -336,9 +370,9 @@ async function transformDownloadsData(
     groupedDownloads[category].push(downloadItem);
   }
 
-  // Transform to match current structure
-  const downloadSections = Object.entries(groupedDownloads).map(
-    ([category, items]) => {
+  // Transform to match current structure and sort by category
+  const downloadSections = Object.entries(groupedDownloads)
+    .map(([category, items]) => {
       const categoryConfig = getCategoryConfig(category);
 
       return {
@@ -346,10 +380,19 @@ async function transformDownloadsData(
         title: categoryConfig.title,
         description: categoryConfig.description,
         image: categoryConfig.image,
-        thumbnails: items,
+        thumbnails: items.sort((a, b) => a.title.localeCompare(b.title)), // Sort items alphabetically
       };
-    }
-  );
+    })
+    .sort((a, b) => {
+      // Sort sections by predefined order
+      const order = ['coloring-pages', 'craft-templates', 'diy-tutorials'];
+      const aIndex = order.indexOf(a.id);
+      const bIndex = order.indexOf(b.id);
+      if (aIndex === -1 && bIndex === -1) return 0;
+      if (aIndex === -1) return 1;
+      if (bIndex === -1) return -1;
+      return aIndex - bIndex;
+    });
 
   return downloadSections;
 }

@@ -2,9 +2,9 @@ import type { NextConfig } from "next";
 import { createRedirectsConfig } from "./app/lib/redirect-manager";
 
 const nextConfig: NextConfig = {
-  // Amplify SSR configuration - no output setting needed
-  // output: 'export', // Use only for static export
-  // output: 'standalone', // Use only for containerized deployment
+  // Amplify SSR configuration
+  // Note: Amplify hosting requires no output mode for SSR
+  // The build artifact should include .next directory with all server components
   
   // Performance optimizations
   poweredByHeader: false,

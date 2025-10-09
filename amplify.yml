@@ -7,9 +7,7 @@ frontend:
     build:
       commands:
         - npm run build
-        - echo "Copying public assets into .next for unified deployment"
-        - mkdir -p .next/server/pages
-        - cp -r public .next/public
+        - echo "Build complete"
   artifacts:
     baseDirectory: .next
     files:

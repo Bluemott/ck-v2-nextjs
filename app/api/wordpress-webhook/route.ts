@@ -1,48 +1,60 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { validateWordPressWebhook } from '../../lib/validation';
 import { z } from 'zod';
-import type { WordPressWebhookPayload, WebhookResponse, WebhookValidationError } from '../../lib/types/api';
+import { invalidateDownloadsCache, invalidatePostCache } from '../../lib/cache';
+import type {
+  WebhookResponse,
+  WebhookValidationError,
+  WordPressWebhookPayload,
+} from '../../lib/types/api';
+import { validateWordPressWebhook } from '../../lib/validation';
 
 export async function POST(request: NextRequest): Promise<NextResponse> {
   try {
     // Parse the request body
     const body = await request.json();
-    
+
     // Validate the webhook data structure with proper error handling
     let validatedWebhook: WordPressWebhookPayload;
     try {
       validatedWebhook = validateWordPressWebhook(body);
     } catch (validationError) {
       if (validationError instanceof z.ZodError) {
-        const errors: WebhookValidationError[] = validationError.issues.map((err: z.ZodIssue) => ({
-          field: err.path.join('.'),
-          message: err.message,
-          code: err.code,
-        }));
-        
+        const errors: WebhookValidationError[] = validationError.issues.map(
+          (err: z.ZodIssue) => ({
+            field: err.path.join('.'),
+            message: err.message,
+            code: err.code,
+          })
+        );
+
         const errorResponse: WebhookResponse = {
           success: false,
           message: 'Invalid webhook data',
           errors,
         };
-        
+
         return NextResponse.json(errorResponse, { status: 400 });
       }
-      
+
       // Handle non-Zod validation errors
       const errorResponse: WebhookResponse = {
         success: false,
         message: 'Validation failed',
-        errors: [{
-          field: 'unknown',
-          message: validationError instanceof Error ? validationError.message : 'Unknown validation error',
-          code: 'VALIDATION_ERROR',
-        }],
+        errors: [
+          {
+            field: 'unknown',
+            message:
+              validationError instanceof Error
+                ? validationError.message
+                : 'Unknown validation error',
+            code: 'VALIDATION_ERROR',
+          },
+        ],
       };
-      
+
       return NextResponse.json(errorResponse, { status: 400 });
     }
-    
+
     // Extract validated data
     const {
       post_id,
@@ -73,37 +85,62 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       user_email,
     });
 
-    // Handle different post statuses
+    // Handle different post statuses and clear appropriate cache
     switch (post_status) {
       case 'publish':
-        // Handle published post
+        // Handle published post - clear relevant cache
         console.warn(`Post ${post_id} published: ${post_title}`);
+        if (post_type === 'post') {
+          invalidatePostCache(new_slug || post_name);
+        } else if (post_type === 'downloads') {
+          invalidateDownloadsCache();
+        }
         break;
-        
+
       case 'draft':
         // Handle draft post
         console.warn(`Post ${post_id} saved as draft: ${post_title}`);
         break;
-        
+
       case 'private':
-        // Handle private post
+        // Handle private post - clear cache since it's no longer public
         console.warn(`Post ${post_id} made private: ${post_title}`);
+        if (post_type === 'post') {
+          invalidatePostCache(post_name);
+        } else if (post_type === 'downloads') {
+          invalidateDownloadsCache();
+        }
         break;
-        
+
       case 'trash':
-        // Handle deleted post
+        // Handle deleted post - clear cache since it's deleted
         console.warn(`Post ${post_id} moved to trash: ${post_title}`);
+        if (post_type === 'post') {
+          invalidatePostCache(post_name);
+        } else if (post_type === 'downloads') {
+          invalidateDownloadsCache();
+        }
         break;
-        
+
       default:
-        console.warn(`Post ${post_id} status changed to ${post_status}: ${post_title}`);
+        console.warn(
+          `Post ${post_id} status changed to ${post_status}: ${post_title}`
+        );
+        // For any other status changes, clear cache to be safe
+        if (post_type === 'post') {
+          invalidatePostCache(post_name);
+        } else if (post_type === 'downloads') {
+          invalidateDownloadsCache();
+        }
     }
 
     // Handle slug changes if both old and new slugs are provided
     const slugChanged = Boolean(old_slug && new_slug && old_slug !== new_slug);
     if (slugChanged) {
-      console.warn(`Slug change detected for post ${post_id}: ${old_slug} -> ${new_slug}`);
-      
+      console.warn(
+        `Slug change detected for post ${post_id}: ${old_slug} -> ${new_slug}`
+      );
+
       // Here you could implement redirect creation logic
       // For example, create a redirect from old slug to new slug
       try {
@@ -131,20 +168,21 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     };
 
     return NextResponse.json(successResponse, { status: 200 });
-
   } catch (error) {
     console.error('WordPress webhook error:', error);
-    
+
     // Handle different types of errors
     let errorResponse: WebhookResponse;
-    
+
     if (error instanceof z.ZodError) {
-      const errors: WebhookValidationError[] = error.issues.map((err: z.ZodIssue) => ({
-        field: err.path.join('.'),
-        message: err.message,
-        code: err.code,
-      }));
-      
+      const errors: WebhookValidationError[] = error.issues.map(
+        (err: z.ZodIssue) => ({
+          field: err.path.join('.'),
+          message: err.message,
+          code: err.code,
+        })
+      );
+
       errorResponse = {
         success: false,
         message: 'Invalid webhook data',
@@ -154,24 +192,29 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       errorResponse = {
         success: false,
         message: 'Invalid JSON payload',
-        errors: [{
-          field: 'body',
-          message: 'Request body must be valid JSON',
-          code: 'INVALID_JSON',
-        }],
+        errors: [
+          {
+            field: 'body',
+            message: 'Request body must be valid JSON',
+            code: 'INVALID_JSON',
+          },
+        ],
       };
     } else {
       errorResponse = {
         success: false,
         message: 'Internal server error',
-        errors: [{
-          field: 'unknown',
-          message: error instanceof Error ? error.message : 'Unknown error occurred',
-          code: 'INTERNAL_ERROR',
-        }],
+        errors: [
+          {
+            field: 'unknown',
+            message:
+              error instanceof Error ? error.message : 'Unknown error occurred',
+            code: 'INTERNAL_ERROR',
+          },
+        ],
       };
     }
-    
+
     return NextResponse.json(errorResponse, { status: 500 });
   }
 }
@@ -179,19 +222,20 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 export async function GET(_request: NextRequest): Promise<NextResponse> {
   return NextResponse.json({
     message: 'WordPress webhook endpoint',
-    description: 'Receives webhook notifications from WordPress for post changes',
+    description:
+      'Receives webhook notifications from WordPress for post changes',
     supportedEvents: [
       'post_publish',
-      'post_update', 
+      'post_update',
       'post_delete',
-      'slug_change'
+      'slug_change',
     ],
     requiredFields: [
       'post_id',
-      'post_title', 
+      'post_title',
       'post_name',
       'post_status',
-      'post_type'
+      'post_type',
     ],
     optionalFields: [
       'old_slug',
@@ -199,7 +243,7 @@ export async function GET(_request: NextRequest): Promise<NextResponse> {
       'timestamp',
       'user_id',
       'user_login',
-      'user_email'
+      'user_email',
     ],
     example: {
       post_id: 123,
@@ -215,4 +259,4 @@ export async function GET(_request: NextRequest): Promise<NextResponse> {
       user_email: 'admin@example.com',
     },
   });
-} 
+}

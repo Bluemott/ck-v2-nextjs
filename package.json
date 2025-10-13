@@ -38,6 +38,11 @@
     "test:structured-data-comprehensive": "node scripts/test-structured-data-comprehensive.js",
     "verify:amplify-redirects": "node scripts/verify-amplify-redirects.js",
     "verify:amplify-deployment": "node scripts/verify-amplify-deployment.js",
+    "clear-cache": "node scripts/clear-cache.js",
+    "clear-cache:all": "node scripts/clear-cache.js all",
+    "clear-cache:posts": "node scripts/clear-cache.js posts",
+    "clear-cache:downloads": "node scripts/clear-cache.js downloads",
+    "cache-stats": "node scripts/clear-cache.js stats",
     "deploy:infrastructure": "cd infrastructure && npm run deploy",
     "build:workspaces": "npm run build --workspaces",
     "prepare": "husky"

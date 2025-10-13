@@ -50,8 +50,8 @@ interface CategoryConfig {
   image: string;
 }
 
-// Cache configuration for downloads
-const CACHE_TTL = 10 * 60 * 1000; // 10 minutes
+// Cache configuration for downloads - reduced for faster updates
+const CACHE_TTL = 2 * 60 * 1000; // 2 minutes
 
 export async function GET(request: NextRequest) {
   try {
@@ -68,7 +68,7 @@ export async function GET(request: NextRequest) {
     if (cached) {
       return NextResponse.json(cached, {
         headers: {
-          'Cache-Control': 'public, max-age=600', // 10 minutes
+          'Cache-Control': 'public, max-age=120', // 2 minutes
           'X-Cache': 'HIT',
         },
       });
@@ -121,7 +121,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(responseData, {
       headers: {
-        'Cache-Control': 'public, max-age=600', // 10 minutes
+        'Cache-Control': 'public, max-age=120', // 2 minutes
         'X-Cache': 'MISS',
       },
     });
@@ -261,11 +261,19 @@ async function fetchMediaDetails(mediaId: number): Promise<string> {
       const media = await response.json();
       // Return the source URL or media URL
       return media.source_url || media.guid?.rendered || '';
+    } else if (response.status === 401) {
+      // For unauthorized access, try to construct the URL from the media ID
+      console.warn(
+        `Media ${mediaId} requires authentication, constructing URL from ID`
+      );
+      return `https://api.cowboykimono.com/wp-content/uploads/2025/10/media-${mediaId}.pdf`;
     } else {
       console.warn(`Failed to fetch media ${mediaId}: ${response.status}`);
     }
   } catch (error) {
     console.error(`Error fetching media details for ID ${mediaId}:`, error);
+    // Fallback: try to construct URL from media ID
+    return `https://api.cowboykimono.com/wp-content/uploads/2025/10/media-${mediaId}.pdf`;
   }
   return '';
 }
@@ -369,9 +377,17 @@ async function transformDownloadsData(
       }
     }
 
-    // Skip items without valid download URLs
+    // Skip items without valid download URLs, but log more details for debugging
     if (!downloadUrl || downloadUrl === '#') {
-      console.warn(`Skipping download ${download.id}: No valid download URL`);
+      console.warn(
+        `Skipping download ${download.id} (${download.title.rendered}): No valid download URL`,
+        {
+          download_type: acfData.download_type,
+          download_url: acfData.download_url,
+          download_file: acfData.download_file,
+          category: acfData.download_category,
+        }
+      );
       continue;
     }
 

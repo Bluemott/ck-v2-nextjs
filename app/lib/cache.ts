@@ -146,8 +146,8 @@ export class CacheManager {
     const { restAPIClient } = await import('./rest-api');
     const result = await restAPIClient.getPosts(params);
 
-    // Cache with different TTL based on content type
-    const ttl = params.search ? 180000 : 300000; // 3 min for search, 5 min for regular
+    // Cache with different TTL based on content type - reduced for faster updates
+    const ttl = params.search ? 60000 : 120000; // 1 min for search, 2 min for regular
     this.set(cacheKey, result, ttl);
 
     if (monitoring) {
@@ -173,7 +173,7 @@ export class CacheManager {
     const post = await restAPIClient.getPostBySlug(slug);
 
     if (post) {
-      this.set(cacheKey, post, 900000); // 15 minutes cache for individual posts
+      this.set(cacheKey, post, 300000); // 5 minutes cache for individual posts
       if (monitoring) {
         await monitoring.recordCacheMiss('wordpress_post');
       }
@@ -266,6 +266,16 @@ export class CacheManager {
       key.startsWith('posts:')
     );
     keysToDelete.forEach((key) => this.cache.delete(key));
+    console.warn(`Cleared ${keysToDelete.length} post cache entries`);
+  }
+
+  // Clear downloads cache
+  clearDownloads(): void {
+    const keysToDelete = Array.from(this.cache.keys()).filter((key) =>
+      key.startsWith('downloads:')
+    );
+    keysToDelete.forEach((key) => this.cache.delete(key));
+    console.warn(`Cleared ${keysToDelete.length} downloads cache entries`);
   }
 
   clearPost(slug: string): void {
@@ -669,8 +679,16 @@ export function invalidatePostCache(slug: string): void {
   cacheManager.clearPosts(); // Clear posts list cache as well
 }
 
+export function invalidateDownloadsCache(): void {
+  cacheManager.clearDownloads();
+}
+
 export function invalidateAllCache(): void {
   cacheManager.clear();
+}
+
+export function getCacheStats() {
+  return cacheManager.getStats();
 }
 
 export function invalidateCacheByPattern(pattern: RegExp): void {

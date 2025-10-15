@@ -77,22 +77,36 @@ const DownloadsClient = () => {
         throw new Error(data.error || 'Failed to fetch downloads');
       }
 
-      // Extract thumbnails from the API response
+      // Extract thumbnails from the API response - improved parsing
       let thumbnails = [];
 
-      if (data.downloads && Array.isArray(data.downloads)) {
-        // If downloads is an array of sections
-        const section = data.downloads.find(
-          (section: { id: string }) => section.id === category
-        );
-        thumbnails = section?.thumbnails || [];
-      } else if (data.downloads && Array.isArray(data.downloads.thumbnails)) {
-        // If downloads has thumbnails directly
-        thumbnails = data.downloads.thumbnails;
+      if (data.success && data.downloads) {
+        // Handle array of sections (new API structure)
+        if (Array.isArray(data.downloads)) {
+          const section = data.downloads.find(
+            (section: { id: string }) => section.id === category
+          );
+          thumbnails = section?.thumbnails || [];
+        }
+        // Handle direct thumbnails array (legacy structure)
+        else if (
+          data.downloads.thumbnails &&
+          Array.isArray(data.downloads.thumbnails)
+        ) {
+          thumbnails = data.downloads.thumbnails;
+        }
+        // Handle single section object
+        else if (data.downloads.id === category && data.downloads.thumbnails) {
+          thumbnails = data.downloads.thumbnails;
+        }
       }
 
       // Ensure thumbnails is an array
       if (!Array.isArray(thumbnails)) {
+        console.warn(
+          `Invalid thumbnails structure for ${category}:`,
+          thumbnails
+        );
         thumbnails = [];
       }
 
@@ -297,91 +311,137 @@ const DownloadsClient = () => {
             {/* Error State */}
             {error && !loading[expandedCard] && (
               <div className="text-center py-8">
-                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4">
-                  <p className="text-yellow-800 text-sm">
-                    Using fallback content. WordPress integration not available.
-                  </p>
+                <div className="bg-red-50 border border-red-200 rounded-lg p-6 mb-4">
+                  <div className="flex flex-col items-center">
+                    <div className="text-red-600 text-4xl mb-2">⚠️</div>
+                    <h3 className="text-red-800 font-semibold mb-2">
+                      Failed to Load Downloads
+                    </h3>
+                    <p className="text-red-700 text-sm mb-4">{error}</p>
+                    <button
+                      onClick={() => {
+                        setError(null);
+                        fetchDownloadsForCategory(expandedCard);
+                      }}
+                      className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors"
+                    >
+                      Try Again
+                    </button>
+                  </div>
                 </div>
               </div>
             )}
 
-            {/* Dynamic Content */}
-            {!loading[expandedCard] && (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                {(dynamicThumbnails[expandedCard] || [])
-                  .filter(
-                    (item) =>
-                      item && typeof item === 'object' && item.id && item.title
-                  )
-                  .map((item) => (
-                    <div
-                      key={item.id}
-                      className="bg-gray-50 rounded-lg shadow-sm overflow-hidden hover:shadow-md transition-all duration-300 transform hover:-translate-y-1 flex flex-col items-center text-center"
-                    >
-                      {/* Thumbnail Image */}
-                      <div className="aspect-square relative w-full">
-                        {item.thumbnail &&
-                        item.thumbnail !== '' &&
-                        item.thumbnail !== '#' ? (
-                          <Image
-                            src={item.thumbnail}
-                            alt={item.title || 'Download'}
-                            fill
-                            className="object-cover"
-                            sizes="(max-width: 768px) 50vw, (max-width: 1024px) 25vw, 20vw"
-                            onError={(e) => {
-                              console.error(
-                                'Thumbnail failed to load:',
-                                item.thumbnail
-                              );
-                              e.currentTarget.style.display = 'none';
-                            }}
-                          />
-                        ) : (
-                          <div className="w-full h-full bg-gray-200 flex items-center justify-center">
-                            <span className="text-gray-500 text-sm">
-                              No Image
-                            </span>
-                          </div>
-                        )}
-                      </div>
-                      {/* Download Info */}
-                      <div className="p-4 flex flex-col items-center text-center w-full">
-                        <h4 className="font-semibold text-gray-800 mb-2 text-center text-sm line-clamp-2 w-full">
-                          {item.title || 'Untitled Download'}
-                        </h4>
-                        {item.downloadUrl &&
-                        item.downloadUrl !== '' &&
-                        item.downloadUrl !== '#' ? (
-                          (() => {
-                            const downloadInfo = getDownloadInfo(
-                              item.downloadUrl,
-                              item.type
-                            );
-                            return (
-                              <button
-                                onClick={() =>
-                                  handleDownload(
-                                    item.downloadUrl,
-                                    item.title || 'Download'
-                                  )
-                                }
-                                className={`px-4 py-2 rounded-md transition-colors font-medium flex items-center justify-center text-sm w-full max-w-[180px] bg-[#1e2939] hover:bg-[#2a3441] text-white`}
-                              >
-                                {downloadInfo.text}
-                              </button>
-                            );
-                          })()
-                        ) : (
-                          <div className="px-4 py-2 rounded-md bg-gray-300 text-gray-600 text-sm text-center w-full max-w-[180px]">
-                            Coming Soon
-                          </div>
-                        )}
-                      </div>
+            {/* Empty State */}
+            {!loading[expandedCard] &&
+              !error &&
+              (!dynamicThumbnails[expandedCard] ||
+                dynamicThumbnails[expandedCard].length === 0) && (
+                <div className="text-center py-12">
+                  <div className="bg-gray-50 border border-gray-200 rounded-lg p-8">
+                    <div className="flex flex-col items-center">
+                      <div className="text-gray-400 text-4xl mb-4">📁</div>
+                      <h3 className="text-gray-600 font-semibold mb-2">
+                        No Downloads Available
+                      </h3>
+                      <p className="text-gray-500 text-sm mb-4">
+                        There are currently no downloads available for this
+                        category.
+                      </p>
+                      <button
+                        onClick={() => fetchDownloadsForCategory(expandedCard)}
+                        className="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors"
+                      >
+                        Refresh
+                      </button>
                     </div>
-                  ))}
-              </div>
-            )}
+                  </div>
+                </div>
+              )}
+
+            {/* Dynamic Content */}
+            {!loading[expandedCard] &&
+              !error &&
+              dynamicThumbnails[expandedCard] &&
+              dynamicThumbnails[expandedCard].length > 0 && (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                  {dynamicThumbnails[expandedCard]
+                    .filter(
+                      (item) =>
+                        item &&
+                        typeof item === 'object' &&
+                        item.id &&
+                        item.title
+                    )
+                    .map((item) => (
+                      <div
+                        key={item.id}
+                        className="bg-gray-50 rounded-lg shadow-sm overflow-hidden hover:shadow-md transition-all duration-300 transform hover:-translate-y-1 flex flex-col items-center text-center"
+                      >
+                        {/* Thumbnail Image */}
+                        <div className="aspect-square relative w-full">
+                          {item.thumbnail &&
+                          item.thumbnail !== '' &&
+                          item.thumbnail !== '#' ? (
+                            <Image
+                              src={item.thumbnail}
+                              alt={item.title || 'Download'}
+                              fill
+                              className="object-cover"
+                              sizes="(max-width: 768px) 50vw, (max-width: 1024px) 25vw, 20vw"
+                              onError={(e) => {
+                                console.error(
+                                  'Thumbnail failed to load:',
+                                  item.thumbnail
+                                );
+                                e.currentTarget.style.display = 'none';
+                              }}
+                            />
+                          ) : (
+                            <div className="w-full h-full bg-gray-200 flex items-center justify-center">
+                              <span className="text-gray-500 text-sm">
+                                No Image
+                              </span>
+                            </div>
+                          )}
+                        </div>
+                        {/* Download Info */}
+                        <div className="p-4 flex flex-col items-center text-center w-full">
+                          <h4 className="font-semibold text-gray-800 mb-2 text-center text-sm line-clamp-2 w-full">
+                            {item.title || 'Untitled Download'}
+                          </h4>
+                          {item.downloadUrl &&
+                          item.downloadUrl !== '' &&
+                          item.downloadUrl !== '#' ? (
+                            (() => {
+                              const downloadInfo = getDownloadInfo(
+                                item.downloadUrl,
+                                item.type
+                              );
+                              return (
+                                <button
+                                  onClick={() =>
+                                    handleDownload(
+                                      item.downloadUrl,
+                                      item.title || 'Download'
+                                    )
+                                  }
+                                  className={`px-4 py-2 rounded-md transition-colors font-medium flex items-center justify-center text-sm w-full max-w-[180px] bg-[#1e2939] hover:bg-[#2a3441] text-white`}
+                                >
+                                  {downloadInfo.text}
+                                </button>
+                              );
+                            })()
+                          ) : (
+                            <div className="px-4 py-2 rounded-md bg-gray-300 text-gray-600 text-sm text-center w-full max-w-[180px]">
+                              Coming Soon
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                </div>
+              )}
           </div>
         )}
       </div>

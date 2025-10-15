@@ -146,8 +146,8 @@ export class CacheManager {
     const { restAPIClient } = await import('./rest-api');
     const result = await restAPIClient.getPosts(params);
 
-    // Cache with different TTL based on content type - reduced for faster updates
-    const ttl = params.search ? 60000 : 120000; // 1 min for search, 2 min for regular
+    // Cache with different TTL based on content type - increased for better performance
+    const ttl = params.search ? 180000 : 300000; // 3 min for search, 5 min for regular
     this.set(cacheKey, result, ttl);
 
     if (monitoring) {
@@ -224,6 +224,70 @@ export class CacheManager {
     }
 
     return tags;
+  }
+
+  // Downloads-specific caching methods
+  async getCachedDownloads(
+    params: {
+      category?: string;
+      page?: number;
+      per_page?: number;
+    } = {}
+  ): Promise<{
+    downloads: unknown[];
+    pagination: WPRestPagination;
+  }> {
+    const cacheKey = `downloads:${params.category || 'all'}:${params.page || 1}:${params.per_page || 100}`;
+    const cached = this.get(cacheKey);
+
+    if (cached) {
+      if (monitoring) {
+        await monitoring.recordCacheHit('wordpress_downloads');
+      }
+      return cached as {
+        downloads: unknown[];
+        pagination: WPRestPagination;
+      };
+    }
+
+    // Import here to avoid circular dependencies
+    const { restAPIClient } = await import('./rest-api');
+    let result;
+
+    if (params.category) {
+      const downloads = await restAPIClient.getDownloadsByCategory(
+        params.category
+      );
+      result = {
+        downloads,
+        pagination: {
+          totalPosts: downloads.length,
+          totalPages: 1,
+          currentPage: 1,
+          perPage: downloads.length,
+          hasNextPage: false,
+          hasPreviousPage: false,
+        },
+      };
+    } else {
+      result = await restAPIClient.getDownloads({
+        page: params.page,
+        per_page: params.per_page,
+        _embed: true,
+        status: 'publish',
+        orderby: 'date',
+        order: 'desc',
+      });
+    }
+
+    // Cache downloads for 15 minutes (stable content)
+    this.set(cacheKey, result, 900000); // 15 minutes
+
+    if (monitoring) {
+      await monitoring.recordCacheMiss('wordpress_downloads');
+    }
+
+    return result;
   }
 
   // Enhanced cache statistics
@@ -325,6 +389,18 @@ export class CacheManager {
         _embed: true,
       });
 
+      // Warm downloads cache for each category (high priority for downloads page)
+      const downloadCategories = [
+        'coloring-pages',
+        'craft-templates',
+        'diy-tutorials',
+      ];
+      await Promise.all(
+        downloadCategories.map((category) =>
+          this.getCachedDownloads({ category, per_page: 100 })
+        )
+      );
+
       console.warn('Enhanced cache warming completed');
     } catch (error) {
       console.error('Cache warming failed:', error);
@@ -407,10 +483,23 @@ export class EnhancedCacheManager extends CacheManager {
 
   private async initializeRedis() {
     try {
+      // Skip Redis in development if not explicitly configured
+      if (process.env.NODE_ENV === 'development' && !process.env.REDIS_URL) {
+        console.warn(
+          'Redis not configured for development, using memory cache only'
+        );
+        return;
+      }
+
       const { createClient } = await import('redis');
       this.redisClient = createClient({
         url: process.env.REDIS_URL || 'redis://localhost:6379',
+        socket: {
+          connectTimeout: 5000,
+          lazyConnect: true,
+        },
       });
+
       await this.redisClient.connect();
       console.warn('Redis connected successfully');
     } catch (error) {

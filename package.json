@@ -9,6 +9,8 @@
   "scripts": {
     "dev": "next dev --turbo",
     "dev:webpack": "next dev",
+    "dev:standard": "next dev",
+    "setup:dev": "node scripts/setup-dev-environment.js",
     "build": "next build",
     "start": "next start",
     "test": "npm run test:basic",

@@ -54,11 +54,22 @@ interface CategoryConfig {
 const CACHE_TTL = 2 * 60 * 1000; // 2 minutes
 
 export async function GET(request: NextRequest) {
+  // Generate request ID for tracking
+  const requestId = crypto.randomUUID();
+
   try {
     const { searchParams } = new URL(request.url);
     const category = searchParams.get('category');
     const page = parseInt(searchParams.get('page') || '1', 10);
     const perPage = parseInt(searchParams.get('per_page') || '100', 10);
+
+    // Enhanced logging for debugging
+    console.warn(`[${requestId}] Downloads API Request:`, {
+      category,
+      page,
+      perPage,
+      timestamp: new Date().toISOString(),
+    });
 
     // Create cache key
     const cacheKey = `downloads:${category || 'all'}:${page}:${perPage}`;
@@ -66,10 +77,16 @@ export async function GET(request: NextRequest) {
     // Check cache first
     const cached = cacheManager.get(cacheKey);
     if (cached) {
+      console.warn(`[${requestId}] Cache HIT for downloads:`, {
+        category,
+        page,
+        perPage,
+      });
       return NextResponse.json(cached, {
         headers: {
-          'Cache-Control': 'public, max-age=120', // 2 minutes
+          'Cache-Control': 'public, max-age=900', // 15 minutes
           'X-Cache': 'HIT',
+          'X-Request-ID': requestId,
         },
       });
     }
@@ -79,6 +96,7 @@ export async function GET(request: NextRequest) {
 
     if (category) {
       // Get downloads by category from WordPress
+      console.warn(`[${requestId}] Fetching downloads for category:`, category);
       downloads = await restAPIClient.getDownloadsByCategory(category);
       pagination = {
         totalPosts: downloads.length,
@@ -88,8 +106,12 @@ export async function GET(request: NextRequest) {
         hasNextPage: false,
         hasPreviousPage: false,
       };
+      console.warn(
+        `[${requestId}] Found ${downloads.length} downloads for category ${category}`
+      );
     } else {
       // Get all downloads from WordPress
+      console.warn(`[${requestId}] Fetching all downloads:`, { page, perPage });
       const result = await restAPIClient.getDownloads({
         page,
         per_page: perPage,
@@ -100,12 +122,21 @@ export async function GET(request: NextRequest) {
       });
       downloads = result.downloads;
       pagination = result.pagination;
+      console.warn(`[${requestId}] Found ${downloads.length} total downloads`);
     }
 
     // Transform WordPress data to match frontend structure
-    const transformedDownloads = await transformDownloadsData(downloads);
+    console.warn(`[${requestId}] Transforming downloads data...`);
+    const transformedDownloads = await transformDownloadsData(
+      downloads,
+      requestId
+    );
+    console.warn(
+      `[${requestId}] Transformed into ${transformedDownloads.length} sections`
+    );
 
     const responseData = {
+      success: true,
       downloads: transformedDownloads,
       pagination,
       meta: {
@@ -113,26 +144,40 @@ export async function GET(request: NextRequest) {
         category: category || 'all',
         timestamp: new Date().toISOString(),
         source: 'wordpress',
+        requestId,
       },
     };
 
-    // Cache the response
+    // Cache the response with longer TTL for stable content
+    const CACHE_TTL = 15 * 60 * 1000; // 15 minutes
     cacheManager.set(cacheKey, responseData, CACHE_TTL);
+    console.warn(
+      `[${requestId}] Cached response for ${CACHE_TTL / 1000 / 60} minutes`
+    );
 
     return NextResponse.json(responseData, {
       headers: {
-        'Cache-Control': 'public, max-age=120', // 2 minutes
+        'Cache-Control': 'public, max-age=900', // 15 minutes
         'X-Cache': 'MISS',
+        'X-Request-ID': requestId,
       },
     });
   } catch (error) {
-    console.error('Error fetching downloads from WordPress:', error);
+    console.error(`[${requestId}] Downloads API Error:`, {
+      error: error instanceof Error ? error.message : String(error),
+      category,
+      page,
+      perPage,
+      stack: error instanceof Error ? error.stack : undefined,
+    });
 
     return NextResponse.json(
       {
+        success: false,
         error: 'Failed to fetch downloads',
         message: error instanceof Error ? error.message : 'Unknown error',
-        downloads: [],
+        requestId,
+        downloads: [], // Empty array instead of undefined
         pagination: {
           totalPosts: 0,
           totalPages: 1,
@@ -141,8 +186,19 @@ export async function GET(request: NextRequest) {
           hasNextPage: false,
           hasPreviousPage: false,
         },
+        meta: {
+          category: category || 'all',
+          timestamp: new Date().toISOString(),
+          source: 'error',
+          requestId,
+        },
       },
-      { status: 500 }
+      {
+        status: 500,
+        headers: {
+          'X-Request-ID': requestId,
+        },
+      }
     );
   }
 }
@@ -280,8 +336,13 @@ async function fetchMediaDetails(mediaId: number): Promise<string> {
 
 // Transform WordPress download data to match current frontend structure
 async function transformDownloadsData(
-  wpDownloads: WordPressDownload[]
+  wpDownloads: WordPressDownload[],
+  requestId: string
 ): Promise<DownloadSection[]> {
+  console.warn(
+    `[${requestId}] Starting transformation of ${wpDownloads.length} downloads`
+  );
+
   // Group downloads by category
   const groupedDownloads: Record<string, TransformedDownload[]> = {};
 
@@ -290,6 +351,11 @@ async function transformDownloadsData(
 
   for (const download of wpDownloads) {
     const acfData = download.acf || download.meta || {};
+    console.warn(`[${requestId}] Processing download ${download.id}:`, {
+      title: download.title.rendered,
+      acfData: Object.keys(acfData),
+      hasEmbedded: !!download._embedded,
+    });
 
     // Collect thumbnail IDs
     if (
@@ -318,12 +384,16 @@ async function transformDownloadsData(
   }
 
   // Batch fetch all media details
+  console.warn(`[${requestId}] Fetching ${mediaIdsToFetch.size} media items`);
   const mediaCache: Record<number, string> = {};
   await Promise.all(
     Array.from(mediaIdsToFetch).map(async (mediaId) => {
       const url = await fetchMediaDetails(mediaId);
       if (url) {
         mediaCache[mediaId] = url;
+        console.warn(`[${requestId}] Media ${mediaId} resolved to:`, url);
+      } else {
+        console.warn(`[${requestId}] Media ${mediaId} could not be resolved`);
       }
     })
   );
@@ -380,7 +450,7 @@ async function transformDownloadsData(
     // Skip items without valid download URLs, but log more details for debugging
     if (!downloadUrl || downloadUrl === '#') {
       console.warn(
-        `Skipping download ${download.id} (${download.title.rendered}): No valid download URL`,
+        `[${requestId}] Skipping download ${download.id} (${download.title.rendered}): No valid download URL`,
         {
           download_type: acfData.download_type,
           download_url: acfData.download_url,
@@ -403,12 +473,19 @@ async function transformDownloadsData(
     };
 
     groupedDownloads[category].push(downloadItem);
+    console.warn(
+      `[${requestId}] Added download to category ${category}:`,
+      downloadItem.title
+    );
   }
 
   // Transform to match current structure and sort by category
   const downloadSections = Object.entries(groupedDownloads)
     .map(([category, items]) => {
       const categoryConfig = getCategoryConfig(category);
+      console.warn(
+        `[${requestId}] Creating section for ${category} with ${items.length} items`
+      );
 
       return {
         id: category,
@@ -429,6 +506,9 @@ async function transformDownloadsData(
       return aIndex - bIndex;
     });
 
+  console.warn(
+    `[${requestId}] Transformation complete: ${downloadSections.length} sections created`
+  );
   return downloadSections;
 }
 

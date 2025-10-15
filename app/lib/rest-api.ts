@@ -38,49 +38,91 @@ export class RestAPIClient {
     this.baseUrl = API_CONFIG.WORDPRESS_REST_URL;
   }
 
-  // Helper method to make HTTP requests with proper typing
+  // Helper method to make HTTP requests with retry logic
   private async makeRequest<T>(
     endpoint: string,
     options: RequestInit = {}
   ): Promise<T> {
-    const url = `${this.baseUrl}${endpoint}`;
-
-    try {
-      const response = await fetch(url, {
-        ...options,
-        headers: {
-          'Content-Type': 'application/json',
-          ...options.headers,
-        },
-        signal: AbortSignal.timeout(10000), // 10 second timeout
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        const error: WPRestErrorResponse = {
-          code: errorData.code || 'HTTP_ERROR',
-          message: errorData.message || response.statusText,
-          data: {
-            status: response.status,
-            params: errorData.data?.params,
-            details: errorData.data?.details,
-          },
-        };
-        throw new Error(`HTTP ${response.status}: ${error.message}`);
-      }
-
-      const data = await response.json();
-      return data as T;
-    } catch (error) {
-      console.error('REST API request error:', {
-        error: error instanceof Error ? error.message : String(error),
-        url,
-      });
-      throw error;
-    }
+    return this.makeRequestWithRetry<T>(endpoint, options, 3);
   }
 
-  // New method to make requests and return both data and headers with proper typing
+  // Enhanced method with retry logic and better error handling
+  private async makeRequestWithRetry<T>(
+    endpoint: string,
+    options: RequestInit = {},
+    maxRetries: number = 3
+  ): Promise<T> {
+    const url = `${this.baseUrl}${endpoint}`;
+    let lastError: Error | null = null;
+
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      try {
+        console.warn(
+          `[REST API] Attempt ${attempt}/${maxRetries} for ${endpoint}`
+        );
+
+        // Increase timeout for downloads endpoint
+        const timeout = endpoint.includes('/downloads') ? 30000 : 10000; // 30s for downloads, 10s for others
+
+        const response = await fetch(url, {
+          ...options,
+          headers: {
+            'Content-Type': 'application/json',
+            ...options.headers,
+          },
+          signal: AbortSignal.timeout(timeout),
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          const error: WPRestErrorResponse = {
+            code: errorData.code || 'HTTP_ERROR',
+            message: errorData.message || response.statusText,
+            data: {
+              status: response.status,
+              params: errorData.data?.params,
+              details: errorData.data?.details,
+            },
+          };
+
+          // Don't retry on client errors (4xx)
+          if (response.status >= 400 && response.status < 500) {
+            throw new Error(`HTTP ${response.status}: ${error.message}`);
+          }
+
+          // Retry on server errors (5xx) or network issues
+          throw new Error(`HTTP ${response.status}: ${error.message}`);
+        }
+
+        const data = await response.json();
+        console.warn(
+          `[REST API] Success on attempt ${attempt} for ${endpoint}`
+        );
+        return data as T;
+      } catch (error) {
+        lastError = error as Error;
+        console.warn(`[REST API] Attempt ${attempt} failed for ${endpoint}:`, {
+          error: lastError.message,
+          url,
+        });
+
+        if (attempt < maxRetries) {
+          const delay = Math.min(1000 * Math.pow(2, attempt), 10000); // Exponential backoff, max 10s
+          console.warn(`[REST API] Retrying in ${delay}ms...`);
+          await new Promise((resolve) => setTimeout(resolve, delay));
+        }
+      }
+    }
+
+    console.error('REST API request failed after all retries:', {
+      error: lastError?.message,
+      url,
+      attempts: maxRetries,
+    });
+    throw lastError;
+  }
+
+  // New method to make requests and return both data and headers with retry logic
   private async makeRequestWithHeaders<T>(
     endpoint: string,
     options: RequestInit = {}
@@ -91,46 +133,82 @@ export class RestAPIClient {
     statusText: string;
   }> {
     const url = `${this.baseUrl}${endpoint}`;
+    let lastError: Error | null = null;
+    const maxRetries = 3;
 
-    try {
-      const response = await fetch(url, {
-        ...options,
-        headers: {
-          'Content-Type': 'application/json',
-          ...options.headers,
-        },
-        signal: AbortSignal.timeout(10000), // 10 second timeout
-      });
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      try {
+        console.warn(
+          `[REST API] Headers attempt ${attempt}/${maxRetries} for ${endpoint}`
+        );
 
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        const error: WPRestErrorResponse = {
-          code: errorData.code || 'HTTP_ERROR',
-          message: errorData.message || response.statusText,
-          data: {
-            status: response.status,
-            params: errorData.data?.params,
-            details: errorData.data?.details,
+        // Increase timeout for downloads endpoint
+        const timeout = endpoint.includes('/downloads') ? 30000 : 10000;
+
+        const response = await fetch(url, {
+          ...options,
+          headers: {
+            'Content-Type': 'application/json',
+            ...options.headers,
           },
+          signal: AbortSignal.timeout(timeout),
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          const error: WPRestErrorResponse = {
+            code: errorData.code || 'HTTP_ERROR',
+            message: errorData.message || response.statusText,
+            data: {
+              status: response.status,
+              params: errorData.data?.params,
+              details: errorData.data?.details,
+            },
+          };
+
+          // Don't retry on client errors (4xx)
+          if (response.status >= 400 && response.status < 500) {
+            throw new Error(`HTTP ${response.status}: ${error.message}`);
+          }
+
+          throw new Error(`HTTP ${response.status}: ${error.message}`);
+        }
+
+        const data = await response.json();
+        console.warn(
+          `[REST API] Headers success on attempt ${attempt} for ${endpoint}`
+        );
+
+        return {
+          data: data as T,
+          headers: response.headers,
+          status: response.status,
+          statusText: response.statusText,
         };
-        throw new Error(`HTTP ${response.status}: ${error.message}`);
+      } catch (error) {
+        lastError = error as Error;
+        console.warn(
+          `[REST API] Headers attempt ${attempt} failed for ${endpoint}:`,
+          {
+            error: lastError.message,
+            url,
+          }
+        );
+
+        if (attempt < maxRetries) {
+          const delay = Math.min(1000 * Math.pow(2, attempt), 10000);
+          console.warn(`[REST API] Headers retrying in ${delay}ms...`);
+          await new Promise((resolve) => setTimeout(resolve, delay));
+        }
       }
-
-      const data = await response.json();
-
-      return {
-        data: data as T,
-        headers: response.headers,
-        status: response.status,
-        statusText: response.statusText,
-      };
-    } catch (error) {
-      console.error('REST API request error:', {
-        error: error instanceof Error ? error.message : String(error),
-        url,
-      });
-      throw error;
     }
+
+    console.error('REST API headers request failed after all retries:', {
+      error: lastError?.message,
+      url,
+      attempts: maxRetries,
+    });
+    throw lastError;
   }
 
   // Get posts with pagination and filtering with proper typing
@@ -454,23 +532,64 @@ export class RestAPIClient {
     }
   }
 
-  // Get downloads by category
+  // Get downloads by category - optimized version
   async getDownloadsByCategory(category: string): Promise<WPRestDownload[]> {
     try {
-      // ACF fields are not queryable via meta_key/meta_value in REST API
-      // We need to fetch all downloads and filter client-side
+      console.warn(`[REST API] Fetching downloads for category: ${category}`);
+
+      // Try to use WordPress meta query if supported, otherwise fall back to client-side filtering
+      try {
+        // Attempt to use meta query for better performance
+        const searchParams = new URLSearchParams({
+          per_page: '100',
+          _embed: '1',
+          status: 'publish',
+          meta_key: 'download_category',
+          meta_value: category,
+        });
+
+        const endpoint = `${WP_ENDPOINTS.DOWNLOADS}?${searchParams.toString()}`;
+        console.warn(`[REST API] Trying meta query for category ${category}`);
+
+        const downloads = await this.makeRequest<WPRestDownload[]>(endpoint);
+
+        if (downloads && downloads.length > 0) {
+          console.warn(
+            `[REST API] Meta query successful: found ${downloads.length} downloads`
+          );
+          return downloads;
+        }
+      } catch (metaError) {
+        console.warn(
+          `[REST API] Meta query failed for category ${category}, falling back to client-side filtering:`,
+          metaError
+        );
+      }
+
+      // Fallback: fetch all downloads and filter client-side
+      console.warn(
+        `[REST API] Using client-side filtering for category ${category}`
+      );
       const { downloads } = await this.getDownloads({
         per_page: 100,
         _embed: true,
       });
 
       // Filter by category client-side
-      return downloads.filter((download) => {
+      const filteredDownloads = downloads.filter((download) => {
         const acfData = download.acf || download.meta || {};
         return acfData.download_category === category;
       });
+
+      console.warn(
+        `[REST API] Client-side filtering found ${filteredDownloads.length} downloads for category ${category}`
+      );
+      return filteredDownloads;
     } catch (error) {
-      console.error('Error fetching downloads by category:', error);
+      console.error(
+        `[REST API] Error fetching downloads by category ${category}:`,
+        error
+      );
       return [];
     }
   }

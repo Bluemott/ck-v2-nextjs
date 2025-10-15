@@ -1,16 +1,16 @@
-import type { NextConfig } from "next";
-import { createRedirectsConfig } from "./app/lib/redirect-manager";
+import type { NextConfig } from 'next';
+import { createRedirectsConfig } from './app/lib/redirect-manager';
 
 const nextConfig: NextConfig = {
   // Amplify SSR configuration
   // Note: Amplify hosting requires no output mode for SSR
   // The build artifact should include .next directory with all server components
-  
+
   // Performance optimizations
   poweredByHeader: false,
   reactStrictMode: true,
   compress: true,
-  
+
   // Advanced image optimization
   images: {
     // Enable optimization for better performance
@@ -18,6 +18,8 @@ const nextConfig: NextConfig = {
     formats: ['image/webp', 'image/avif'],
     deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 3840],
     imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
+    // Configure image qualities for Next.js 16 compatibility
+    qualities: [25, 50, 75, 85, 90, 95, 100],
     // Optimize for performance
     minimumCacheTTL: 60 * 60 * 24 * 30, // 30 days
     dangerouslyAllowSVG: true,
@@ -74,14 +76,19 @@ const nextConfig: NextConfig = {
       },
     ],
   },
-  
+
   // Bundle optimization
   experimental: {
     optimizePackageImports: ['@next/font'],
   },
-  
-  // Webpack optimizations
+
+  // Webpack optimizations (only when not using Turbopack)
   webpack: (config, { dev, isServer }) => {
+    // Skip webpack optimizations when using Turbopack
+    if (process.env.TURBOPACK) {
+      return config;
+    }
+
     // Optimize bundle size
     if (!dev && !isServer) {
       config.optimization = {
@@ -114,17 +121,17 @@ const nextConfig: NextConfig = {
         sideEffects: false,
       };
     }
-    
+
     // Add compression
     if (!dev) {
       config.optimization.minimize = true;
       // Note: Next.js handles minification automatically in production
       // TerserPlugin is not needed as Next.js uses its own minification
     }
-    
+
     return config;
   },
-  
+
   // Server external packages for AWS SDK
   serverExternalPackages: [
     '@aws-sdk/client-cloudwatch',
@@ -133,7 +140,7 @@ const nextConfig: NextConfig = {
     '@aws-sdk/client-s3',
     '@aws-sdk/client-rds-data',
   ],
-  
+
   // Headers for performance and security
   async headers() {
     return [
@@ -191,7 +198,7 @@ const nextConfig: NextConfig = {
       },
     ];
   },
-  
+
   // Redirects for SEO and performance
   async redirects() {
     return createRedirectsConfig();

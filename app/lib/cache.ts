@@ -9,6 +9,10 @@ import type {
   WPRestTag,
 } from './rest-api';
 
+// Build-time cache singleton for sharing data across page generations
+const BUILD_CACHE = new Map<string, { data: unknown; timestamp: number }>();
+const IS_BUILD_TIME = process.env.CI === 'true';
+
 // Only import monitoring on the server side
 if (typeof window === 'undefined') {
   try {
@@ -47,6 +51,11 @@ export class CacheManager {
   }
 
   set(key: string, data: unknown, ttl: number = 300000): void {
+    // Store in build cache during CI builds
+    if (IS_BUILD_TIME) {
+      BUILD_CACHE.set(key, { data, timestamp: Date.now() });
+    }
+
     // Implement LRU eviction with access count tracking
     if (this.cache.size >= this.maxSize) {
       this.evictLRU();
@@ -61,6 +70,13 @@ export class CacheManager {
   }
 
   get(key: string): unknown | null {
+    // Check build cache first during CI builds
+    if (IS_BUILD_TIME && BUILD_CACHE.has(key)) {
+      const item = BUILD_CACHE.get(key)!;
+      this.hitCount++;
+      return item.data;
+    }
+
     const item = this.cache.get(key);
     if (!item) {
       this.missCount++;
@@ -483,12 +499,14 @@ export class EnhancedCacheManager extends CacheManager {
 
   private async initializeRedis() {
     try {
+      // Skip Redis in CI/build environment
+      if (process.env.CI) {
+        return; // Silent skip during builds
+      }
+
       // Skip Redis in development if not explicitly configured
       if (process.env.NODE_ENV === 'development' && !process.env.REDIS_URL) {
-        console.warn(
-          'Redis not configured for development, using memory cache only'
-        );
-        return;
+        return; // Silent skip
       }
 
       const { createClient } = await import('redis');
@@ -496,14 +514,22 @@ export class EnhancedCacheManager extends CacheManager {
         url: process.env.REDIS_URL || 'redis://localhost:6379',
         socket: {
           connectTimeout: 5000,
-          lazyConnect: true,
         },
       });
 
       await this.redisClient.connect();
-      console.warn('Redis connected successfully');
+      // Only log success in development
+      if (process.env.NODE_ENV === 'development') {
+        console.warn('Redis connected successfully');
+      }
     } catch (error) {
-      console.warn('Redis not available, falling back to memory cache:', error);
+      // Silent fail - no logging during builds or production
+      if (process.env.NODE_ENV === 'development') {
+        console.warn(
+          'Redis not available, falling back to memory cache:',
+          error
+        );
+      }
     }
   }
 

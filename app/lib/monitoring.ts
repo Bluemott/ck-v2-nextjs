@@ -134,6 +134,11 @@ export class Monitoring {
 
   // Metrics with proper AWS SDK types
   async putMetric(data: MetricData): Promise<void> {
+    // Skip monitoring completely during builds
+    if (process.env.CI) {
+      return;
+    }
+
     if (!this.config.enableMetrics) {
       // In development, just log to console
       if (this.config.environment === 'development') {
@@ -147,8 +152,7 @@ export class Monitoring {
 
     // Skip if AWS SDK is not available
     if (!this.cloudwatch || !PutMetricDataCommand) {
-      console.warn('CloudWatch not available, skipping metric');
-      return;
+      return; // Silent skip, no logging
     }
 
     try {
@@ -298,6 +302,11 @@ export class Monitoring {
 
   // Logging with proper AWS SDK types
   async putLog(data: LogData): Promise<void> {
+    // Skip monitoring completely during builds
+    if (process.env.CI) {
+      return;
+    }
+
     if (!this.config.enableLogs) {
       // In development, just log to console
       if (this.config.environment === 'development') {
@@ -311,8 +320,7 @@ export class Monitoring {
 
     // Skip if AWS SDK is not available
     if (!this.logs || !PutLogEventsCommand) {
-      console.warn('CloudWatch Logs not available, skipping log');
-      return;
+      return; // Silent skip, no logging
     }
 
     try {

@@ -879,27 +879,31 @@ export function getFeaturedImageUrl(post: BlogPost): string | null {
   // If no embedded data but post has featured_media ID, return null
   // The WordPressImage component will handle fetching the media data
   if (post.featured_media && post.featured_media > 0) {
-    console.warn(
-      'getFeaturedImageUrl - No embedded data, but featured_media ID exists:',
-      {
-        postId: post.id,
-        postTitle: post.title?.rendered,
-        featuredMediaId: post.featured_media,
-      }
-    );
+    if (process.env.CI !== 'true') {
+      console.warn(
+        'getFeaturedImageUrl - No embedded data, but featured_media ID exists:',
+        {
+          postId: post.id,
+          postTitle: post.title?.rendered,
+          featuredMediaId: post.featured_media,
+        }
+      );
+    }
     return null;
   }
 
   // Enhanced debugging for missing featured images
-  console.warn('getFeaturedImageUrl - No featured image found for post:', {
-    postId: post.id,
-    postTitle: post.title?.rendered,
-    featuredMediaId: post.featured_media,
-    hasEmbedded: !!post._embedded,
-    embeddedKeys: post._embedded ? Object.keys(post._embedded) : [],
-    hasFeaturedMedia: !!post._embedded?.['wp:featuredmedia'],
-    featuredMediaLength: post._embedded?.['wp:featuredmedia']?.length || 0,
-  });
+  if (process.env.CI !== 'true') {
+    console.warn('getFeaturedImageUrl - No featured image found for post:', {
+      postId: post.id,
+      postTitle: post.title?.rendered,
+      featuredMediaId: post.featured_media,
+      hasEmbedded: !!post._embedded,
+      embeddedKeys: post._embedded ? Object.keys(post._embedded) : [],
+      hasFeaturedMedia: !!post._embedded?.['wp:featuredmedia'],
+      featuredMediaLength: post._embedded?.['wp:featuredmedia']?.length || 0,
+    });
+  }
 
   return null;
 }

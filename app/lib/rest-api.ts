@@ -11,6 +11,9 @@ import type {
   WPRestTag,
 } from './types/wordpress';
 
+// Build-time detection for conditional logging
+const IS_BUILD = process.env.CI === 'true';
+
 // REST API Configuration
 const API_CONFIG = {
   WORDPRESS_REST_URL:
@@ -101,14 +104,21 @@ export class RestAPIClient {
         return data as T;
       } catch (error) {
         lastError = error as Error;
-        console.warn(`[REST API] Attempt ${attempt} failed for ${endpoint}:`, {
-          error: lastError.message,
-          url,
-        });
+        if (!IS_BUILD) {
+          console.warn(
+            `[REST API] Attempt ${attempt} failed for ${endpoint}:`,
+            {
+              error: lastError.message,
+              url,
+            }
+          );
+        }
 
         if (attempt < maxRetries) {
           const delay = Math.min(1000 * Math.pow(2, attempt), 10000); // Exponential backoff, max 10s
-          console.warn(`[REST API] Retrying in ${delay}ms...`);
+          if (!IS_BUILD) {
+            console.warn(`[REST API] Retrying in ${delay}ms...`);
+          }
           await new Promise((resolve) => setTimeout(resolve, delay));
         }
       }
@@ -241,15 +251,17 @@ export class RestAPIClient {
       const currentPage = parseInt(headers.get('X-WP-CurrentPage') || '1', 10);
       const perPage = parseInt(headers.get('X-WP-PerPage') || '10', 10);
 
-      console.warn('Pagination info from headers:', {
-        totalPosts,
-        totalPages,
-        currentPage,
-        perPage,
-        'X-WP-Total': headers.get('X-WP-Total'),
-        'X-WP-TotalPages': headers.get('X-WP-TotalPages'),
-        'X-WP-Query': headers.get('X-WP-Query'),
-      });
+      if (!IS_BUILD) {
+        console.warn('Pagination info from headers:', {
+          totalPosts,
+          totalPages,
+          currentPage,
+          perPage,
+          'X-WP-Total': headers.get('X-WP-Total'),
+          'X-WP-TotalPages': headers.get('X-WP-TotalPages'),
+          'X-WP-Query': headers.get('X-WP-Query'),
+        });
+      }
 
       const pagination: WPRestPagination = {
         totalPosts: totalPosts || posts.length,
@@ -535,7 +547,9 @@ export class RestAPIClient {
   // Get downloads by category - optimized version
   async getDownloadsByCategory(category: string): Promise<WPRestDownload[]> {
     try {
-      console.warn(`[REST API] Fetching downloads for category: ${category}`);
+      if (!IS_BUILD) {
+        console.warn(`[REST API] Fetching downloads for category: ${category}`);
+      }
 
       // Try to use WordPress meta query if supported, otherwise fall back to client-side filtering
       try {
@@ -549,27 +563,35 @@ export class RestAPIClient {
         });
 
         const endpoint = `${WP_ENDPOINTS.DOWNLOADS}?${searchParams.toString()}`;
-        console.warn(`[REST API] Trying meta query for category ${category}`);
+        if (!IS_BUILD) {
+          console.warn(`[REST API] Trying meta query for category ${category}`);
+        }
 
         const downloads = await this.makeRequest<WPRestDownload[]>(endpoint);
 
         if (downloads && downloads.length > 0) {
-          console.warn(
-            `[REST API] Meta query successful: found ${downloads.length} downloads`
-          );
+          if (!IS_BUILD) {
+            console.warn(
+              `[REST API] Meta query successful: found ${downloads.length} downloads`
+            );
+          }
           return downloads;
         }
       } catch (metaError) {
-        console.warn(
-          `[REST API] Meta query failed for category ${category}, falling back to client-side filtering:`,
-          metaError
-        );
+        if (!IS_BUILD) {
+          console.warn(
+            `[REST API] Meta query failed for category ${category}, falling back to client-side filtering:`,
+            metaError
+          );
+        }
       }
 
       // Fallback: fetch all downloads and filter client-side
-      console.warn(
-        `[REST API] Using client-side filtering for category ${category}`
-      );
+      if (!IS_BUILD) {
+        console.warn(
+          `[REST API] Using client-side filtering for category ${category}`
+        );
+      }
       const { downloads } = await this.getDownloads({
         per_page: 100,
         _embed: true,
@@ -581,9 +603,11 @@ export class RestAPIClient {
         return acfData.download_category === category;
       });
 
-      console.warn(
-        `[REST API] Client-side filtering found ${filteredDownloads.length} downloads for category ${category}`
-      );
+      if (!IS_BUILD) {
+        console.warn(
+          `[REST API] Client-side filtering found ${filteredDownloads.length} downloads for category ${category}`
+        );
+      }
       return filteredDownloads;
     } catch (error) {
       console.error(

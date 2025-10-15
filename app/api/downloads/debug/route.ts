@@ -23,10 +23,11 @@ export async function GET(request: NextRequest) {
         wordpressAdminUrl: process.env.NEXT_PUBLIC_WORDPRESS_ADMIN_URL,
       },
       tests: {
-        wordpressConnection: null as any,
-        downloadsEndpoint: null as any,
-        mediaEndpoint: null as any,
-        categoryFilter: null as any,
+        wordpressConnection: null as unknown,
+        downloadsEndpoint: null as unknown,
+        mediaEndpoint: null as unknown,
+        categoryFilter: null as unknown,
+        ourApiEndpoint: null as unknown,
       },
       errors: [] as string[],
     };

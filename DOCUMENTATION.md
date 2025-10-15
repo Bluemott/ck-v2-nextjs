@@ -22,6 +22,12 @@
 9. [Best Practices](#best-practices)
 10. [Enhanced Sitemap & SEO](#enhanced-sitemap--seo)
 
+## 📚 **Additional Documentation**
+
+- **Project History & Fixes:** See `HISTORY.md` for consolidated documentation of major fixes, deployments, and optimizations
+- **AWS Configuration Files:** Located in `infrastructure/config/` directory
+- **Testing Guide:** See `TESTING_GUIDE.md` for comprehensive testing procedures
+
 ---
 
 ## 🏗️ **System Architecture**

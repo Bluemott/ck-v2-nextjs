@@ -68,7 +68,9 @@ export async function generateStaticParams() {
   // Generate static paths for existing blog posts
   try {
     const { fetchPosts } = await import('../../lib/api');
-    const posts = await fetchPosts({ per_page: 100 });
+    // Reduce per_page from 100 to 50 for faster initial fetch
+    // The build-time cache will share data with sitemap generation
+    const posts = await fetchPosts({ per_page: 50 });
 
     return posts.map((post) => ({
       slug: post.slug,

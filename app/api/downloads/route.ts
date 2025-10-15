@@ -51,18 +51,19 @@ interface CategoryConfig {
 }
 
 // Cache configuration for downloads - reduced for faster updates
-const CACHE_TTL = 2 * 60 * 1000; // 2 minutes
+// const CACHE_TTL = 2 * 60 * 1000; // 2 minutes
 
 export async function GET(request: NextRequest) {
   // Generate request ID for tracking
   const requestId = crypto.randomUUID();
 
-  try {
-    const { searchParams } = new URL(request.url);
-    const category = searchParams.get('category');
-    const page = parseInt(searchParams.get('page') || '1', 10);
-    const perPage = parseInt(searchParams.get('per_page') || '100', 10);
+  // Parse query parameters outside try block for error logging
+  const { searchParams } = new URL(request.url);
+  const category = searchParams.get('category');
+  const page = parseInt(searchParams.get('page') || '1', 10);
+  const perPage = parseInt(searchParams.get('per_page') || '100', 10);
 
+  try {
     // Enhanced logging for debugging
     console.warn(`[${requestId}] Downloads API Request:`, {
       category,

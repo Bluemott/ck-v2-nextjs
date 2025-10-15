@@ -69,10 +69,19 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     },
   ];
 
-  // Enhanced blog posts with priority-based generation
+  // Batch all API calls in parallel for faster generation
   let blogUrls: MetadataRoute.Sitemap = [];
+  let categoryUrls: MetadataRoute.Sitemap = [];
+  let tagUrls: MetadataRoute.Sitemap = [];
+
   try {
-    const posts = await fetchPosts({ per_page: SITEMAP_CONFIG.MAX_POSTS });
+    const [posts, categories, tags] = await Promise.all([
+      fetchPosts({ per_page: SITEMAP_CONFIG.MAX_POSTS }),
+      fetchCategories(),
+      fetchTags(),
+    ]);
+
+    // Process blog posts
     if (posts && Array.isArray(posts)) {
       blogUrls = posts
         .filter((post) => post && post.status === 'publish')
@@ -93,16 +102,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
           };
         });
     }
-  } catch (error) {
-    if (process.env.NODE_ENV === 'development') {
-      console.error('Error fetching posts for sitemap:', error);
-    }
-  }
 
-  // Enhanced categories with post count consideration
-  let categoryUrls: MetadataRoute.Sitemap = [];
-  try {
-    const categories = await fetchCategories();
+    // Process categories
     if (categories && Array.isArray(categories)) {
       categoryUrls = categories
         .filter((cat) => cat && cat.count > 0)
@@ -123,16 +124,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
           };
         });
     }
-  } catch (error) {
-    if (process.env.NODE_ENV === 'development') {
-      console.error('Error fetching categories for sitemap:', error);
-    }
-  }
 
-  // Enhanced tags with post count consideration
-  let tagUrls: MetadataRoute.Sitemap = [];
-  try {
-    const tags = await fetchTags();
+    // Process tags
     if (tags && Array.isArray(tags)) {
       tagUrls = tags
         .filter((tag) => tag && tag.count > 0)
@@ -155,7 +148,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     }
   } catch (error) {
     if (process.env.NODE_ENV === 'development') {
-      console.error('Error fetching tags for sitemap:', error);
+      console.error('Error fetching data for sitemap:', error);
     }
   }
 

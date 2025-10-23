@@ -75,6 +75,13 @@ const BLOCKED_URLS_REDIRECTS: RedirectMapping[] = [
     category: 'old-patterns',
     reason: 'Old shop URL to current shop page',
   },
+  {
+    source: '/shop-2',
+    destination: '/shop',
+    permanent: true,
+    category: 'old-patterns',
+    reason: 'Old shop URL to current shop page',
+  },
   // Redirect old contact URLs
   {
     source: '/contact-2',

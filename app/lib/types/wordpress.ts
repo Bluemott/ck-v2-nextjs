@@ -26,6 +26,44 @@ export interface WPRestPost {
   template: string;
   format: string;
   meta: unknown[];
+  // Yoast SEO fields
+  yoast_head?: string;
+  yoast_head_json?: {
+    title?: string;
+    description?: string;
+    robots?: {
+      index?: string;
+      follow?: string;
+      'max-snippet'?: string;
+      'max-image-preview'?: string;
+      'max-video-preview'?: string;
+    };
+    canonical?: string;
+    og_locale?: string;
+    og_type?: string;
+    og_title?: string;
+    og_description?: string;
+    og_url?: string;
+    og_site_name?: string;
+    article_published_time?: string;
+    article_modified_time?: string;
+    og_image?: Array<{
+      url: string;
+      type?: string;
+      width?: number;
+      height?: number;
+    }>;
+    author?: string;
+    twitter_card?: string;
+    twitter_title?: string;
+    twitter_description?: string;
+    twitter_image?: string;
+    twitter_misc?: Record<string, string>;
+    schema?: {
+      '@context': string;
+      '@graph': Array<Record<string, unknown>>;
+    };
+  };
   _embedded?: {
     author?: Array<{
       id: number;
@@ -35,6 +73,34 @@ export interface WPRestPost {
       link: string;
       slug: string;
       avatar_urls: Record<string, string>;
+      yoast_head?: string;
+      yoast_head_json?: {
+        title?: string;
+        robots?: {
+          index?: string;
+          follow?: string;
+          'max-snippet'?: string;
+          'max-image-preview'?: string;
+          'max-video-preview'?: string;
+        };
+        canonical?: string;
+        og_locale?: string;
+        og_type?: string;
+        og_title?: string;
+        og_url?: string;
+        og_site_name?: string;
+        og_image?: Array<{
+          url: string;
+          type?: string;
+          width?: string;
+          height?: string;
+        }>;
+        twitter_card?: string;
+        schema?: {
+          '@context': string;
+          '@graph': Array<Record<string, unknown>>;
+        };
+      };
     }>;
     'wp:featuredmedia'?: Array<{
       id: number;
@@ -58,6 +124,29 @@ export interface WPRestPost {
         name: string;
         slug: string;
         taxonomy: string;
+        yoast_head?: string;
+        yoast_head_json?: {
+          title?: string;
+          robots?: {
+            index?: string;
+            follow?: string;
+            'max-snippet'?: string;
+            'max-image-preview'?: string;
+            'max-video-preview'?: string;
+          };
+          canonical?: string;
+          og_locale?: string;
+          og_type?: string;
+          og_title?: string;
+          og_description?: string;
+          og_url?: string;
+          og_site_name?: string;
+          twitter_card?: string;
+          schema?: {
+            '@context': string;
+            '@graph': Array<Record<string, unknown>>;
+          };
+        };
         _links: Record<string, unknown>;
       }>
     >;

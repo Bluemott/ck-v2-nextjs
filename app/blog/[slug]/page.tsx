@@ -46,6 +46,36 @@ export async function generateMetadata({
   const description = processExcerpt(post.excerpt, 160);
   const image = getFeaturedImageUrl(post);
 
+  // Extract Yoast SEO data from the WordPress API response
+  const yoastSEO = post.yoast_head_json
+    ? {
+        title: post.yoast_head_json.title,
+        metaDesc: post.yoast_head_json.description,
+        canonical: post.yoast_head_json.canonical,
+        opengraphTitle: post.yoast_head_json.og_title,
+        opengraphDescription: post.yoast_head_json.og_description,
+        opengraphImage: post.yoast_head_json.og_image?.[0]?.url,
+        twitterTitle: post.yoast_head_json.twitter_title,
+        twitterDescription: post.yoast_head_json.twitter_description,
+        twitterImage: post.yoast_head_json.twitter_image,
+        focuskw: '', // Yoast focus keyword not available in head_json
+        metaKeywords: '', // Yoast meta keywords not available in head_json
+        metaRobotsNoindex:
+          post.yoast_head_json.robots?.index === 'noindex' ? '1' : '0',
+        metaRobotsNofollow:
+          post.yoast_head_json.robots?.follow === 'nofollow' ? '1' : '0',
+        opengraphType: post.yoast_head_json.og_type,
+        opengraphUrl: post.yoast_head_json.og_url,
+        opengraphSiteName: post.yoast_head_json.og_site_name,
+        opengraphAuthor: post.yoast_head_json.author,
+        opengraphPublishedTime: post.yoast_head_json.article_published_time,
+        opengraphModifiedTime: post.yoast_head_json.article_modified_time,
+        schema: post.yoast_head_json.schema
+          ? JSON.stringify(post.yoast_head_json.schema)
+          : undefined,
+      }
+    : undefined;
+
   return generateSEOMetadata({
     title,
     description,
@@ -61,6 +91,7 @@ export async function generateMetadata({
     publishedTime: post.date,
     modifiedTime: post.modified,
     author: 'Cowboy Kimono',
+    yoastSEO,
   });
 }
 

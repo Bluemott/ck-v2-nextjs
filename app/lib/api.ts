@@ -55,6 +55,54 @@ const blogPostSchema = z.object({
   author: z.number(),
   featured_media: z.number(),
   _embedded: z.any().optional(),
+  // Yoast SEO fields
+  yoast_head: z.string().optional(),
+  yoast_head_json: z
+    .object({
+      title: z.string().optional(),
+      description: z.string().optional(),
+      robots: z
+        .object({
+          index: z.string().optional(),
+          follow: z.string().optional(),
+          'max-snippet': z.string().optional(),
+          'max-image-preview': z.string().optional(),
+          'max-video-preview': z.string().optional(),
+        })
+        .optional(),
+      canonical: z.string().optional(),
+      og_locale: z.string().optional(),
+      og_type: z.string().optional(),
+      og_title: z.string().optional(),
+      og_description: z.string().optional(),
+      og_url: z.string().optional(),
+      og_site_name: z.string().optional(),
+      article_published_time: z.string().optional(),
+      article_modified_time: z.string().optional(),
+      og_image: z
+        .array(
+          z.object({
+            url: z.string(),
+            type: z.string().optional(),
+            width: z.number().optional(),
+            height: z.number().optional(),
+          })
+        )
+        .optional(),
+      author: z.string().optional(),
+      twitter_card: z.string().optional(),
+      twitter_title: z.string().optional(),
+      twitter_description: z.string().optional(),
+      twitter_image: z.string().optional(),
+      twitter_misc: z.record(z.string(), z.string()).optional(),
+      schema: z
+        .object({
+          '@context': z.string(),
+          '@graph': z.array(z.record(z.string(), z.unknown())),
+        })
+        .optional(),
+    })
+    .optional(),
 });
 
 export type BlogPost = z.infer<typeof blogPostSchema>;
@@ -102,6 +150,9 @@ function transformWPRestPost(wpPost: WPRestPost): BlogPost {
     author: wpPost.author,
     featured_media: wpPost.featured_media,
     _embedded: wpPost._embedded,
+    // Include Yoast SEO fields
+    yoast_head: wpPost.yoast_head,
+    yoast_head_json: wpPost.yoast_head_json,
   };
 }
 

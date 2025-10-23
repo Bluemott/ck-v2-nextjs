@@ -1,21 +1,23 @@
 import { Metadata } from 'next';
-import { notFound } from 'next/navigation';
 import Link from 'next/link';
-import { fetchCategoryBySlug, decodeHtmlEntities } from '../../../lib/api';
+import { notFound } from 'next/navigation';
+import Breadcrumbs from '../../../components/Breadcrumbs';
+import { decodeHtmlEntities, fetchCategoryBySlug } from '../../../lib/api';
 import { generateSEOMetadata } from '../../../lib/seo';
 import BlogClient from '../../BlogClient';
-import Breadcrumbs from '../../../components/Breadcrumbs';
 
 interface CategoryPageProps {
   params: Promise<{ slug: string }>;
 }
 
-export async function generateMetadata({ params }: CategoryPageProps): Promise<Metadata> {
+export async function generateMetadata({
+  params,
+}: CategoryPageProps): Promise<Metadata> {
   const { slug } = await params;
-  
+
   try {
     const category = await fetchCategoryBySlug(slug);
-    
+
     if (!category) {
       return generateSEOMetadata({
         title: 'Category Not Found',
@@ -26,7 +28,12 @@ export async function generateMetadata({ params }: CategoryPageProps): Promise<M
     return generateSEOMetadata({
       title: `${decodeHtmlEntities(category.name)} Posts`,
       description: `Browse all posts in the ${decodeHtmlEntities(category.name)} category. Discover stories, inspiration, and insights from Cowboy Kimono.`,
-      keywords: [decodeHtmlEntities(category.name), 'cowboy kimono blog', 'western fashion', 'handcraft stories'],
+      keywords: [
+        decodeHtmlEntities(category.name),
+        'cowboy kimono blog',
+        'western fashion',
+        'handcraft stories',
+      ],
       canonical: `/blog/category/${slug}`,
     });
   } catch {
@@ -37,12 +44,28 @@ export async function generateMetadata({ params }: CategoryPageProps): Promise<M
   }
 }
 
+export async function generateStaticParams() {
+  try {
+    const { fetchCategories } = await import('../../../lib/api');
+    const categories = await fetchCategories();
+
+    return categories
+      .filter((category) => category && category.count > 0)
+      .map((category) => ({
+        slug: category.slug,
+      }));
+  } catch (error) {
+    console.error('Error generating static params for categories:', error);
+    return [];
+  }
+}
+
 export default async function CategoryPage({ params }: CategoryPageProps) {
   const { slug } = await params;
-  
+
   try {
     const category = await fetchCategoryBySlug(slug);
-    
+
     if (!category) {
       notFound();
     }
@@ -57,7 +80,7 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
               items={[
                 { label: 'Home', href: '/' },
                 { label: 'Blog', href: '/blog' },
-                { label: decodeHtmlEntities(category.name) }
+                { label: decodeHtmlEntities(category.name) },
               ]}
             />
 
@@ -80,17 +103,29 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
             <div className="text-center py-16">
               <div className="max-w-md mx-auto">
                 <div className="text-gray-400 mb-4">
-                  <svg className="w-16 h-16 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                  <svg
+                    className="w-16 h-16 mx-auto"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"
+                    />
                   </svg>
                 </div>
                 <h3 className="text-lg font-medium text-gray-900 mb-2">
                   No posts found
                 </h3>
                 <p className="text-gray-500 mb-6">
-                  There are currently no posts in the &ldquo;{decodeHtmlEntities(category.name)}&rdquo; category. Check back later for new content!
+                  There are currently no posts in the &ldquo;
+                  {decodeHtmlEntities(category.name)}&rdquo; category. Check
+                  back later for new content!
                 </p>
-                <Link 
+                <Link
                   href="/blog"
                   className="inline-flex items-center px-4 py-2 bg-[#1e2939] text-white rounded-md hover:bg-[#2a3441] transition-colors"
                 >
@@ -111,7 +146,7 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
             items={[
               { label: 'Home', href: '/' },
               { label: 'Blog', href: '/blog' },
-              { label: decodeHtmlEntities(category.name) }
+              { label: decodeHtmlEntities(category.name) },
             ]}
           />
 
@@ -135,7 +170,7 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
 
           {/* Back to Blog Link */}
           <div className="text-center mt-12 pt-8 border-t border-gray-200">
-            <Link 
+            <Link
               href="/blog"
               className="inline-flex items-center text-[#1e2939] hover:text-[#2a3441] font-medium transition-colors"
             >
@@ -148,4 +183,4 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
   } catch {
     notFound();
   }
-} 
+}

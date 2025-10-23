@@ -21,12 +21,14 @@
 8. [Troubleshooting Guide](#troubleshooting-guide)
 9. [Best Practices](#best-practices)
 10. [Enhanced Sitemap & SEO](#enhanced-sitemap--seo)
+11. [Downloads System](#downloads-system)
 
 ## 📚 **Additional Documentation**
 
 - **Project History & Fixes:** See `HISTORY.md` for consolidated documentation of major fixes, deployments, and optimizations
 - **AWS Configuration Files:** Located in `infrastructure/config/` directory
 - **Testing Guide:** See `TESTING_GUIDE.md` for comprehensive testing procedures
+- **SEO Audit & Optimization:** See SEO Audit section below for comprehensive search engine optimization
 
 ---
 
@@ -1505,8 +1507,465 @@ headers: {
 
 ---
 
-**Documentation Version:** 2.7.0  
-**Last Updated:** 2025-01-25  
-**Status:** Production Ready with WordPress Cleanup and CORS Configuration
+## 📥 **Downloads System**
 
-**Implementation Status:** All major features implemented and tested in production environment. CloudFront removed from WordPress API path. WordPress server cleaned up and properly configured for direct API access with specific CORS headers. Lambda validation errors fixed and CORS issues resolved through proper WordPress configuration.
+### **Overview**
+
+The downloads system provides a comprehensive solution for managing and delivering downloadable content with individual pages, analytics tracking, and enhanced SEO. Built on WordPress ACF fields for easy content management by non-technical users.
+
+### **Architecture**
+
+```
+WordPress ACF Fields
+├── Enhanced Download Fields (10 new fields)
+├── REST API Integration
+└── Content Management
+
+Next.js Frontend
+├── Individual Download Pages (/downloads/[category]/[slug])
+├── Enhanced Main Downloads Page
+├── Download Components (Card, Skeleton, States)
+└── Analytics Integration
+
+Analytics & Tracking
+├── Download Count Tracking
+├── User Analytics (Anonymized)
+├── Popular Downloads
+└── CloudWatch Integration
+```
+
+### **WordPress ACF Configuration**
+
+**Enhanced Fields Added:**
+
+- `download_slug` - URL-friendly slug for individual pages
+- `download_file_size` - Display file size (e.g., "2.5 MB")
+- `download_format` - File format (PDF, DOC, ZIP, etc.)
+- `download_difficulty` - Easy, Intermediate, Advanced
+- `download_time_estimate` - Estimated completion time
+- `download_materials_needed` - Materials list for crafts
+- `download_seo_title` - Custom SEO title override
+- `download_seo_description` - Custom meta description
+- `download_featured` - Feature this download
+- `download_order` - Custom sorting order
+
+**Configuration File:** `wordpress-downloads-setup.php`
+
+### **Individual Download Pages**
+
+**Route:** `/downloads/[category]/[slug]`
+
+**Features:**
+
+- Full SEO metadata with custom titles/descriptions
+- Structured data (DigitalDocument schema)
+- Breadcrumb navigation
+- File information display (size, format, difficulty)
+- Materials needed section
+- Related downloads
+- Social sharing buttons
+- Download tracking integration
+
+**Static Generation:** Uses `generateStaticParams` for optimal SEO and performance.
+
+### **Enhanced Downloads Index Page**
+
+**Improvements:**
+
+- Featured downloads carousel
+- Quick stats display (total downloads, monthly stats)
+- Improved card hover states
+- Better mobile responsiveness
+- Enhanced visual feedback
+- Download count display
+- File format badges
+- Difficulty indicators
+
+### **Download Components**
+
+**Reusable Components:**
+
+- `DownloadCard.tsx` - Enhanced download card with file info
+- `DownloadSkeleton.tsx` - Loading state component
+- `EmptyState.tsx` - No downloads state
+- `ErrorState.tsx` - Error handling state
+- `FeaturedDownloads.tsx` - Featured downloads section
+- `DownloadTracker.tsx` - Download tracking component
+
+### **Analytics & Tracking**
+
+**API Endpoints:**
+
+- `/api/downloads/track` - Track download events
+- `/api/downloads/analytics` - Get overall statistics
+- `/api/downloads/analytics/[downloadId]` - Individual download analytics
+
+**Tracking Data:**
+
+- Download count per item
+- User analytics (anonymized via IP hash)
+- Timestamp tracking
+- Referrer tracking
+- Device/browser information
+- Geographic distribution
+
+**Analytics Features:**
+
+- Most popular downloads
+- Downloads by category
+- Download trends over time
+- Real-time download counts
+- CloudWatch integration
+
+### **SEO Implementation**
+
+**Metadata Generation:**
+
+- Custom SEO titles and descriptions
+- Open Graph and Twitter Cards
+- Canonical URLs
+- Structured data (DigitalDocument schema)
+- Breadcrumb structured data
+
+**Sitemap Integration:**
+
+- Individual download pages in sitemap
+- Proper priority configuration
+
+---
+
+## 🔍 **SEO Audit & Optimization**
+
+### **Current SEO Status (October 2025)**
+
+**Google Search Console Issues Resolved:**
+
+- ✅ Sitemap expanded from 100 to 500 posts for better indexation
+- ✅ Static generation increased from 50 to 500 posts
+- ✅ Comprehensive redirect system implemented
+- ✅ Enhanced 404 page with popular pages and search suggestions
+- ✅ Canonical URLs implemented across all page types
+- ✅ SEO audit and validation scripts created
+
+**Key Metrics Improvements:**
+
+- **Sitemap Coverage:** Increased from 100 to 500 posts (5x improvement)
+- **Static Generation:** Increased from 50 to 500 posts (10x improvement)
+- **Redirect Coverage:** Comprehensive redirect mapping for 404 resolution
+- **User Experience:** Enhanced 404 page with navigation options
+
+### **SEO Audit Tools**
+
+**Automated SEO Validation:**
+
+```bash
+# Run comprehensive SEO audit
+node scripts/audit-seo.js
+
+# Test redirect functionality
+node scripts/validate-redirects.js
+
+# Test with custom URL
+node scripts/audit-seo.js --url=https://staging.cowboykimono.com
+```
+
+**Audit Coverage:**
+
+- Sitemap accessibility and structure validation
+- Robots.txt compliance checking
+- Canonical URL verification
+- Meta tag validation (title, description, Open Graph)
+- Image alt tag checking
+- Redirect testing (301, 302, 308 status codes)
+- Response time monitoring
+- Internal link validation
+
+### **Redirect Management System**
+
+**File:** `app/lib/redirect-mappings.ts`
+
+**Features:**
+
+- Centralized redirect configuration
+- WordPress legacy URL patterns
+- WWW to non-WWW canonicalization
+- Old URL pattern redirects
+- Dynamic redirect management
+- Redirect validation and testing
+
+**Redirect Categories:**
+
+- **Canonical:** WWW to non-WWW redirects
+- **WordPress Legacy:** Date-based URLs, category/tag redirects
+- **Old Patterns:** Deprecated URLs (shop-1, contact-2, kimono-builder)
+- **Blog:** Post slug changes and updates
+- **Downloads:** URL structure optimization
+
+### **Sitemap Optimization**
+
+**Enhanced Configuration:**
+
+```typescript
+const SITEMAP_CONFIG = {
+  MAX_POSTS: 500, // Increased from 100
+  MAX_CATEGORIES: 200, // Increased from 100
+  MAX_TAGS: 200, // Increased from 100
+  CACHE_TTL: 3600000, // 1 hour cache
+  PRIORITY_DECAY: 0.1, // Priority calculation
+};
+```
+
+**Content Types Included:**
+
+1. **Core Pages** (Priority 1.0 - 0.7)
+2. **Blog Posts** (Priority 0.9 - 0.3) - Dynamic based on recency
+3. **Categories** (Priority 0.8 - 0.4) - Based on post count
+4. **Tags** (Priority 0.7 - 0.3) - Based on post count
+5. **Download Pages** (Priority 0.7 - 0.6) - Individual download pages
+
+### **Static Generation Optimization**
+
+**Blog Posts:** `app/blog/[slug]/page.tsx`
+
+```typescript
+// Increased from 50 to 500 posts
+const posts = await fetchPosts({ per_page: 500 });
+```
+
+**Download Pages:** `app/downloads/[category]/[slug]/page.tsx`
+
+```typescript
+// Already optimized at 100 downloads
+const downloads = await restAPIClient.getDownloads({
+  per_page: 100,
+  _embed: true,
+  status: 'publish',
+});
+```
+
+### **Enhanced 404 Page**
+
+**File:** `app/not-found.tsx`
+
+**Improvements:**
+
+- Popular pages navigation grid
+- Search suggestions
+- Contact information
+- Proper meta tags (noindex, follow)
+- Enhanced user experience
+- Internal linking strategy
+
+### **SEO Best Practices Implementation**
+
+**Canonical URLs:**
+
+- All pages have proper canonical tags
+- Non-WWW canonicalization enforced
+- Consistent URL structure
+
+**Meta Tags:**
+
+- Unique title tags for all pages
+- Meta descriptions (160 characters)
+- Open Graph tags for social sharing
+- Twitter Card optimization
+- Structured data implementation
+
+**Technical SEO:**
+
+- Proper heading hierarchy (H1→H2→H3)
+- Image alt tags for accessibility
+- Internal linking strategy
+- Breadcrumb navigation
+- Mobile-friendly responsive design
+
+### **Monitoring & Validation**
+
+**Automated Testing:**
+
+```bash
+# Weekly SEO audit
+npm run audit:seo
+
+# Redirect validation
+npm run validate:redirects
+
+# Performance check
+npm run audit:performance
+```
+
+**Key Metrics to Monitor:**
+
+- Google Search Console indexation status
+- 404 error reduction
+- Redirect chain optimization
+- Page load speed
+- Core Web Vitals
+- Ahrefs site health score
+
+### **Google Search Console Integration**
+
+**Recommended Actions:**
+
+1. Submit updated sitemap.xml
+2. Request re-indexing of fixed pages
+3. Remove outdated URLs via URL Removal Tool
+4. Monitor indexation status weekly
+5. Track 404 error reduction
+
+**Expected Results:**
+
+- **Week 1-2:** 404 errors reduced from 97 to <20
+- **Week 3-4:** Indexed pages increase from 78 to >150
+- **Week 5-8:** "Crawled not indexed" drops from 737 to <200
+- **Long-term:** Ahrefs site health score >90
+
+### **Troubleshooting SEO Issues**
+
+**Common Issues & Solutions:**
+
+1. **404 Errors:**
+   - Check redirect-mappings.ts for missing patterns
+   - Verify Next.js redirect configuration
+   - Test with validate-redirects.js script
+
+2. **Indexation Problems:**
+   - Verify sitemap.xml accessibility
+   - Check robots.txt blocking rules
+   - Ensure proper canonical URLs
+
+3. **Duplicate Content:**
+   - Verify canonical tag implementation
+   - Check for www vs non-www issues
+   - Review pagination canonical tags
+
+4. **Slow Indexing:**
+   - Increase static generation limits
+   - Optimize sitemap priority values
+   - Improve internal linking
+
+**Debug Commands:**
+
+```bash
+# Test sitemap
+curl https://cowboykimono.com/sitemap.xml
+
+# Test robots.txt
+curl https://cowboykimono.com/robots.txt
+
+# Test redirects
+node scripts/validate-redirects.js
+
+# Full SEO audit
+node scripts/audit-seo.js
+```
+
+- Monthly update frequency
+- Canonical URL handling
+
+**Performance:**
+
+- Static generation for all download pages
+- Image optimization with Next.js Image
+- Lazy loading for thumbnails
+- CDN caching headers
+
+### **REST API Enhancements**
+
+**New Methods:**
+
+- `getDownloadBySlug(category, slug)` - Fetch single download
+- `getFeaturedDownloads(limit)` - Get featured downloads
+- `getPopularDownloads(limit)` - Get most downloaded items
+- `getRelatedDownloads(downloadId, limit)` - Get similar downloads
+- `getDownloadById(id)` - Get download by ID
+
+**Enhanced Fields Support:**
+
+- All new ACF fields integrated
+- Proper type definitions
+- Validation schemas
+- Error handling
+
+### **Mobile Optimization**
+
+**Responsive Design:**
+
+- Mobile-first approach
+- Touch-friendly buttons (44x44px minimum)
+- Optimized images for mobile
+- Swipeable navigation
+- Bottom sheet for mobile details
+- Simplified mobile layout
+
+### **Testing & Validation**
+
+**Test Scripts:**
+
+- `scripts/test-downloads-pages.js` - Verify page generation
+- `scripts/test-download-tracking.js` - Validate analytics
+- `scripts/validate-downloads-seo.js` - Check SEO implementation
+
+**Validation Areas:**
+
+- Individual page generation
+- Download tracking functionality
+- Analytics accuracy
+- SEO metadata validation
+- Mobile responsiveness
+- Performance optimization
+
+### **Content Management**
+
+**WordPress Admin:**
+
+- Easy ACF field management
+- Non-technical user friendly
+- Bulk operations support
+- Featured download management
+- Custom sorting options
+
+**Field Configuration:**
+
+- Required fields: `download_slug`, `download_category`
+- Optional fields: All other enhanced fields
+- Default values for better UX
+- Validation rules
+- Help text for each field
+
+### **Deployment & Migration**
+
+**Migration Steps:**
+
+1. Update WordPress ACF fields (non-breaking)
+2. Deploy enhanced REST API endpoints
+3. Deploy individual download pages
+4. Update main downloads page
+5. Enable download tracking
+6. Verify sitemap regeneration
+
+**Rollback Plan:**
+
+- New features are additive
+- Existing functionality preserved
+- Feature flags available
+- Gradual rollout possible
+
+### **Success Metrics**
+
+- All individual download pages generate successfully
+- Download tracking captures 100% of clicks
+- Page load time < 2 seconds for download pages
+- Mobile usability score > 95
+- All pages indexed by Google within 1 week
+- Download analytics dashboard shows accurate data
+- Non-technical users can successfully add/edit downloads
+
+---
+
+**Documentation Version:** 2.8.0  
+**Last Updated:** 2025-01-25  
+**Status:** Production Ready with Enhanced Downloads System
+
+**Implementation Status:** All major features implemented and tested in production environment. CloudFront removed from WordPress API path. WordPress server cleaned up and properly configured for direct API access with specific CORS headers. Lambda validation errors fixed and CORS issues resolved through proper WordPress configuration. Downloads system completely overhauled with individual pages, analytics tracking, and enhanced SEO.

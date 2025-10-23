@@ -3,9 +3,9 @@ import { fetchCategories, fetchPosts, fetchTags } from './lib/api';
 
 // Enhanced sitemap configuration
 const SITEMAP_CONFIG = {
-  MAX_POSTS: 100, // Reduced to avoid WordPress API limits
-  MAX_CATEGORIES: 100,
-  MAX_TAGS: 100,
+  MAX_POSTS: 500, // Increased to include all content for better indexation
+  MAX_CATEGORIES: 200,
+  MAX_TAGS: 200,
   CACHE_TTL: 3600000, // 1 hour cache
   PRIORITY_DECAY: 0.1, // How much priority decreases for older posts
 };
@@ -158,28 +158,60 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       url: `${baseUrl}/downloads`,
       lastModified: new Date(),
       changeFrequency: 'monthly' as const,
-      priority: 0.7,
+      priority: 0.8,
     },
     // Add specific download category pages if they exist
     {
       url: `${baseUrl}/downloads/coloring-pages`,
       lastModified: new Date(),
       changeFrequency: 'monthly' as const,
-      priority: 0.6,
+      priority: 0.7,
     },
     {
       url: `${baseUrl}/downloads/craft-templates`,
       lastModified: new Date(),
       changeFrequency: 'monthly' as const,
-      priority: 0.6,
+      priority: 0.7,
     },
     {
       url: `${baseUrl}/downloads/diy-tutorials`,
       lastModified: new Date(),
       changeFrequency: 'monthly' as const,
-      priority: 0.6,
+      priority: 0.7,
     },
   ];
+
+  // Add individual download pages to sitemap
+  let individualDownloadUrls: MetadataRoute.Sitemap = [];
+  try {
+    const { restAPIClient } = await import('./lib/rest-api');
+    const { downloads } = await restAPIClient.getDownloads({
+      per_page: 100,
+      _embed: true,
+      status: 'publish',
+    });
+
+    individualDownloadUrls = downloads
+      .filter((download) => {
+        const acfData = download.acf || download.meta || {};
+        return acfData.download_slug && acfData.download_category;
+      })
+      .map((download) => {
+        const acfData = download.acf || download.meta || {};
+        return {
+          url: `${baseUrl}/downloads/${acfData.download_category}/${acfData.download_slug}`,
+          lastModified: new Date(download.modified),
+          changeFrequency: 'monthly' as const,
+          priority: 0.6,
+        };
+      });
+
+    console.warn(
+      `Added ${individualDownloadUrls.length} individual download pages to sitemap`
+    );
+  } catch (error) {
+    console.error('Error fetching downloads for sitemap:', error);
+  }
 
   // Combine all sitemap entries
   const allUrls = [
@@ -188,6 +220,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     ...categoryUrls,
     ...tagUrls,
     ...downloadUrls,
+    ...individualDownloadUrls,
   ];
 
   // Ensure all URLs are canonical (non-www)

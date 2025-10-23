@@ -71,6 +71,17 @@ function ck_add_downloads_acf_to_rest() {
                 'download_type'        => get_field('download_type', $post['id']),
                 'download_url'         => get_field('download_url', $post['id']),
                 'download_description' => get_field('download_description', $post['id']),
+                // Enhanced fields for improved functionality
+                'download_slug'        => get_field('download_slug', $post['id']),
+                'download_file_size'   => get_field('download_file_size', $post['id']),
+                'download_format'      => get_field('download_format', $post['id']),
+                'download_difficulty'  => get_field('download_difficulty', $post['id']),
+                'download_time_estimate' => get_field('download_time_estimate', $post['id']),
+                'download_materials_needed' => get_field('download_materials_needed', $post['id']),
+                'download_seo_title'   => get_field('download_seo_title', $post['id']),
+                'download_seo_description' => get_field('download_seo_description', $post['id']),
+                'download_featured'    => get_field('download_featured', $post['id']),
+                'download_order'       => get_field('download_order', $post['id']),
             );
         },
         'update_callback' => null,
@@ -118,6 +129,70 @@ add_action('rest_api_init', 'ck_add_downloads_acf_to_rest');
  * Field Name: download_description
  * - Field Type: Text Area
  * - Instructions: Optional description for this download
+ * - Required: No
+ * 
+ * Field Name: download_slug
+ * - Field Type: Text
+ * - Instructions: URL-friendly slug for individual pages (e.g., "abq-neon-coloring")
+ * - Required: Yes
+ * 
+ * Field Name: download_file_size
+ * - Field Type: Text
+ * - Instructions: Display file size (e.g., "2.5 MB", "1.2 GB")
+ * - Required: No
+ * 
+ * Field Name: download_format
+ * - Field Type: Select
+ * - Choices:
+ *   - PDF : PDF Document
+ *   - DOC : Word Document
+ *   - DOCX : Word Document (New)
+ *   - ZIP : ZIP Archive
+ *   - JPG : JPEG Image
+ *   - PNG : PNG Image
+ *   - Other : Other Format
+ * - Default: PDF
+ * - Required: No
+ * 
+ * Field Name: download_difficulty
+ * - Field Type: Select
+ * - Choices:
+ *   - Easy : Easy
+ *   - Intermediate : Intermediate
+ *   - Advanced : Advanced
+ * - Default: Easy
+ * - Required: No
+ * 
+ * Field Name: download_time_estimate
+ * - Field Type: Text
+ * - Instructions: Estimated completion time (e.g., "15 minutes", "1 hour", "2-3 hours")
+ * - Required: No
+ * 
+ * Field Name: download_materials_needed
+ * - Field Type: Text Area
+ * - Instructions: List materials needed for this download (for crafts/tutorials)
+ * - Required: No
+ * 
+ * Field Name: download_seo_title
+ * - Field Type: Text
+ * - Instructions: Custom SEO title override (leave empty to use post title)
+ * - Required: No
+ * 
+ * Field Name: download_seo_description
+ * - Field Type: Text Area
+ * - Instructions: Custom meta description for SEO
+ * - Required: No
+ * 
+ * Field Name: download_featured
+ * - Field Type: True/False
+ * - Instructions: Feature this download on the main downloads page
+ * - Default: False
+ * - Required: No
+ * 
+ * Field Name: download_order
+ * - Field Type: Number
+ * - Instructions: Custom sorting order (lower numbers appear first)
+ * - Default: 0
  * - Required: No
  * 
  * Location Rules:

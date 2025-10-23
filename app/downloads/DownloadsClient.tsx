@@ -2,6 +2,10 @@
 
 import Image from 'next/image';
 import { useState } from 'react';
+import { trackDownload } from '../lib/analytics';
+import DownloadCard from './components/DownloadCard';
+import EmptyState from './components/EmptyState';
+import FeaturedDownloads from './components/FeaturedDownloads';
 
 interface DownloadThumbnail {
   id: string;
@@ -9,6 +13,13 @@ interface DownloadThumbnail {
   thumbnail: string;
   downloadUrl: string;
   type?: string;
+  format?: string;
+  fileSize?: string;
+  difficulty?: string;
+  timeEstimate?: string;
+  description?: string;
+  category: string;
+  slug: string;
 }
 
 interface DownloadItem {
@@ -20,12 +31,14 @@ interface DownloadItem {
 }
 
 const DownloadsClient = () => {
-  const [expandedCard, setExpandedCard] = useState<string | null>(null);
   const [dynamicThumbnails, setDynamicThumbnails] = useState<
     Record<string, DownloadThumbnail[]>
   >({});
   const [loading, setLoading] = useState<Record<string, boolean>>({});
-  const [error, setError] = useState<string | null>(null);
+  const [, setError] = useState<string | null>(null);
+  const [expandedCategories, setExpandedCategories] = useState<Set<string>>(
+    new Set()
+  );
 
   // Static card configuration (keeping the beautiful design)
   const staticCards: DownloadItem[] = [
@@ -55,6 +68,23 @@ const DownloadsClient = () => {
     },
   ];
 
+  // Toggle category expansion - only allow one category to be expanded at a time
+  const toggleCategory = (categoryId: string) => {
+    setExpandedCategories((prev) => {
+      const next = new Set(prev);
+      if (next.has(categoryId)) {
+        // If clicking the currently expanded category, close it
+        next.delete(categoryId);
+      } else {
+        // If clicking a different category, close all others and open this one
+        next.clear();
+        next.add(categoryId);
+        fetchDownloadsForCategory(categoryId);
+      }
+      return next;
+    });
+  };
+
   // Fetch downloads for a specific category
   const fetchDownloadsForCategory = async (category: string) => {
     if (dynamicThumbnails[category] || loading[category]) {
@@ -68,45 +98,33 @@ const DownloadsClient = () => {
       const response = await fetch(`/api/downloads?category=${category}`);
       const data = await response.json();
 
-      // Debug logging (only in development)
-      if (process.env.NODE_ENV === 'development') {
-        console.warn(`API response for ${category}:`, data);
-      }
-
       if (!response.ok) {
         throw new Error(data.error || 'Failed to fetch downloads');
       }
 
-      // Extract thumbnails from the API response - improved parsing
+      // Extract thumbnails from the API response
       let thumbnails = [];
 
       if (data.success && data.downloads) {
-        // Handle array of sections (new API structure)
         if (Array.isArray(data.downloads)) {
           const section = data.downloads.find(
             (section: { id: string }) => section.id === category
           );
           thumbnails = section?.thumbnails || [];
-        }
-        // Handle direct thumbnails array (legacy structure)
-        else if (
+        } else if (
           data.downloads.thumbnails &&
           Array.isArray(data.downloads.thumbnails)
         ) {
           thumbnails = data.downloads.thumbnails;
-        }
-        // Handle single section object
-        else if (data.downloads.id === category && data.downloads.thumbnails) {
+        } else if (
+          data.downloads.id === category &&
+          data.downloads.thumbnails
+        ) {
           thumbnails = data.downloads.thumbnails;
         }
       }
 
-      // Ensure thumbnails is an array
       if (!Array.isArray(thumbnails)) {
-        console.warn(
-          `Invalid thumbnails structure for ${category}:`,
-          thumbnails
-        );
         thumbnails = [];
       }
 
@@ -114,92 +132,65 @@ const DownloadsClient = () => {
     } catch (err) {
       console.error(`Error fetching downloads for ${category}:`, err);
       setError(err instanceof Error ? err.message : 'Failed to load downloads');
-
-      // Set empty array on error - no fallback to local files
-      setDynamicThumbnails((prev) => ({
-        ...prev,
-        [category]: [],
-      }));
+      setDynamicThumbnails((prev) => ({ ...prev, [category]: [] }));
     } finally {
       setLoading((prev) => ({ ...prev, [category]: false }));
     }
   };
 
-  // No fallback - WordPress API only
-
-  const toggleCard = (cardId: string) => {
-    if (expandedCard === cardId) {
-      setExpandedCard(null);
-    } else {
-      setExpandedCard(cardId);
-      // Fetch downloads when expanding a card
-      fetchDownloadsForCategory(cardId);
+  // Handle download tracking
+  const handleDownload = async (downloadId: string, _title: string) => {
+    try {
+      await trackDownload(downloadId, {
+        category: 'unknown',
+        slug: 'unknown',
+        userAgent: navigator.userAgent,
+        referrer: document.referrer,
+      });
+    } catch (error) {
+      console.error('Error tracking download:', error);
     }
   };
 
   // Helper function to determine download type and button text
-  const getDownloadInfo = (downloadUrl: string, downloadType?: string) => {
-    if (!downloadUrl || typeof downloadUrl !== 'string') {
-      return { type: 'unknown', text: 'Download' };
-    }
+  // const _getDownloadInfo = (downloadUrl: string, downloadType?: string) => {
+  //   if (!downloadUrl || typeof downloadUrl !== 'string') {
+  //     return { type: 'unknown', text: 'Download' };
+  //   }
 
-    // Check if it's a blog post link
-    if (downloadUrl.startsWith('/blog/') || downloadUrl.includes('/blog/')) {
-      return { type: 'blog', text: 'Read Post' };
-    }
+  //   // Check if it's a blog post link
+  //   if (downloadUrl.startsWith('/blog/') || downloadUrl.includes('/blog/')) {
+  //     return { type: 'blog', text: 'Read Post' };
+  //   }
 
-    // Check if it's a PDF or file download
-    if (
-      downloadUrl.includes('.pdf') ||
-      downloadUrl.includes('.doc') ||
-      downloadUrl.includes('.docx') ||
-      downloadUrl.includes('.zip') ||
-      downloadUrl.includes('.rar') ||
-      downloadType === 'pdf' ||
-      downloadType === 'file'
-    ) {
-      return { type: 'file', text: 'Download' };
-    }
+  //   // Check if it's a PDF or file download
+  //   if (
+  //     downloadUrl.includes('.pdf') ||
+  //     downloadUrl.includes('.doc') ||
+  //     downloadUrl.includes('.docx') ||
+  //     downloadUrl.includes('.zip') ||
+  //     downloadUrl.includes('.rar') ||
+  //     downloadType === 'pdf' ||
+  //     downloadType === 'file'
+  //   ) {
+  //     return { type: 'file', text: 'Download' };
+  //   }
 
-    // Check if it's an external link
-    if (
-      downloadUrl.startsWith('http') &&
-      !downloadUrl.includes('cowboykimono.com')
-    ) {
-      return { type: 'external', text: 'Visit Link' };
-    }
+  //   // Check if it's an external link
+  //   if (
+  //     downloadUrl.startsWith('http') &&
+  //     !downloadUrl.includes('cowboykimono.com')
+  //   ) {
+  //     return { type: 'external', text: 'Visit Link' };
+  //   }
 
-    // Default to download
-    return { type: 'download', text: 'Download' };
-  };
-
-  const handleDownload = (downloadUrl: string, title: string) => {
-    // Ensure downloadUrl is a string
-    if (!downloadUrl || typeof downloadUrl !== 'string') {
-      console.error('Invalid download URL:', downloadUrl);
-      return;
-    }
-
-    const downloadInfo = getDownloadInfo(downloadUrl);
-
-    // Check if it's a blog post link or actual download
-    if (downloadInfo.type === 'blog') {
-      // Navigate to blog post
-      window.location.href = downloadUrl;
-    } else {
-      // Create a temporary link to trigger download
-      const link = document.createElement('a');
-      link.href = downloadUrl;
-      link.download = title;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-    }
-  };
+  //   // Default to download
+  //   return { type: 'download', text: 'Download' };
+  // };
 
   return (
     <div className="min-h-screen bg-[#f0f8ff] py-12">
-      <div className="max-w-6xl mx-auto px-8">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header Section */}
         <div className="text-center mb-12">
           <div className="flex justify-center mb-6">
@@ -215,235 +206,169 @@ const DownloadsClient = () => {
             Free resources, patterns, and guides to enhance your cowboy kimono
             experience
           </p>
-          <p className="text-sm text-gray-500 mt-2">
-            {staticCards.length} categories available • Click cards to explore
-            downloads
-          </p>
         </div>
 
-        {/* Download Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-10 mb-12">
-          {staticCards.map((section) => (
-            <div
-              key={section.id}
-              className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1"
-            >
-              {/* Main Card with Image and Overlay - Square Aspect Ratio */}
-              <div
-                className="cursor-pointer relative w-full overflow-hidden group"
-                style={{ width: '100%', height: 300, background: '#eee' }}
-                onClick={() => toggleCard(section.id)}
-              >
-                <Image
-                  src={section.image}
-                  alt={`${section.title} preview`}
-                  fill
-                  className="object-cover object-center"
-                  sizes="(max-width: 768px) 100vw, 33vw"
-                  priority
-                  onError={(e) => {
-                    console.error('Image failed to load:', section.image);
-                    e.currentTarget.style.display = 'none';
-                  }}
-                />
-                {/* Dark Overlay - Only visible on hover */}
-                <div
-                  className="absolute inset-0 transition-all duration-300 opacity-0 group-hover:opacity-100"
-                  style={{ background: 'rgba(0,0,0,0.35)', zIndex: 5 }}
-                />
-                {/* Text Content Overlay - Only visible on hover */}
-                <div
-                  className="absolute inset-0 flex flex-col justify-center items-center text-center p-6 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-                  style={{ zIndex: 10 }}
-                >
-                  {/* Add a semi-transparent background behind the text for readability */}
-                  <div
-                    className="inline-block px-6 py-4 rounded-lg text-center"
-                    style={{ background: 'rgba(0,0,0,0.5)' }}
-                  >
-                    <h2 className="text-2xl font-bold text-white mb-3 drop-shadow-lg text-center serif">
-                      {section.title}
-                    </h2>
-                    <p className="text-white text-sm leading-relaxed mb-4 drop-shadow-md line-clamp-3 text-center">
-                      {section.description}
-                    </p>
-                    <div className="flex flex-col items-center text-white">
-                      <span className="font-medium mr-2 drop-shadow-md text-center">
-                        View Items
-                      </span>
-                      <span className="transform transition-transform duration-300 drop-shadow-md text-center">
-                        ↓
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
+        {/* Featured Downloads */}
+        <FeaturedDownloads onDownload={handleDownload} />
 
-        {/* Expanded Content - Full Width Below Cards */}
-        {expandedCard && (
-          <div className="bg-white rounded-lg shadow-md p-6 mb-8">
-            <div className="flex justify-between items-center mb-6">
-              <h3 className="text-2xl font-bold text-gray-800 serif">
-                {
-                  staticCards.find((section) => section.id === expandedCard)
-                    ?.title
-                }
-              </h3>
-              <button
-                onClick={() => setExpandedCard(null)}
-                className="text-gray-500 hover:text-gray-700 text-2xl"
-              >
-                ×
-              </button>
-            </div>
-
-            {/* Loading State */}
-            {loading[expandedCard] && (
-              <div className="text-center py-8">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#1e2939] mx-auto mb-4"></div>
-                <p className="text-gray-600">Loading downloads...</p>
-              </div>
-            )}
-
-            {/* Error State */}
-            {error && !loading[expandedCard] && (
-              <div className="text-center py-8">
-                <div className="bg-red-50 border border-red-200 rounded-lg p-6 mb-4">
-                  <div className="flex flex-col items-center">
-                    <div className="text-red-600 text-4xl mb-2">⚠️</div>
-                    <h3 className="text-red-800 font-semibold mb-2">
-                      Failed to Load Downloads
-                    </h3>
-                    <p className="text-red-700 text-sm mb-4">{error}</p>
-                    <button
-                      onClick={() => {
-                        setError(null);
-                        fetchDownloadsForCategory(expandedCard);
-                      }}
-                      className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors"
-                    >
-                      Try Again
-                    </button>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Empty State */}
-            {!loading[expandedCard] &&
-              !error &&
-              (!dynamicThumbnails[expandedCard] ||
-                dynamicThumbnails[expandedCard].length === 0) && (
-                <div className="text-center py-12">
-                  <div className="bg-gray-50 border border-gray-200 rounded-lg p-8">
-                    <div className="flex flex-col items-center">
-                      <div className="text-gray-400 text-4xl mb-4">📁</div>
-                      <h3 className="text-gray-600 font-semibold mb-2">
-                        No Downloads Available
-                      </h3>
-                      <p className="text-gray-500 text-sm mb-4">
-                        There are currently no downloads available for this
-                        category.
-                      </p>
-                      <button
-                        onClick={() => fetchDownloadsForCategory(expandedCard)}
-                        className="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors"
-                      >
-                        Refresh
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-            {/* Dynamic Content */}
-            {!loading[expandedCard] &&
-              !error &&
-              dynamicThumbnails[expandedCard] &&
-              dynamicThumbnails[expandedCard].length > 0 && (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                  {dynamicThumbnails[expandedCard]
-                    .filter(
-                      (item) =>
-                        item &&
-                        typeof item === 'object' &&
-                        item.id &&
-                        item.title
-                    )
-                    .map((item) => (
-                      <div
-                        key={item.id}
-                        className="bg-gray-50 rounded-lg shadow-sm overflow-hidden hover:shadow-md transition-all duration-300 transform hover:-translate-y-1 flex flex-col items-center text-center"
-                      >
-                        {/* Thumbnail Image */}
-                        <div className="aspect-square relative w-full">
-                          {item.thumbnail &&
-                          item.thumbnail !== '' &&
-                          item.thumbnail !== '#' ? (
-                            <Image
-                              src={item.thumbnail}
-                              alt={item.title || 'Download'}
-                              fill
-                              className="object-cover"
-                              sizes="(max-width: 768px) 50vw, (max-width: 1024px) 25vw, 20vw"
-                              onError={(e) => {
-                                console.error(
-                                  'Thumbnail failed to load:',
-                                  item.thumbnail
-                                );
-                                e.currentTarget.style.display = 'none';
-                              }}
-                            />
-                          ) : (
-                            <div className="w-full h-full bg-gray-200 flex items-center justify-center">
-                              <span className="text-gray-500 text-sm">
-                                No Image
-                              </span>
-                            </div>
-                          )}
-                        </div>
-                        {/* Download Info */}
-                        <div className="p-4 flex flex-col items-center text-center w-full">
-                          <h4 className="font-semibold text-gray-800 mb-2 text-center text-sm line-clamp-2 w-full">
-                            {item.title || 'Untitled Download'}
-                          </h4>
-                          {item.downloadUrl &&
-                          item.downloadUrl !== '' &&
-                          item.downloadUrl !== '#' ? (
-                            (() => {
-                              const downloadInfo = getDownloadInfo(
-                                item.downloadUrl,
-                                item.type
-                              );
-                              return (
-                                <button
-                                  onClick={() =>
-                                    handleDownload(
-                                      item.downloadUrl,
-                                      item.title || 'Download'
-                                    )
-                                  }
-                                  className={`px-4 py-2 rounded-md transition-colors font-medium flex items-center justify-center text-sm w-full max-w-[180px] bg-[#1e2939] hover:bg-[#2a3441] text-white`}
-                                >
-                                  {downloadInfo.text}
-                                </button>
-                              );
-                            })()
-                          ) : (
-                            <div className="px-4 py-2 rounded-md bg-gray-300 text-gray-600 text-sm text-center w-full max-w-[180px]">
-                              Coming Soon
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    ))}
-                </div>
-              )}
+        {/* Section Divider */}
+        <div className="relative mb-12">
+          <div className="absolute inset-0 flex items-center">
+            <div className="w-full border-t border-gray-300"></div>
           </div>
-        )}
+          <div className="relative flex justify-center">
+            <span className="bg-[#f0f8ff] px-6 text-gray-500 text-sm font-medium">
+              Browse by Category
+            </span>
+          </div>
+        </div>
+
+        {/* Category Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
+          {staticCards.map((section) => {
+            const isExpanded = expandedCategories.has(section.id);
+            const isLoading = loading[section.id];
+
+            return (
+              <div
+                key={section.id}
+                className="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2 group"
+              >
+                {/* Image Section */}
+                <div
+                  className="relative w-full overflow-hidden"
+                  style={{ height: 300 }}
+                >
+                  <Image
+                    src={section.image}
+                    alt={`${section.title} preview`}
+                    fill
+                    className="object-cover object-center group-hover:scale-110 transition-transform duration-700"
+                    sizes="(max-width: 768px) 100vw, 33vw"
+                    priority
+                  />
+                  {/* Subtle overlay on hover */}
+                  <div className="absolute inset-0 bg-black opacity-0 group-hover:opacity-10 transition-opacity duration-500"></div>
+                </div>
+
+                {/* Content Section */}
+                <div className="p-6 lg:p-8">
+                  <h2 className="text-xl sm:text-2xl font-bold mb-3 text-gray-900 group-hover:text-[#1e2939] transition-colors duration-300 serif">
+                    {section.title}
+                  </h2>
+                  <p className="text-gray-600 mb-6 line-clamp-2 leading-relaxed text-sm sm:text-base">
+                    {section.description}
+                  </p>
+
+                  {/* Expand/Collapse Button */}
+                  <button
+                    onClick={() => toggleCategory(section.id)}
+                    className="w-full bg-[#1e2939] hover:bg-[#2a3441] text-white font-medium py-3 px-4 rounded-lg transition-all duration-300 flex items-center justify-center space-x-2 group/btn"
+                    disabled={isLoading}
+                  >
+                    {isLoading ? (
+                      <>
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                        <span>Loading...</span>
+                      </>
+                    ) : (
+                      <>
+                        <span>
+                          {isExpanded ? 'Hide Downloads' : 'Show Downloads'}
+                        </span>
+                        <svg
+                          className={`w-4 h-4 transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''}`}
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M19 9l-7 7-7-7"
+                          />
+                        </svg>
+                      </>
+                    )}
+                  </button>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Expanded Downloads Section - Full Width Below Cards */}
+        {Array.from(expandedCategories).map((categoryId) => {
+          const section = staticCards.find((s) => s.id === categoryId);
+          const thumbnails = dynamicThumbnails[categoryId];
+          const isLoading = loading[categoryId];
+          const hasDownloads = (thumbnails?.length ?? 0) > 0;
+
+          if (!section) return null;
+
+          return (
+            <div key={categoryId} className="mb-12">
+              <div className="bg-white rounded-xl shadow-lg p-6 lg:p-8">
+                <div className="flex items-center justify-between mb-6">
+                  <h2 className="text-2xl font-bold text-gray-900 serif">
+                    {section.title} Downloads
+                  </h2>
+                  <button
+                    onClick={() => toggleCategory(categoryId)}
+                    className="text-gray-500 hover:text-gray-700 transition-colors"
+                  >
+                    <svg
+                      className="w-6 h-6"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M6 18L18 6M6 6l12 12"
+                      />
+                    </svg>
+                  </button>
+                </div>
+
+                {isLoading && (
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {[...Array(3)].map((_, i) => (
+                      <div
+                        key={i}
+                        className="bg-gray-200 rounded-xl h-64 animate-pulse"
+                      ></div>
+                    ))}
+                  </div>
+                )}
+
+                {!isLoading && hasDownloads && (
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {thumbnails?.map((item) => (
+                      <DownloadCard
+                        key={item.id}
+                        {...item}
+                        onDownload={handleDownload}
+                      />
+                    ))}
+                  </div>
+                )}
+
+                {!isLoading && !hasDownloads && (
+                  <EmptyState
+                    title="No Downloads Available"
+                    description={`There are currently no downloads available for ${section.title.toLowerCase()}.`}
+                    actionText="Refresh"
+                    onAction={() => fetchDownloadsForCategory(categoryId)}
+                  />
+                )}
+              </div>
+            </div>
+          );
+        })}
       </div>
     </div>
   );

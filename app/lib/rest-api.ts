@@ -618,6 +618,215 @@ export class RestAPIClient {
     }
   }
 
+  // Get single download by category and slug
+  async getDownloadBySlug(
+    category: string,
+    slug: string
+  ): Promise<WPRestDownload | null> {
+    try {
+      if (!IS_BUILD) {
+        console.warn(`[REST API] Fetching download: ${category}/${slug}`);
+      }
+
+      // First try to get downloads by category
+      const downloads = await this.getDownloadsByCategory(category);
+      console.warn(
+        `[REST API] Found ${downloads.length} downloads in category ${category}`
+      );
+
+      // Debug: log all download slugs for debugging
+      downloads.forEach((d, index) => {
+        const acfData = d.acf || d.meta || {};
+        console.warn(
+          `[REST API] Download ${index + 1}: id=${d.id}, title="${d.title.rendered}", post_slug="${d.slug}", download_slug="${acfData.download_slug}"`
+        );
+      });
+
+      // Find the download with matching slug
+      const download = downloads.find((d) => {
+        const acfData = d.acf || d.meta || {};
+        const downloadSlug = acfData.download_slug;
+        const postSlug = d.slug;
+
+        console.warn(
+          `[REST API] Checking download ${d.id}: download_slug="${downloadSlug}", post_slug="${postSlug}", looking for="${slug}"`
+        );
+
+        // Try both download_slug and post slug
+        return downloadSlug === slug || postSlug === slug;
+      });
+
+      if (download) {
+        if (!IS_BUILD) {
+          console.warn(`[REST API] Found download: ${download.title.rendered}`);
+        }
+        return download;
+      }
+
+      if (!IS_BUILD) {
+        console.warn(`[REST API] Download not found: ${category}/${slug}`);
+        console.warn(
+          `[REST API] Available downloads in category:`,
+          downloads.map((d) => ({
+            id: d.id,
+            title: d.title.rendered,
+            slug: (d.acf || d.meta || {}).download_slug,
+          }))
+        );
+      }
+      return null;
+    } catch (error) {
+      console.error(`Error fetching download ${category}/${slug}:`, error);
+      return null;
+    }
+  }
+
+  // Get featured downloads
+  async getFeaturedDownloads(limit: number = 6): Promise<WPRestDownload[]> {
+    try {
+      if (!IS_BUILD) {
+        console.warn(
+          `[REST API] Fetching featured downloads (limit: ${limit})`
+        );
+      }
+
+      // Get all downloads and filter for featured ones
+      const { downloads } = await this.getDownloads({
+        per_page: 100,
+        _embed: true,
+        status: 'publish',
+      });
+
+      const featuredDownloads = downloads
+        .filter((download) => {
+          const acfData = download.acf || download.meta || {};
+          return acfData.download_featured === true;
+        })
+        .sort((a, b) => {
+          const aOrder = (a.acf || a.meta || {}).download_order || 0;
+          const bOrder = (b.acf || b.meta || {}).download_order || 0;
+          return aOrder - bOrder;
+        })
+        .slice(0, limit);
+
+      if (!IS_BUILD) {
+        console.warn(
+          `[REST API] Found ${featuredDownloads.length} featured downloads`
+        );
+      }
+
+      return featuredDownloads;
+    } catch (error) {
+      console.error('Error fetching featured downloads:', error);
+      return [];
+    }
+  }
+
+  // Get popular downloads based on download count
+  async getPopularDownloads(limit: number = 10): Promise<WPRestDownload[]> {
+    try {
+      if (!IS_BUILD) {
+        console.warn(`[REST API] Fetching popular downloads (limit: ${limit})`);
+      }
+
+      // Get all downloads
+      const { downloads } = await this.getDownloads({
+        per_page: 100,
+        _embed: true,
+        status: 'publish',
+      });
+
+      // Sort by download count (mock data for now - in real implementation,
+      // this would be based on actual analytics data)
+      const popularDownloads = downloads
+        .sort((a, b) => {
+          // Mock popularity based on post ID for consistency
+          const aPopularity = (a.id % 100) + Math.random() * 50;
+          const bPopularity = (b.id % 100) + Math.random() * 50;
+          return bPopularity - aPopularity;
+        })
+        .slice(0, limit);
+
+      if (!IS_BUILD) {
+        console.warn(
+          `[REST API] Found ${popularDownloads.length} popular downloads`
+        );
+      }
+
+      return popularDownloads;
+    } catch (error) {
+      console.error('Error fetching popular downloads:', error);
+      return [];
+    }
+  }
+
+  // Get related downloads based on category and tags
+  async getRelatedDownloads(
+    downloadId: string,
+    limit: number = 4
+  ): Promise<WPRestDownload[]> {
+    try {
+      if (!IS_BUILD) {
+        console.warn(`[REST API] Fetching related downloads for ${downloadId}`);
+      }
+
+      // First get the current download to extract category
+      const currentDownload = await this.getDownloadById(
+        parseInt(downloadId.replace('download-', ''), 10)
+      );
+      if (!currentDownload) return [];
+
+      const acfData = currentDownload.acf || currentDownload.meta || {};
+      const category = acfData.download_category;
+
+      if (!category) return [];
+
+      // Get downloads from the same category, excluding the current one
+      const categoryDownloads = await this.getDownloadsByCategory(category);
+      const relatedDownloads = categoryDownloads
+        .filter(
+          (download) =>
+            download.id !== parseInt(downloadId.replace('download-', ''), 10)
+        )
+        .slice(0, limit);
+
+      if (!IS_BUILD) {
+        console.warn(
+          `[REST API] Found ${relatedDownloads.length} related downloads`
+        );
+      }
+
+      return relatedDownloads;
+    } catch (error) {
+      console.error(
+        `Error fetching related downloads for ${downloadId}:`,
+        error
+      );
+      return [];
+    }
+  }
+
+  // Get download by ID
+  async getDownloadById(id: number): Promise<WPRestDownload | null> {
+    try {
+      if (!IS_BUILD) {
+        console.warn(`[REST API] Fetching download by ID: ${id}`);
+      }
+
+      const endpoint = `${WP_ENDPOINTS.DOWNLOADS}/${id}?_embed=1`;
+      const download = await this.makeRequest<WPRestDownload>(endpoint);
+
+      if (!IS_BUILD) {
+        console.warn(`[REST API] Found download: ${download.title.rendered}`);
+      }
+
+      return download;
+    } catch (error) {
+      console.error(`Error fetching download by ID ${id}:`, error);
+      return null;
+    }
+  }
+
   // Get configuration for debugging
   getConfig() {
     return {

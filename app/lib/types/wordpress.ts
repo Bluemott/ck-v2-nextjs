@@ -184,6 +184,17 @@ export interface WPRestDownload {
     download_type?: string;
     download_url?: string;
     download_description?: string;
+    // Enhanced fields for improved functionality
+    download_slug?: string;
+    download_file_size?: string;
+    download_format?: string;
+    download_difficulty?: string;
+    download_time_estimate?: string;
+    download_materials_needed?: string;
+    download_seo_title?: string;
+    download_seo_description?: string;
+    download_featured?: boolean;
+    download_order?: number;
   };
   // ACF fields might also be directly on the object
   acf?: {
@@ -193,6 +204,17 @@ export interface WPRestDownload {
     download_type?: string;
     download_url?: string;
     download_description?: string;
+    // Enhanced fields for improved functionality
+    download_slug?: string;
+    download_file_size?: string;
+    download_format?: string;
+    download_difficulty?: string;
+    download_time_estimate?: string;
+    download_materials_needed?: string;
+    download_seo_title?: string;
+    download_seo_description?: string;
+    download_featured?: boolean;
+    download_order?: number;
   };
   _embedded?: {
     author?: Array<{
@@ -503,3 +525,43 @@ export const WP_POST_TYPES = {
   CUSTOM_POST_TYPE: 'custom_post_type',
   DOWNLOADS: 'downloads', // Custom post type
 } as const;
+
+// Download Analytics Types
+export interface DownloadAnalytics {
+  downloadCount: number;
+  lastDownloaded?: string;
+  popularityScore: number;
+  downloadsByDate: Record<string, number>;
+  downloadsByCountry?: Record<string, number>;
+  downloadsByDevice?: Record<string, number>;
+}
+
+export interface DownloadTrackingData {
+  downloadId: string;
+  category: string;
+  slug: string;
+  timestamp: string;
+  userAgent?: string;
+  referrer?: string;
+  ipHash: string; // Anonymized IP
+  deviceType?: string;
+  country?: string;
+}
+
+export interface DownloadStats {
+  totalDownloads: number;
+  downloadsThisMonth: number;
+  mostPopular: Array<{
+    id: string;
+    title: string;
+    downloadCount: number;
+    category: string;
+  }>;
+  downloadsByCategory: Record<string, number>;
+  recentDownloads: Array<{
+    id: string;
+    title: string;
+    category: string;
+    timestamp: string;
+  }>;
+}

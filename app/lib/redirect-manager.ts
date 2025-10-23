@@ -1,6 +1,8 @@
 // Redirect Manager for Dynamic Slug Changes
 // This utility manages redirects that can be updated without rebuilding the entire Next.js config
 
+import { getNextJsRedirects } from './redirect-mappings';
+
 export interface RedirectEntry {
   source: string;
   destination: string;
@@ -74,31 +76,33 @@ export function handleSlugChange(data: SlugChangeData): void {
  * Get redirects for Next.js config
  */
 export function getRedirectsForNextConfig(): RedirectEntry[] {
-  return [
-    // Canonical redirects (www to non-www) - Primary redirect
-    {
-      source: '/:path*',
-      destination: 'https://cowboykimono.com/:path*',
-      permanent: true,
-      has: [
-        {
-          type: 'host',
-          key: 'host',
-          value: 'www.cowboykimono.com',
-        },
-      ],
-    },
+  // Get comprehensive redirects from redirect-mappings.ts
+  const mappingRedirects = getNextJsRedirects();
 
-    // Static redirects (from next.config.ts)
-    {
-      source: '/blog/how-to-create-a-hip-jackalope-display',
-      destination: '/blog/jackalope-garden-display-diy',
-      permanent: true,
-    },
+  // Convert to RedirectEntry format with has conditions for www redirects
+  const redirects: RedirectEntry[] = mappingRedirects.map((redirect) => {
+    // Special handling for www to non-www redirects
+    if (
+      redirect.source === '/:path*' &&
+      redirect.destination.includes('cowboykimono.com')
+    ) {
+      return {
+        ...redirect,
+        has: [
+          {
+            type: 'host',
+            key: 'host',
+            value: 'www.cowboykimono.com',
+          },
+        ],
+      };
+    }
 
-    // Dynamic redirects (from slug changes)
-    ...dynamicRedirects,
-  ];
+    return redirect;
+  });
+
+  // Add dynamic redirects (from slug changes)
+  return [...redirects, ...dynamicRedirects];
 }
 
 /**

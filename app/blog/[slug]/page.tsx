@@ -68,9 +68,9 @@ export async function generateStaticParams() {
   // Generate static paths for existing blog posts
   try {
     const { fetchPosts } = await import('../../lib/api');
-    // Reduce per_page from 100 to 50 for faster initial fetch
+    // Increased to match sitemap coverage for better indexation
     // The build-time cache will share data with sitemap generation
-    const posts = await fetchPosts({ per_page: 50 });
+    const posts = await fetchPosts({ per_page: 500 });
 
     return posts.map((post) => ({
       slug: post.slug,
@@ -115,22 +115,23 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
     <>
       {/* Structured Data for Blog Article */}
       <StructuredData
-        type="BlogPosting"
         data={generateArticleStructuredData({
           title: decodeHtmlEntities(post.title.rendered),
           description: post.content.rendered
             .replace(/<[^>]+>/g, '')
             .slice(0, 160),
           url: `${env.NEXT_PUBLIC_SITE_URL}/blog/${post.slug}`,
-          image: getFeaturedImageUrl(post) || undefined,
+          image: getFeaturedImageUrl(post) || '',
           datePublished: post.date,
+          dateModified: post.modified,
           author: 'Cowboy Kimono',
+          category: 'Blog',
+          tags: [],
         })}
       />
 
       {/* Structured Data for Breadcrumbs */}
       <StructuredData
-        type="BreadcrumbList"
         data={generateBreadcrumbStructuredData([
           { name: 'Home', url: env.NEXT_PUBLIC_SITE_URL },
           { name: 'Blog', url: `${env.NEXT_PUBLIC_SITE_URL}/blog` },

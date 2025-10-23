@@ -166,7 +166,11 @@ export default async function TagPage({ params }: TagPageProps) {
           </div>
 
           {/* Blog Posts Grid */}
-          <BlogClient initialTag={tag.slug} showHeader={false} />
+          <BlogClient
+            initialTag={tag.slug}
+            initialTagData={tag}
+            showHeader={false}
+          />
 
           {/* Back to Blog Link */}
           <div className="text-center mt-12 pt-8 border-t border-gray-200">

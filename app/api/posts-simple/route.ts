@@ -9,6 +9,11 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const page = parseInt(searchParams.get('page') || '1', 10);
     const perPage = parseInt(searchParams.get('per_page') || '9', 10);
+    const search = searchParams.get('search') || '';
+    const categories = searchParams.get('categories') || '';
+    const tags = searchParams.get('tags') || '';
+    const orderby = searchParams.get('orderby') || 'date';
+    const order = searchParams.get('order') || 'desc';
 
     // Simple WordPress API call
     const wpUrl = process.env.NEXT_PUBLIC_WORDPRESS_REST_URL;
@@ -30,7 +35,20 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const apiUrl = `${wpUrl}/wp-json/wp/v2/posts?page=${page}&per_page=${perPage}&_embed=1`;
+    // Build WordPress API URL with all parameters
+    const wpParams = new URLSearchParams({
+      page: page.toString(),
+      per_page: perPage.toString(),
+      _embed: '1',
+      orderby,
+      order,
+    });
+
+    if (search) wpParams.append('search', search);
+    if (categories) wpParams.append('categories', categories);
+    if (tags) wpParams.append('tags', tags);
+
+    const apiUrl = `${wpUrl}/wp-json/wp/v2/posts?${wpParams.toString()}`;
 
     const response = await fetch(apiUrl, {
       method: 'GET',

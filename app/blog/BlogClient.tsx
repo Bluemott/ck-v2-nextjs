@@ -18,17 +18,22 @@ import {
   type WPRestTag,
 } from '../lib/api';
 
+// Build-time detection for conditional logging
+const IS_BUILD = process.env.CI === 'true';
+
 const POSTS_PER_PAGE = 9; // Reduced from 12 to accommodate larger cards
 
 interface BlogClientProps {
   initialCategory?: string;
   initialTag?: string;
+  initialTagData?: WPRestTag;
   showHeader?: boolean;
 }
 
 const BlogClient = ({
   initialCategory,
   initialTag,
+  initialTagData,
   showHeader = true,
 }: BlogClientProps = {}) => {
   const [posts, setPosts] = useState<BlogPost[]>([]);
@@ -141,7 +146,8 @@ const BlogClient = ({
         // Handle tag filtering
         if (initialTag) {
           try {
-            const tag = await fetchTagBySlug(initialTag);
+            // Use provided tag data if available, otherwise fetch it
+            const tag = initialTagData || (await fetchTagBySlug(initialTag));
             if (tag) {
               searchParams.tags = [tag.id];
             }
@@ -172,7 +178,22 @@ const BlogClient = ({
         }
       } catch (error) {
         console.error('Error loading posts:', error);
-        setError('Failed to load blog posts. Please try again later.');
+        const errorMessage =
+          error instanceof Error ? error.message : 'Unknown error';
+        if (
+          errorMessage.includes('NetworkError') ||
+          errorMessage.includes('fetch')
+        ) {
+          setError(
+            'Unable to connect to the blog server. Please check your internet connection and try again.'
+          );
+        } else if (errorMessage.includes('404')) {
+          setError('Blog posts not found. Please try refreshing the page.');
+        } else if (errorMessage.includes('500')) {
+          setError('Server error occurred. Please try again later.');
+        } else {
+          setError('Failed to load blog posts. Please try again later.');
+        }
       } finally {
         setLoading(false);
         setIsPageLoading(false);
@@ -220,6 +241,15 @@ const BlogClient = ({
       } catch (error) {
         console.error('Error loading sidebar data:', error);
         // Sidebar data failure is non-critical, so we don't set error state
+        // But we can log more specific error information for debugging
+        const errorMessage =
+          error instanceof Error ? error.message : 'Unknown error';
+        if (!IS_BUILD) {
+          console.warn('Sidebar data loading failed:', {
+            error: errorMessage,
+            type: 'sidebar_data_error',
+          });
+        }
         setRecentPosts([]);
         setCategories([]);
         setTags([]);

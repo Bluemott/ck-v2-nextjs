@@ -216,11 +216,17 @@ export async function fetchPosts(
           searchParams.append('order', validatedParams.order);
 
         const response = await fetch(
-          `/api/posts-simple?${searchParams.toString()}`
+          `/api/posts-simple?${searchParams.toString()}`,
+          {
+            headers: {
+              'Content-Type': 'application/json',
+            },
+          }
         );
         if (!response.ok) {
+          const errorText = await response.text().catch(() => 'Unknown error');
           throw new Error(
-            `API request failed: ${response.status} ${response.statusText}`
+            `API request failed: ${response.status} ${response.statusText} - ${errorText}`
           );
         }
 
@@ -335,11 +341,17 @@ export async function fetchPostsWithPagination(
           searchParams.append('order', validatedParams.order);
 
         const response = await fetch(
-          `/api/posts-simple?${searchParams.toString()}`
+          `/api/posts-simple?${searchParams.toString()}`,
+          {
+            headers: {
+              'Content-Type': 'application/json',
+            },
+          }
         );
         if (!response.ok) {
+          const errorText = await response.text().catch(() => 'Unknown error');
           throw new Error(
-            `API request failed: ${response.status} ${response.statusText}`
+            `API request failed: ${response.status} ${response.statusText} - ${errorText}`
           );
         }
 
@@ -457,10 +469,15 @@ export async function fetchCategories(): Promise<WPRestCategory[]> {
 
       if (isClient) {
         // Use Next.js API route for client-side requests
-        const response = await fetch('/api/categories');
+        const response = await fetch('/api/categories', {
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        });
         if (!response.ok) {
+          const errorText = await response.text().catch(() => 'Unknown error');
           throw new Error(
-            `API request failed: ${response.status} ${response.statusText}`
+            `API request failed: ${response.status} ${response.statusText} - ${errorText}`
           );
         }
 
@@ -515,10 +532,15 @@ export async function fetchTags(): Promise<WPRestTag[]> {
 
       if (isClient) {
         // Use Next.js API route for client-side requests
-        const response = await fetch('/api/tags');
+        const response = await fetch('/api/tags', {
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        });
         if (!response.ok) {
+          const errorText = await response.text().catch(() => 'Unknown error');
           throw new Error(
-            `API request failed: ${response.status} ${response.statusText}`
+            `API request failed: ${response.status} ${response.statusText} - ${errorText}`
           );
         }
 
@@ -544,9 +566,34 @@ export async function fetchTagBySlug(slug: string): Promise<WPRestTag | null> {
       const tags = await cacheManager.getCachedTags();
       return tags.find((tag: WPRestTag) => tag.slug === slug) || null;
     } else {
-      // Fallback to direct API call
-      const tags = await restAPIClient.getTags();
-      return tags.find((tag: WPRestTag) => tag.slug === slug) || null;
+      // For client-side, use Next.js API routes to avoid CORS issues
+      const isClient = typeof window !== 'undefined';
+
+      if (isClient) {
+        // Use Next.js API route for client-side requests
+        const response = await fetch(`/api/tags?slug=${slug}`, {
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        });
+        if (!response.ok) {
+          if (response.status === 404) {
+            return null;
+          }
+          const errorText = await response.text().catch(() => 'Unknown error');
+          throw new Error(
+            `API request failed: ${response.status} ${response.statusText} - ${errorText}`
+          );
+        }
+
+        const apiResult = await response.json();
+        const tags = apiResult.data?.data || [];
+        return tags.length > 0 ? tags[0] : null;
+      } else {
+        // Server-side: use direct API call
+        const tags = await restAPIClient.getTags();
+        return tags.find((tag: WPRestTag) => tag.slug === slug) || null;
+      }
     }
   } catch (error) {
     console.error('Error fetching tag by slug:', error);

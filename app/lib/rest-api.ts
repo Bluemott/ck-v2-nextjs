@@ -60,9 +60,11 @@ export class RestAPIClient {
 
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
       try {
-        console.warn(
-          `[REST API] Attempt ${attempt}/${maxRetries} for ${endpoint}`
-        );
+        if (!IS_BUILD) {
+          console.warn(
+            `[REST API] Attempt ${attempt}/${maxRetries} for ${endpoint}`
+          );
+        }
 
         // Increase timeout for downloads endpoint
         const timeout = endpoint.includes('/downloads') ? 30000 : 10000; // 30s for downloads, 10s for others
@@ -98,9 +100,11 @@ export class RestAPIClient {
         }
 
         const data = await response.json();
-        console.warn(
-          `[REST API] Success on attempt ${attempt} for ${endpoint}`
-        );
+        if (!IS_BUILD) {
+          console.warn(
+            `[REST API] Success on attempt ${attempt} for ${endpoint}`
+          );
+        }
         return data as T;
       } catch (error) {
         lastError = error as Error;
@@ -148,9 +152,11 @@ export class RestAPIClient {
 
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
       try {
-        console.warn(
-          `[REST API] Headers attempt ${attempt}/${maxRetries} for ${endpoint}`
-        );
+        if (!IS_BUILD) {
+          console.warn(
+            `[REST API] Headers attempt ${attempt}/${maxRetries} for ${endpoint}`
+          );
+        }
 
         // Increase timeout for downloads endpoint
         const timeout = endpoint.includes('/downloads') ? 30000 : 10000;
@@ -185,9 +191,11 @@ export class RestAPIClient {
         }
 
         const data = await response.json();
-        console.warn(
-          `[REST API] Headers success on attempt ${attempt} for ${endpoint}`
-        );
+        if (!IS_BUILD) {
+          console.warn(
+            `[REST API] Headers success on attempt ${attempt} for ${endpoint}`
+          );
+        }
 
         return {
           data: data as T,
@@ -197,17 +205,21 @@ export class RestAPIClient {
         };
       } catch (error) {
         lastError = error as Error;
-        console.warn(
-          `[REST API] Headers attempt ${attempt} failed for ${endpoint}:`,
-          {
-            error: lastError.message,
-            url,
-          }
-        );
+        if (!IS_BUILD) {
+          console.warn(
+            `[REST API] Headers attempt ${attempt} failed for ${endpoint}:`,
+            {
+              error: lastError.message,
+              url,
+            }
+          );
+        }
 
         if (attempt < maxRetries) {
           const delay = Math.min(1000 * Math.pow(2, attempt), 10000);
-          console.warn(`[REST API] Headers retrying in ${delay}ms...`);
+          if (!IS_BUILD) {
+            console.warn(`[REST API] Headers retrying in ${delay}ms...`);
+          }
           await new Promise((resolve) => setTimeout(resolve, delay));
         }
       }

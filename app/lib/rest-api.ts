@@ -365,9 +365,9 @@ export class RestAPIClient {
   ): Promise<WPRestTag[]> {
     const searchParams = new URLSearchParams();
 
+    // Default to 100 tags to ensure all tags are fetched
+    searchParams.append('per_page', (params.per_page || 100).toString());
     if (params.page) searchParams.append('page', params.page.toString());
-    if (params.per_page)
-      searchParams.append('per_page', params.per_page.toString());
     if (params.orderby) searchParams.append('orderby', params.orderby);
     if (params.order) searchParams.append('order', params.order);
 
@@ -835,6 +835,30 @@ export class RestAPIClient {
       return download;
     } catch (error) {
       console.error(`Error fetching download by ID ${id}:`, error);
+      return null;
+    }
+  }
+
+  // Get media by ID to resolve ACF file fields
+  async getMediaById(id: number): Promise<{ url: string; title: string } | null> {
+    try {
+      if (!IS_BUILD) {
+        console.warn(`[REST API] Fetching media by ID: ${id}`);
+      }
+
+      const endpoint = `${WP_ENDPOINTS.MEDIA}/${id}`;
+      const media = await this.makeRequest<{
+        id: number;
+        source_url: string;
+        title: { rendered: string };
+      }>(endpoint);
+
+      return {
+        url: media.source_url,
+        title: media.title.rendered,
+      };
+    } catch (error) {
+      console.error(`Error fetching media by ID ${id}:`, error);
       return null;
     }
   }

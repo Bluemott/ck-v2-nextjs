@@ -3,9 +3,9 @@ import { fetchCategories, fetchPosts, fetchTags } from './lib/api';
 
 // Enhanced sitemap configuration
 const SITEMAP_CONFIG = {
-  MAX_POSTS: 500, // Increased to include all content for better indexation
-  MAX_CATEGORIES: 200,
-  MAX_TAGS: 200,
+  MAX_POSTS: 100, // WordPress API max per_page limit
+  MAX_CATEGORIES: 100, // WordPress API max per_page limit
+  MAX_TAGS: 100, // WordPress API max per_page limit
   CACHE_TTL: 3600000, // 1 hour cache
   PRIORITY_DECAY: 0.1, // How much priority decreases for older posts
 };

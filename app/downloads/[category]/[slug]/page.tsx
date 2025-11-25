@@ -118,9 +118,24 @@ export default async function IndividualDownloadPage({
     }
 
     const acfData = download.acf || download.meta || {};
-    const thumbnailUrl =
-      download._embedded?.['wp:featuredmedia']?.[0]?.source_url ||
-      '/images/placeholder.svg';
+
+    // Get thumbnail - check ACF field first, then WordPress featured image
+    let thumbnailUrl = '/images/placeholder.svg';
+    if (acfData.download_thumbnail) {
+      // ACF thumbnail field (returns media ID)
+      const thumbId =
+        typeof acfData.download_thumbnail === 'number'
+          ? acfData.download_thumbnail
+          : parseInt(acfData.download_thumbnail as string, 10);
+      if (!isNaN(thumbId)) {
+        const thumbMedia = await restAPIClient.getMediaById(thumbId);
+        if (thumbMedia?.url) {
+          thumbnailUrl = thumbMedia.url;
+        }
+      }
+    } else if (download._embedded?.['wp:featuredmedia']?.[0]?.source_url) {
+      thumbnailUrl = download._embedded['wp:featuredmedia'][0].source_url;
+    }
 
     // Fetch related downloads from the same category
     const relatedDownloads =
@@ -129,13 +144,44 @@ export default async function IndividualDownloadPage({
       .filter((relatedDownload) => relatedDownload.id !== download.id)
       .slice(0, 3); // Show up to 3 related downloads
 
-    // Get download URL
+    // Resolve thumbnails for related downloads
+    const relatedWithThumbnails = await Promise.all(
+      filteredRelatedDownloads.map(async (rd) => {
+        const rdAcf = rd.acf || rd.meta || {};
+        let thumb = '/images/placeholder.svg';
+        if (rdAcf.download_thumbnail) {
+          const thumbId =
+            typeof rdAcf.download_thumbnail === 'number'
+              ? rdAcf.download_thumbnail
+              : parseInt(rdAcf.download_thumbnail as string, 10);
+          if (!isNaN(thumbId)) {
+            const media = await restAPIClient.getMediaById(thumbId);
+            if (media?.url) thumb = media.url;
+          }
+        } else if (rd._embedded?.['wp:featuredmedia']?.[0]?.source_url) {
+          thumb = rd._embedded['wp:featuredmedia'][0].source_url;
+        }
+        return { ...rd, resolvedThumbnail: thumb };
+      })
+    );
+
+    // Get download URL - resolve ACF file ID to actual media URL
     let downloadUrl = '#';
     if (acfData.download_type === 'blog-post' && acfData.download_url) {
       downloadUrl = acfData.download_url;
     } else if (acfData.download_file) {
-      // Handle file downloads - this would need proper media URL resolution
-      downloadUrl = `https://api.cowboykimono.com/wp-content/uploads/2025/10/media-${acfData.download_file}.pdf`;
+      // ACF returns file ID, resolve it to actual URL via Media API
+      const fileId =
+        typeof acfData.download_file === 'number'
+          ? acfData.download_file
+          : parseInt(acfData.download_file, 10);
+
+      if (!isNaN(fileId)) {
+        const media = await restAPIClient.getMediaById(fileId);
+        if (media?.url) {
+          downloadUrl = media.url;
+        }
+      }
     }
 
     // Generate structured data
@@ -392,18 +438,16 @@ export default async function IndividualDownloadPage({
           </div>
 
           {/* Related Downloads */}
-          {filteredRelatedDownloads.length > 0 && (
+          {relatedWithThumbnails.length > 0 && (
             <div className="mt-12">
               <h2 className="text-2xl font-bold text-gray-900 mb-6 serif">
                 Related Downloads
               </h2>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {filteredRelatedDownloads.map((relatedDownload) => {
+                {relatedWithThumbnails.map((relatedDownload) => {
                   const relatedAcfData =
                     relatedDownload.acf || relatedDownload.meta || {};
-                  const relatedThumbnailUrl =
-                    relatedDownload._embedded?.['wp:featuredmedia']?.[0]
-                      ?.source_url || '/images/placeholder.svg';
+                  const relatedThumbnailUrl = relatedDownload.resolvedThumbnail;
                   const relatedSlug = relatedAcfData.download_slug || '';
 
                   return (

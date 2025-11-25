@@ -17,6 +17,12 @@ interface DownloadPageProps {
   }>;
 }
 
+// Allow dynamic rendering for pages not generated at build time
+export const dynamicParams = true;
+
+// Revalidate pages every hour to pick up WordPress changes
+export const revalidate = 3600;
+
 export async function generateStaticParams() {
   try {
     const { downloads } = await restAPIClient.getDownloads({

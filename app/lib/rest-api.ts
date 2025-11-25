@@ -640,32 +640,32 @@ export class RestAPIClient {
         console.warn(`[REST API] Fetching download: ${category}/${slug}`);
       }
 
-      // First try to get downloads by category
-      const downloads = await this.getDownloadsByCategory(category);
-      console.warn(
-        `[REST API] Found ${downloads.length} downloads in category ${category}`
-      );
-
-      // Debug: log all download slugs for debugging
-      downloads.forEach((d, index) => {
-        const acfData = d.acf || d.meta || {};
-        console.warn(
-          `[REST API] Download ${index + 1}: id=${d.id}, title="${d.title.rendered}", post_slug="${d.slug}", download_slug="${acfData.download_slug}"`
-        );
+      // Fetch ALL downloads and filter client-side for reliability
+      // The meta query doesn't always filter correctly
+      const { downloads: allDownloads } = await this.getDownloads({
+        per_page: 100,
+        _embed: true,
+        status: 'publish',
       });
 
-      // Find the download with matching slug
-      const download = downloads.find((d) => {
+      if (!IS_BUILD) {
+        console.warn(
+          `[REST API] Fetched ${allDownloads.length} total downloads`
+        );
+      }
+
+      // Find the download with matching category AND slug
+      const download = allDownloads.find((d) => {
         const acfData = d.acf || d.meta || {};
         const downloadSlug = acfData.download_slug;
+        const downloadCategory = acfData.download_category;
         const postSlug = d.slug;
 
-        console.warn(
-          `[REST API] Checking download ${d.id}: download_slug="${downloadSlug}", post_slug="${postSlug}", looking for="${slug}"`
-        );
+        // Match both category and slug
+        const categoryMatch = downloadCategory === category;
+        const slugMatch = downloadSlug === slug || postSlug === slug;
 
-        // Try both download_slug and post slug
-        return downloadSlug === slug || postSlug === slug;
+        return categoryMatch && slugMatch;
       });
 
       if (download) {
@@ -677,14 +677,6 @@ export class RestAPIClient {
 
       if (!IS_BUILD) {
         console.warn(`[REST API] Download not found: ${category}/${slug}`);
-        console.warn(
-          `[REST API] Available downloads in category:`,
-          downloads.map((d) => ({
-            id: d.id,
-            title: d.title.rendered,
-            slug: (d.acf || d.meta || {}).download_slug,
-          }))
-        );
       }
       return null;
     } catch (error) {

@@ -11,10 +11,10 @@ import { generateSEOMetadata } from '../../../lib/seo';
 import DownloadTracker from './DownloadTracker';
 
 interface DownloadPageProps {
-  params: {
+  params: Promise<{
     category: string;
     slug: string;
-  };
+  }>;
 }
 
 export async function generateStaticParams() {
@@ -46,7 +46,7 @@ export async function generateStaticParams() {
 export async function generateMetadata({
   params,
 }: DownloadPageProps): Promise<Metadata> {
-  const { category, slug } = params;
+  const { category, slug } = await params;
 
   try {
     const download = await restAPIClient.getDownloadBySlug(category, slug);
@@ -84,7 +84,7 @@ export async function generateMetadata({
 export default async function IndividualDownloadPage({
   params,
 }: DownloadPageProps) {
-  const { category, slug } = params;
+  const { category, slug } = await params;
 
   try {
     console.warn(`[Download Page] Fetching download: ${category}/${slug}`);

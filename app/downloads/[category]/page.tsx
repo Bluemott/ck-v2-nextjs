@@ -10,9 +10,9 @@ import { generateSEOMetadata } from '../../lib/seo';
 import DownloadCard from '../components/DownloadCard';
 
 interface CategoryPageProps {
-  params: {
+  params: Promise<{
     category: string;
-  };
+  }>;
 }
 
 // Valid categories
@@ -58,7 +58,7 @@ export async function generateStaticParams() {
 export async function generateMetadata({
   params,
 }: CategoryPageProps): Promise<Metadata> {
-  const { category } = params;
+  const { category } = await params;
 
   if (!VALID_CATEGORIES.includes(category)) {
     return generateSEOMetadata({
@@ -86,7 +86,7 @@ export async function generateMetadata({
 }
 
 export default async function CategoryPage({ params }: CategoryPageProps) {
-  const { category } = params;
+  const { category } = await params;
 
   // Validate category
   if (!VALID_CATEGORIES.includes(category)) {

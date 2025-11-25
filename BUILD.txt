@@ -1,0 +1,702 @@
+2025-11-25T22:45:09.067Z [INFO]: # Build environment configured with Standard build compute type: 8GiB Memory, 4vCPUs, 128GB Disk Space
+2025-11-25T22:45:09.604Z [INFO]: # Cloning repository: git@github.com:Bluemott/ck-v2-nextjs.git
+2025-11-25T22:45:10.903Z [INFO]: 
+2025-11-25T22:45:10.904Z [INFO]: Cloning into 'ck-v2-nextjs'...
+2025-11-25T22:45:10.904Z [INFO]: # Switching to commit: a5981e4e19ca781eb1ef7233523ce08ec3820756
+2025-11-25T22:45:11.029Z [INFO]: Note: switching to 'a5981e4e19ca781eb1ef7233523ce08ec3820756'.
+                                 You are in 'detached HEAD' state. You can look around, make experimental
+                                 changes and commit them, and you can discard any commits you make in this
+                                 state without impacting any branches by switching back to a branch.
+                                 If you want to create a new branch to retain commits you create, you may
+                                 do so (now or later) by using -c with the switch command. Example:
+                                 git switch -c <new-branch-name>
+                                 Or undo this operation with:
+                                 git switch -
+                                 Turn off this advice by setting config variable advice.detachedHead to false
+                                 HEAD is now at a5981e4 fixing and issue with the downloads on the site.
+2025-11-25T22:45:11.078Z [INFO]: Successfully cleaned up Git credentials
+2025-11-25T22:45:11.078Z [INFO]: # Checking for Git submodules at: /codebuild/output/src816943081/src/ck-v2-nextjs/.gitmodules
+2025-11-25T22:45:11.086Z [INFO]: # Retrieving environment cache...
+2025-11-25T22:45:11.131Z [WARNING]: ! Unable to write cache: {"code":"ERR_BAD_REQUEST","message":"Request failed with status code 404"})}
+2025-11-25T22:45:11.131Z [INFO]: ---- Setting Up SSM Secrets ----
+2025-11-25T22:45:11.131Z [INFO]: SSM params {"Path":"/amplify/d1crrnsi5h4ht1/master/","WithDecryption":true}
+2025-11-25T22:45:11.192Z [WARNING]: !Failed to set up process.env.secrets
+2025-11-25T22:45:11.947Z [INFO]: # No package override configuration found.
+2025-11-25T22:45:11.951Z [INFO]: # Retrieving cache...
+2025-11-25T22:45:27.037Z [INFO]: # Extracting cache...
+2025-11-25T22:45:40.534Z [INFO]: # Extraction completed
+2025-11-25T22:45:40.734Z [INFO]: # Retrieved cache
+2025-11-25T22:45:45.540Z [INFO]: ## Starting Backend Build
+                                 ## Checking for associated backend environment...
+2025-11-25T22:45:45.545Z [INFO]: ## No backend environment association found, continuing...
+                                 ## Completed Backend Build
+                                 {"backendDuration": 0}
+                                 ## Starting Frontend Build
+                                 # Starting phase: preBuild
+                                 # Executing command: npm ci --legacy-peer-deps --include=dev --prefer-offline
+2025-11-25T22:46:10.688Z [WARNING]: npm warn deprecated querystring@0.2.0: The querystring API is considered Legacy. new code should use the URLSearchParams API instead.
+2025-11-25T22:46:25.652Z [INFO]: > ck-v2-nextjs@0.1.0 prepare
+                                 > husky
+2025-11-25T22:46:25.720Z [INFO]: added 901 packages, and audited 940 packages in 35s
+2025-11-25T22:46:25.721Z [INFO]: 223 packages are looking for funding
+                                 run `npm fund` for details
+2025-11-25T22:46:25.724Z [INFO]: 2 vulnerabilities (1 moderate, 1 high)
+                                 To address all issues, run:
+                                 npm audit fix
+                                 Run `npm audit` for details.
+2025-11-25T22:46:25.752Z [INFO]: # Completed phase: preBuild
+                                 # Starting phase: build
+                                 # Executing command: npm run build
+2025-11-25T22:46:25.864Z [INFO]: > ck-v2-nextjs@0.1.0 build
+                                 > next build
+2025-11-25T22:46:26.831Z [INFO]: ▲ Next.js 15.5.4
+2025-11-25T22:46:26.832Z [INFO]: - Experiments (use with caution):
+                                 · optimizePackageImports
+2025-11-25T22:46:26.869Z [INFO]: Creating an optimized production build ...
+2025-11-25T22:46:40.600Z [INFO]: ✓ Compiled successfully in 13.6s
+2025-11-25T22:46:40.606Z [INFO]: Linting and checking validity of types ...
+2025-11-25T22:46:45.874Z [INFO]: ./app/blog/BlogClient.tsx
+                                 264:6  Warning: React Hook useEffect has a missing dependency: 'initialTagData'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+                                 ./app/blog/tag/[slug]/page.tsx
+                                 129:25  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+                                 info  - Need to disable some ESLint rules? Learn more here: https://nextjs.org/docs/app/api-reference/config/eslint#disabling-rules
+2025-11-25T22:46:53.600Z [INFO]: Collecting page data ...
+2025-11-25T22:46:55.111Z [WARNING]: [REST API] Headers attempt 1/3 for /wp-json/wp/v2/posts?per_page=500&orderby=date&order=desc&_embed=1
+2025-11-25T22:46:55.119Z [WARNING]: [REST API] Attempt 1/3 for /wp-json/wp/v2/categories?
+2025-11-25T22:46:55.215Z [WARNING]: [REST API] Attempt 1/3 for /wp-json/wp/v2/tags?per_page=100
+2025-11-25T22:46:55.227Z [WARNING]: [REST API] Headers attempt 1 failed for /wp-json/wp/v2/posts?per_page=500&orderby=date&order=desc&_embed=1: {
+                                    error: 'HTTP 400: Invalid parameter(s): per_page',
+                                    url: 'https://api.cowboykimono.com/wp-json/wp/v2/posts?per_page=500&orderby=date&order=desc&_embed=1'
+                                    }
+2025-11-25T22:46:55.228Z [WARNING]: [REST API] Headers retrying in 2000ms...
+2025-11-25T22:46:55.232Z [WARNING]: [REST API] Success on attempt 1 for /wp-json/wp/v2/categories?
+2025-11-25T22:46:55.259Z [WARNING]: [REST API] Headers attempt 1/3 for /wp-json/wp/v2/downloads?per_page=100&_embed=1&status=publish
+2025-11-25T22:46:55.282Z [WARNING]: [REST API] Headers success on attempt 1 for /wp-json/wp/v2/downloads?per_page=100&_embed=1&status=publish
+2025-11-25T22:46:55.313Z [WARNING]: [REST API] Success on attempt 1 for /wp-json/wp/v2/tags?per_page=100
+2025-11-25T22:46:57.229Z [WARNING]: [REST API] Headers attempt 2/3 for /wp-json/wp/v2/posts?per_page=500&orderby=date&order=desc&_embed=1
+2025-11-25T22:46:57.267Z [WARNING]: [REST API] Headers attempt 2 failed for /wp-json/wp/v2/posts?per_page=500&orderby=date&order=desc&_embed=1: {
+                                    error: 'HTTP 400: Invalid parameter(s): per_page',
+                                    url: 'https://api.cowboykimono.com/wp-json/wp/v2/posts?per_page=500&orderby=date&order=desc&_embed=1'
+                                    }
+2025-11-25T22:46:57.267Z [WARNING]: [REST API] Headers retrying in 4000ms...
+2025-11-25T22:47:01.269Z [WARNING]: [REST API] Headers attempt 3/3 for /wp-json/wp/v2/posts?per_page=500&orderby=date&order=desc&_embed=1
+2025-11-25T22:47:01.306Z [WARNING]: [REST API] Headers attempt 3 failed for /wp-json/wp/v2/posts?per_page=500&orderby=date&order=desc&_embed=1: {
+                                    error: 'HTTP 400: Invalid parameter(s): per_page',
+                                    url: 'https://api.cowboykimono.com/wp-json/wp/v2/posts?per_page=500&orderby=date&order=desc&_embed=1'
+                                    }
+2025-11-25T22:47:01.306Z [WARNING]: REST API headers request failed after all retries: {
+                                    error: 'HTTP 400: Invalid parameter(s): per_page',
+                                    url: 'https://api.cowboykimono.com/wp-json/wp/v2/posts?per_page=500&orderby=date&order=desc&_embed=1',
+                                    attempts: 3
+                                    }
+2025-11-25T22:47:01.310Z [WARNING]: Error fetching posts: Error: HTTP 400: Invalid parameter(s): per_page
+                                    at h.makeRequestWithHeaders (.next/server/chunks/7650.js:1:2185)
+                                    at async h.getPosts (.next/server/chunks/7650.js:1:3208)
+                                    at async g.getCachedPosts (.next/server/chunks/5163.js:1:1879)
+                                    at async m (.next/server/chunks/8797.js:1:4962)
+                                    at async Object.q [as generateStaticParams] (.next/server/app/blog/[slug]/page.js:2:44900)
+2025-11-25T22:47:03.195Z [INFO]: Generating static pages (0/114) ...
+2025-11-25T22:47:04.052Z [WARNING]: [Download Page] Fetching download: diy-tutorials/sofa-table
+                                    [REST API] Fetching download: diy-tutorials/sofa-table
+                                    [REST API] Headers attempt 1/3 for /wp-json/wp/v2/downloads?per_page=100&_embed=1&status=publish
+                                    [REST API] Fetching download: diy-tutorials/sofa-table
+                                    [REST API] Headers attempt 1/3 for /wp-json/wp/v2/downloads?per_page=100&_embed=1&status=publish
+                                    [Download Page] Fetching download: craft-templates/ox-book-corner
+                                    [REST API] Fetching download: craft-templates/ox-book-corner
+                                    [REST API] Headers attempt 1/3 for /wp-json/wp/v2/downloads?per_page=100&_embed=1&status=publish
+                                    [REST API] Fetching download: craft-templates/ox-book-corner
+                                    [REST API] Headers attempt 1/3 for /wp-json/wp/v2/downloads?per_page=100&_embed=1&status=publish
+                                    [Download Page] Fetching download: diy-tutorials/animated-chalk-art
+                                    [REST API] Fetching download: diy-tutorials/animated-chalk-art
+                                    [REST API] Headers attempt 1/3 for /wp-json/wp/v2/downloads?per_page=100&_embed=1&status=publish
+                                    [REST API] Fetching download: diy-tutorials/animated-chalk-art
+                                    [REST API] Headers attempt 1/3 for /wp-json/wp/v2/downloads?per_page=100&_embed=1&status=publish
+                                    [Download Page] Fetching download: diy-tutorials/how-to-wash-denim
+                                    [REST API] Fetching download: diy-tutorials/how-to-wash-denim
+                                    [REST API] Headers attempt 1/3 for /wp-json/wp/v2/downloads?per_page=100&_embed=1&status=publish
+                                    [REST API] Fetching download: diy-tutorials/how-to-wash-denim
+                                    [REST API] Headers attempt 1/3 for /wp-json/wp/v2/downloads?per_page=100&_embed=1&status=publish
+                                    [Download Page] Fetching download: craft-templates/labor-day-love
+                                    [REST API] Fetching download: craft-templates/labor-day-love
+                                    [REST API] Headers attempt 1/3 for /wp-json/wp/v2/downloads?per_page=100&_embed=1&status=publish
+                                    [REST API] Fetching download: craft-templates/labor-day-love
+                                    [REST API] Headers attempt 1/3 for /wp-json/wp/v2/downloads?per_page=100&_embed=1&status=publish
+                                    [Download Page] Fetching download: craft-templates/mail-carrier-thanks
+                                    [REST API] Fetching download: craft-templates/mail-carrier-thanks
+                                    [REST API] Headers attempt 1/3 for /wp-json/wp/v2/downloads?per_page=100&_embed=1&status=publish
+                                    [REST API] Fetching download: craft-templates/mail-carrier-thanks
+                                    [REST API] Headers attempt 1/3 for /wp-json/wp/v2/downloads?per_page=100&_embed=1&status=publish
+                                    [Download Page] Fetching download: craft-templates/grocery-bird-ornaments
+                                    [REST API] Fetching download: craft-templates/grocery-bird-ornaments
+                                    [REST API] Headers attempt 1/3 for /wp-json/wp/v2/downloads?per_page=100&_embed=1&status=publish
+                                    [REST API] Fetching download: craft-templates/grocery-bird-ornaments
+                                    [REST API] Headers attempt 1/3 for /wp-json/wp/v2/downloads?per_page=100&_embed=1&status=publish
+                                    [Download Page] Fetching download: craft-templates/fathers-day-craft
+                                    [REST API] Fetching download: craft-templates/fathers-day-craft
+                                    [REST API] Headers attempt 1/3 for /wp-json/wp/v2/downloads?per_page=100&_embed=1&status=publish
+                                    [REST API] Fetching download: craft-templates/fathers-day-craft
+                                    [REST API] Headers attempt 1/3 for /wp-json/wp/v2/downloads?per_page=100&_embed=1&status=publish
+                                    [REST API] Headers success on attempt 1 for /wp-json/wp/v2/downloads?per_page=100&_embed=1&status=publish
+                                    [REST API] Fetched 5 total downloads
+                                    [REST API] Download not found: diy-tutorials/sofa-table
+                                    [Download Page] Download result: Not found
+                                    [Download Page] Download not found for diy-tutorials/sofa-table
+                                    [REST API] Headers success on attempt 1 for /wp-json/wp/v2/downloads?per_page=100&_embed=1&status=publish
+                                    [REST API] Fetched 5 total downloads
+                                    [REST API] Download not found: diy-tutorials/sofa-table
+                                    [REST API] Headers success on attempt 1 for /wp-json/wp/v2/downloads?per_page=100&_embed=1&status=publish
+                                    [REST API] Fetched 5 total downloads
+                                    [REST API] Download not found: craft-templates/ox-book-corner
+                                    [Download Page] Download result: Not found
+                                    [Download Page] Download not found for craft-templates/ox-book-corner
+                                    [REST API] Headers success on attempt 1 for /wp-json/wp/v2/downloads?per_page=100&_embed=1&status=publish
+                                    [REST API] Fetched 5 total downloads
+                                    [REST API] Download not found: craft-templates/ox-book-corner
+                                    [REST API] Headers success on attempt 1 for /wp-json/wp/v2/downloads?per_page=100&_embed=1&status=publish
+                                    [REST API] Fetched 5 total downloads
+                                    [REST API] Download not found: diy-tutorials/animated-chalk-art
+                                    [Download Page] Download result: Not found
+                                    [Download Page] Download not found for diy-tutorials/animated-chalk-art
+                                    [REST API] Headers success on attempt 1 for /wp-json/wp/v2/downloads?per_page=100&_embed=1&status=publish
+                                    [REST API] Fetched 5 total downloads
+                                    [REST API] Download not found: diy-tutorials/animated-chalk-art
+                                    [REST API] Headers success on attempt 1 for /wp-json/wp/v2/downloads?per_page=100&_embed=1&status=publish
+                                    [REST API] Fetched 5 total downloads
+                                    [REST API] Download not found: diy-tutorials/how-to-wash-denim
+                                    [Download Page] Download result: Not found
+                                    [Download Page] Download not found for diy-tutorials/how-to-wash-denim
+                                    [REST API] Headers success on attempt 1 for /wp-json/wp/v2/downloads?per_page=100&_embed=1&status=publish
+                                    [REST API] Fetched 5 total downloads
+                                    [REST API] Download not found: diy-tutorials/how-to-wash-denim
+                                    [REST API] Headers success on attempt 1 for /wp-json/wp/v2/downloads?per_page=100&_embed=1&status=publish
+                                    [REST API] Fetched 5 total downloads
+                                    [REST API] Download not found: craft-templates/labor-day-love
+                                    [Download Page] Download result: Not found
+                                    [Download Page] Download not found for craft-templates/labor-day-love
+                                    [REST API] Headers success on attempt 1 for /wp-json/wp/v2/downloads?per_page=100&_embed=1&status=publish
+                                    [REST API] Fetched 5 total downloads
+                                    [REST API] Download not found: craft-templates/labor-day-love
+                                    [REST API] Headers success on attempt 1 for /wp-json/wp/v2/downloads?per_page=100&_embed=1&status=publish
+                                    [REST API] Fetched 5 total downloads
+                                    [REST API] Download not found: craft-templates/mail-carrier-thanks
+                                    [Download Page] Download result: Not found
+                                    [Download Page] Download not found for craft-templates/mail-carrier-thanks
+                                    [REST API] Headers success on attempt 1 for /wp-json/wp/v2/downloads?per_page=100&_embed=1&status=publish
+                                    [REST API] Fetched 5 total downloads
+                                    [REST API] Download not found: craft-templates/mail-carrier-thanks
+                                    [REST API] Headers success on attempt 1 for /wp-json/wp/v2/downloads?per_page=100&_embed=1&status=publish
+                                    [REST API] Fetched 5 total downloads
+                                    [REST API] Download not found: craft-templates/grocery-bird-ornaments
+                                    [Download Page] Download result: Not found
+                                    [Download Page] Download not found for craft-templates/grocery-bird-ornaments
+                                    [REST API] Headers success on attempt 1 for /wp-json/wp/v2/downloads?per_page=100&_embed=1&status=publish
+                                    [REST API] Fetched 5 total downloads
+                                    [REST API] Download not found: craft-templates/grocery-bird-ornaments
+                                    [REST API] Headers success on attempt 1 for /wp-json/wp/v2/downloads?per_page=100&_embed=1&status=publish
+                                    [REST API] Fetched 5 total downloads
+                                    [REST API] Download not found: craft-templates/fathers-day-craft
+                                    [Download Page] Download result: Not found
+                                    [Download Page] Download not found for craft-templates/fathers-day-craft
+                                    [REST API] Headers success on attempt 1 for /wp-json/wp/v2/downloads?per_page=100&_embed=1&status=publish
+                                    [REST API] Fetched 5 total downloads
+                                    [REST API] Download not found: craft-templates/fathers-day-craft
+2025-11-25T22:47:04.291Z [WARNING]: [REST API] Attempt 1/3 for /wp-json/wp/v2/tags?per_page=100
+                                    [REST API] Attempt 1/3 for /wp-json/wp/v2/tags?per_page=100
+                                    [REST API] Attempt 1/3 for /wp-json/wp/v2/tags?per_page=100
+                                    [REST API] Attempt 1/3 for /wp-json/wp/v2/tags?per_page=100
+                                    [REST API] Attempt 1/3 for /wp-json/wp/v2/tags?per_page=100
+                                    [REST API] Attempt 1/3 for /wp-json/wp/v2/tags?per_page=100
+                                    [REST API] Attempt 1/3 for /wp-json/wp/v2/tags?per_page=100
+                                    [REST API] Attempt 1/3 for /wp-json/wp/v2/tags?per_page=100
+                                    [REST API] Attempt 1/3 for /wp-json/wp/v2/tags?per_page=100
+                                    [REST API] Attempt 1/3 for /wp-json/wp/v2/tags?per_page=100
+                                    [REST API] Attempt 1/3 for /wp-json/wp/v2/tags?per_page=100
+                                    [REST API] Attempt 1/3 for /wp-json/wp/v2/tags?per_page=100
+                                    [REST API] Attempt 1/3 for /wp-json/wp/v2/tags?per_page=100
+                                    [REST API] Attempt 1/3 for /wp-json/wp/v2/tags?per_page=100
+                                    [REST API] Attempt 1/3 for /wp-json/wp/v2/tags?per_page=100
+                                    [REST API] Attempt 1/3 for /wp-json/wp/v2/tags?per_page=100
+2025-11-25T22:47:04.386Z [WARNING]: [REST API] Success on attempt 1 for /wp-json/wp/v2/tags?per_page=100
+                                    [REST API] Success on attempt 1 for /wp-json/wp/v2/tags?per_page=100
+                                    [REST API] Success on attempt 1 for /wp-json/wp/v2/tags?per_page=100
+                                    [REST API] Success on attempt 1 for /wp-json/wp/v2/tags?per_page=100
+                                    [REST API] Success on attempt 1 for /wp-json/wp/v2/tags?per_page=100
+                                    [REST API] Success on attempt 1 for /wp-json/wp/v2/tags?per_page=100
+                                    [REST API] Success on attempt 1 for /wp-json/wp/v2/tags?per_page=100
+                                    [REST API] Success on attempt 1 for /wp-json/wp/v2/tags?per_page=100
+                                    [REST API] Success on attempt 1 for /wp-json/wp/v2/tags?per_page=100
+                                    [REST API] Success on attempt 1 for /wp-json/wp/v2/tags?per_page=100
+                                    [REST API] Success on attempt 1 for /wp-json/wp/v2/tags?per_page=100
+                                    [REST API] Success on attempt 1 for /wp-json/wp/v2/tags?per_page=100
+                                    [REST API] Success on attempt 1 for /wp-json/wp/v2/tags?per_page=100
+                                    [REST API] Success on attempt 1 for /wp-json/wp/v2/tags?per_page=100
+                                    [REST API] Success on attempt 1 for /wp-json/wp/v2/tags?per_page=100
+                                    [REST API] Success on attempt 1 for /wp-json/wp/v2/tags?per_page=100
+2025-11-25T22:47:04.393Z [WARNING]: [Download Page] Fetching download: coloring-pages/cover-my-back
+                                    [REST API] Fetching download: coloring-pages/cover-my-back
+                                    [REST API] Headers attempt 1/3 for /wp-json/wp/v2/downloads?per_page=100&_embed=1&status=publish
+                                    [REST API] Headers success on attempt 1 for /wp-json/wp/v2/downloads?per_page=100&_embed=1&status=publish
+                                    [REST API] Fetched 5 total downloads
+                                    [REST API] Download not found: coloring-pages/cover-my-back
+                                    [Download Page] Download result: Not found
+                                    [Download Page] Download not found for coloring-pages/cover-my-back
+                                    [REST API] Fetching download: coloring-pages/cover-my-back
+                                    [REST API] Headers attempt 1/3 for /wp-json/wp/v2/downloads?per_page=100&_embed=1&status=publish
+                                    [REST API] Headers success on attempt 1 for /wp-json/wp/v2/downloads?per_page=100&_embed=1&status=publish
+                                    [REST API] Fetched 5 total downloads
+                                    [REST API] Download not found: coloring-pages/cover-my-back
+                                    [Download Page] Fetching download: craft-templates/holiday-craft-template
+                                    [REST API] Fetching download: craft-templates/holiday-craft-template
+                                    [REST API] Headers attempt 1/3 for /wp-json/wp/v2/downloads?per_page=100&_embed=1&status=publish
+                                    [REST API] Headers success on attempt 1 for /wp-json/wp/v2/downloads?per_page=100&_embed=1&status=publish
+                                    [REST API] Fetched 5 total downloads
+                                    [REST API] Download not found: craft-templates/holiday-craft-template
+                                    [Download Page] Download result: Not found
+                                    [Download Page] Download not found for craft-templates/holiday-craft-template
+                                    [REST API] Fetching download: craft-templates/holiday-craft-template
+                                    [REST API] Headers attempt 1/3 for /wp-json/wp/v2/downloads?per_page=100&_embed=1&status=publish
+                                    [REST API] Headers success on attempt 1 for /wp-json/wp/v2/downloads?per_page=100&_embed=1&status=publish
+                                    [REST API] Fetched 5 total downloads
+                                    [REST API] Download not found: craft-templates/holiday-craft-template
+                                    [Download Page] Fetching download: diy-tutorials/creativity-exercise
+                                    [REST API] Fetching download: diy-tutorials/creativity-exercise
+                                    [REST API] Headers attempt 1/3 for /wp-json/wp/v2/downloads?per_page=100&_embed=1&status=publish
+                                    [REST API] Headers success on attempt 1 for /wp-json/wp/v2/downloads?per_page=100&_embed=1&status=publish
+                                    [REST API] Fetched 5 total downloads
+                                    [REST API] Download not found: diy-tutorials/creativity-exercise
+                                    [Download Page] Download result: Not found
+                                    [Download Page] Download not found for diy-tutorials/creativity-exercise
+                                    [REST API] Fetching download: diy-tutorials/creativity-exercise
+                                    [REST API] Headers attempt 1/3 for /wp-json/wp/v2/downloads?per_page=100&_embed=1&status=publish
+                                    [REST API] Headers success on attempt 1 for /wp-json/wp/v2/downloads?per_page=100&_embed=1&status=publish
+                                    [REST API] Fetched 5 total downloads
+                                    [REST API] Download not found: diy-tutorials/creativity-exercise
+                                    [Download Page] Fetching download: coloring-pages/cocktail-charms-coloring
+                                    [REST API] Fetching download: coloring-pages/cocktail-charms-coloring
+                                    [REST API] Headers attempt 1/3 for /wp-json/wp/v2/downloads?per_page=100&_embed=1&status=publish
+                                    [REST API] Headers success on attempt 1 for /wp-json/wp/v2/downloads?per_page=100&_embed=1&status=publish
+                                    [REST API] Fetched 5 total downloads
+                                    [REST API] Found download: Vintage Cocktail Charms Coloring Pages
+                                    [Download Page] Download result: Found
+                                    [REST API] Fetching downloads for category: coloring-pages
+                                    [REST API] Trying meta query for category coloring-pages
+                                    [REST API] Attempt 1/3 for /wp-json/wp/v2/downloads?per_page=100&_embed=1&status=publish&meta_key=download_category&meta_value=coloring-pages
+                                    [REST API] Fetching download: coloring-pages/cocktail-charms-coloring
+                                    [REST API] Headers attempt 1/3 for /wp-json/wp/v2/downloads?per_page=100&_embed=1&status=publish
+                                    [REST API] Headers success on attempt 1 for /wp-json/wp/v2/downloads?per_page=100&_embed=1&status=publish
+                                    [REST API] Fetched 5 total downloads
+                                    [REST API] Found download: Vintage Cocktail Charms Coloring Pages
+                                    [Download Page] Fetching download: craft-templates/seashell-ornament
+                                    [REST API] Fetching download: craft-templates/seashell-ornament
+                                    [REST API] Headers attempt 1/3 for /wp-json/wp/v2/downloads?per_page=100&_embed=1&status=publish
+                                    [REST API] Headers success on attempt 1 for /wp-json/wp/v2/downloads?per_page=100&_embed=1&status=publish
+                                    [REST API] Fetched 5 total downloads
+                                    [REST API] Found download: Seashell and Starfish Embossed Ornament Craft
+                                    [Download Page] Download result: Found
+                                    [REST API] Fetching media by ID: 3527
+                                    [REST API] Attempt 1/3 for /wp-json/wp/v2/media/3527
+2025-11-25T22:47:04.483Z [WARNING]: [REST API] Fetching download: craft-templates/seashell-ornament
+                                    [REST API] Headers attempt 1/3 for /wp-json/wp/v2/downloads?per_page=100&_embed=1&status=publish
+                                    [REST API] Headers success on attempt 1 for /wp-json/wp/v2/downloads?per_page=100&_embed=1&status=publish
+                                    [REST API] Fetched 5 total downloads
+                                    [REST API] Found download: Seashell and Starfish Embossed Ornament Craft
+                                    [Download Page] Fetching download: diy-tutorials/jackalope-display
+                                    [REST API] Fetching download: diy-tutorials/jackalope-display
+                                    [REST API] Headers attempt 1/3 for /wp-json/wp/v2/downloads?per_page=100&_embed=1&status=publish
+                                    [REST API] Headers success on attempt 1 for /wp-json/wp/v2/downloads?per_page=100&_embed=1&status=publish
+                                    [REST API] Fetched 5 total downloads
+                                    [REST API] Found download: How to Create a Hip Jackalope Display
+                                    [Download Page] Download result: Found
+                                    [REST API] Fetching media by ID: 3108
+                                    [REST API] Attempt 1/3 for /wp-json/wp/v2/media/3108
+                                    [REST API] Fetching download: diy-tutorials/jackalope-display
+                                    [REST API] Headers attempt 1/3 for /wp-json/wp/v2/downloads?per_page=100&_embed=1&status=publish
+                                    [REST API] Headers success on attempt 1 for /wp-json/wp/v2/downloads?per_page=100&_embed=1&status=publish
+                                    [REST API] Fetched 5 total downloads
+                                    [REST API] Found download: How to Create a Hip Jackalope Display
+                                    [Download Page] Fetching download: craft-templates/june-bug-template
+                                    [REST API] Fetching download: craft-templates/june-bug-template
+                                    [REST API] Headers attempt 1/3 for /wp-json/wp/v2/downloads?per_page=100&_embed=1&status=publish
+                                    [REST API] Headers success on attempt 1 for /wp-json/wp/v2/downloads?per_page=100&_embed=1&status=publish
+                                    [REST API] Fetched 5 total downloads
+                                    [REST API] Found download: June Bug Craft Template
+                                    [Download Page] Download result: Found
+                                    [REST API] Fetching media by ID: 2661
+                                    [REST API] Attempt 1/3 for /wp-json/wp/v2/media/2661
+                                    [REST API] Fetching download: craft-templates/june-bug-template
+                                    [REST API] Headers attempt 1/3 for /wp-json/wp/v2/downloads?per_page=100&_embed=1&status=publish
+                                    [REST API] Headers success on attempt 1 for /wp-json/wp/v2/downloads?per_page=100&_embed=1&status=publish
+                                    [REST API] Fetched 5 total downloads
+                                    [REST API] Found download: June Bug Craft Template
+                                    [Download Page] Fetching download: coloring-pages/abq-neon-coloring
+                                    [REST API] Fetching download: coloring-pages/abq-neon-coloring
+                                    [REST API] Headers attempt 1/3 for /wp-json/wp/v2/downloads?per_page=100&_embed=1&status=publish
+                                    [REST API] Headers success on attempt 1 for /wp-json/wp/v2/downloads?per_page=100&_embed=1&status=publish
+                                    [REST API] Fetched 5 total downloads
+                                    [REST API] Found download: ABQ Neon Coloring Page
+                                    [Download Page] Download result: Found
+                                    [REST API] Fetching media by ID: 3594
+                                    [REST API] Attempt 1/3 for /wp-json/wp/v2/media/3594
+                                    [REST API] Fetching download: coloring-pages/abq-neon-coloring
+                                    [REST API] Headers attempt 1/3 for /wp-json/wp/v2/downloads?per_page=100&_embed=1&status=publish
+                                    [REST API] Headers success on attempt 1 for /wp-json/wp/v2/downloads?per_page=100&_embed=1&status=publish
+                                    [REST API] Fetched 5 total downloads
+                                    [REST API] Found download: ABQ Neon Coloring Page
+                                    [REST API] Success on attempt 1 for /wp-json/wp/v2/downloads?per_page=100&_embed=1&status=publish&meta_key=download_category&meta_value=coloring-pages
+                                    [REST API] Meta query successful: found 5 downloads
+                                    [REST API] Fetching media by ID: 3527
+                                    [REST API] Attempt 1/3 for /wp-json/wp/v2/media/3527
+                                    [REST API] Fetching media by ID: 3108
+                                    [REST API] Attempt 1/3 for /wp-json/wp/v2/media/3108
+                                    [REST API] Fetching media by ID: 2661
+                                    [REST API] Attempt 1/3 for /wp-json/wp/v2/media/2661
+                                    [REST API] Success on attempt 1 for /wp-json/wp/v2/media/3527
+                                    [REST API] Fetching downloads for category: craft-templates
+                                    [REST API] Trying meta query for category craft-templates
+                                    [REST API] Attempt 1/3 for /wp-json/wp/v2/downloads?per_page=100&_embed=1&status=publish&meta_key=download_category&meta_value=craft-templates
+                                    [REST API] Success on attempt 1 for /wp-json/wp/v2/media/3527
+                                    [REST API] Success on attempt 1 for /wp-json/wp/v2/media/3108
+                                    [REST API] Fetching downloads for category: diy-tutorials
+                                    [REST API] Trying meta query for category diy-tutorials
+                                    [REST API] Attempt 1/3 for /wp-json/wp/v2/downloads?per_page=100&_embed=1&status=publish&meta_key=download_category&meta_value=diy-tutorials
+                                    [REST API] Success on attempt 1 for /wp-json/wp/v2/media/3108
+                                    [REST API] Success on attempt 1 for /wp-json/wp/v2/media/2661
+                                    [REST API] Fetching downloads for category: craft-templates
+                                    [REST API] Trying meta query for category craft-templates
+                                    [REST API] Attempt 1/3 for /wp-json/wp/v2/downloads?per_page=100&_embed=1&status=publish&meta_key=download_category&meta_value=craft-templates
+                                    [REST API] Success on attempt 1 for /wp-json/wp/v2/media/2661
+                                    [REST API] Fetching media by ID: 3599
+                                    [REST API] Attempt 1/3 for /wp-json/wp/v2/media/3599
+                                    [REST API] Success on attempt 1 for /wp-json/wp/v2/media/3594
+                                    [REST API] Fetching downloads for category: coloring-pages
+                                    [REST API] Trying meta query for category coloring-pages
+                                    [REST API] Attempt 1/3 for /wp-json/wp/v2/downloads?per_page=100&_embed=1&status=publish&meta_key=download_category&meta_value=coloring-pages
+                                    [REST API] Success on attempt 1 for /wp-json/wp/v2/downloads?per_page=100&_embed=1&status=publish&meta_key=download_category&meta_value=coloring-pages
+                                    [REST API] Meta query successful: found 5 downloads
+                                    [REST API] Fetching media by ID: 3527
+                                    [REST API] Attempt 1/3 for /wp-json/wp/v2/media/3527
+                                    [REST API] Fetching media by ID: 3108
+                                    [REST API] Attempt 1/3 for /wp-json/wp/v2/media/3108
+                                    [REST API] Success on attempt 1 for /wp-json/wp/v2/media/3527
+                                    [REST API] Success on attempt 1 for /wp-json/wp/v2/media/3108
+                                    [REST API] Fetching media by ID: 3573
+                                    [REST API] Attempt 1/3 for /wp-json/wp/v2/media/3573
+                                    [REST API] Success on attempt 1 for /wp-json/wp/v2/downloads?per_page=100&_embed=1&status=publish&meta_key=download_category&meta_value=craft-templates
+                                    [REST API] Meta query successful: found 5 downloads
+                                    [REST API] Fetching media by ID: 3108
+                                    [REST API] Attempt 1/3 for /wp-json/wp/v2/media/3108
+                                    [REST API] Fetching media by ID: 2661
+                                    [REST API] Attempt 1/3 for /wp-json/wp/v2/media/2661
+                                    [REST API] Success on attempt 1 for /wp-json/wp/v2/downloads?per_page=100&_embed=1&status=publish&meta_key=download_category&meta_value=craft-templates
+                                    [REST API] Meta query successful: found 5 downloads
+                                    [REST API] Fetching media by ID: 3527
+                                    [REST API] Attempt 1/3 for /wp-json/wp/v2/media/3527
+                                    [REST API] Fetching media by ID: 3108
+                                    [REST API] Attempt 1/3 for /wp-json/wp/v2/media/3108
+                                    [REST API] Success on attempt 1 for /wp-json/wp/v2/media/3108
+                                    [REST API] Success on attempt 1 for /wp-json/wp/v2/media/2661
+                                    [REST API] Success on attempt 1 for /wp-json/wp/v2/media/3527
+                                    [REST API] Success on attempt 1 for /wp-json/wp/v2/media/3108
+                                    [REST API] Fetching media by ID: 3597
+                                    [REST API] Attempt 1/3 for /wp-json/wp/v2/media/3597
+                                    [REST API] Fetching media by ID: 3591
+                                    [REST API] Attempt 1/3 for /wp-json/wp/v2/media/3591
+                                    [REST API] Success on attempt 1 for /wp-json/wp/v2/downloads?per_page=100&_embed=1&status=publish&meta_key=download_category&meta_value=diy-tutorials
+                                    [REST API] Meta query successful: found 5 downloads
+                                    [REST API] Fetching media by ID: 3527
+                                    [REST API] Attempt 1/3 for /wp-json/wp/v2/media/3527
+                                    [REST API] Fetching media by ID: 2661
+                                    [REST API] Attempt 1/3 for /wp-json/wp/v2/media/2661
+                                    [REST API] Success on attempt 1 for /wp-json/wp/v2/media/3527
+                                    [REST API] Success on attempt 1 for /wp-json/wp/v2/media/2661
+                                    [REST API] Success on attempt 1 for /wp-json/wp/v2/media/3599
+                                    [REST API] Success on attempt 1 for /wp-json/wp/v2/media/3573
+2025-11-25T22:47:04.686Z [INFO]: Generating static pages (28/114)
+2025-11-25T22:47:04.687Z [WARNING]: [REST API] Success on attempt 1 for /wp-json/wp/v2/media/3597
+                                    [REST API] Success on attempt 1 for /wp-json/wp/v2/media/3591
+2025-11-25T22:47:04.935Z [WARNING]: [REST API] Fetching downloads for category: coloring-pages
+                                    [REST API] Trying meta query for category coloring-pages
+                                    [REST API] Attempt 1/3 for /wp-json/wp/v2/downloads?per_page=100&_embed=1&status=publish&meta_key=download_category&meta_value=coloring-pages
+                                    [REST API] Success on attempt 1 for /wp-json/wp/v2/downloads?per_page=100&_embed=1&status=publish&meta_key=download_category&meta_value=coloring-pages
+                                    [REST API] Meta query successful: found 5 downloads
+                                    [Category Page] Fetched 5 downloads for category: coloring-pages
+                                    [Category Page] Download 1: {
+                                    id: 3603,
+                                    title: 'Vintage Cocktail Charms Coloring Pages',
+                                    category: 'coloring-pages',
+                                    expectedCategory: 'coloring-pages'
+                                    }
+                                    [Category Page] Download 2: {
+                                    id: 3596,
+                                    title: 'Seashell and Starfish Embossed Ornament Craft',
+                                    category: 'craft-templates',
+                                    expectedCategory: 'coloring-pages'
+                                    }
+                                    [Category Page] Download 3: {
+                                    id: 3592,
+                                    title: 'How to Create a Hip Jackalope Display',
+                                    category: 'diy-tutorials',
+                                    expectedCategory: 'coloring-pages'
+                                    }
+                                    [Category Page] Download 4: {
+                                    id: 3590,
+                                    title: 'June Bug Craft Template',
+                                    category: 'craft-templates',
+                                    expectedCategory: 'coloring-pages'
+                                    }
+                                    [Category Page] Download 5: {
+                                    id: 3589,
+                                    title: 'ABQ Neon Coloring Page',
+                                    category: 'coloring-pages',
+                                    expectedCategory: 'coloring-pages'
+                                    }
+                                    [Category Page] Filtering out download "Seashell and Starfish Embossed Ornament Craft" - category "craft-templates" doesn't match "coloring-pages"
+                                    [Category Page] Filtering out download "How to Create a Hip Jackalope Display" - category "diy-tutorials" doesn't match "coloring-pages"
+                                    [Category Page] Filtering out download "June Bug Craft Template" - category "craft-templates" doesn't match "coloring-pages"
+                                    [Category Page] After filtering: 2 downloads match category "coloring-pages"
+                                    [REST API] Fetching downloads for category: craft-templates
+                                    [REST API] Trying meta query for category craft-templates
+                                    [REST API] Attempt 1/3 for /wp-json/wp/v2/downloads?per_page=100&_embed=1&status=publish&meta_key=download_category&meta_value=craft-templates
+                                    [REST API] Success on attempt 1 for /wp-json/wp/v2/downloads?per_page=100&_embed=1&status=publish&meta_key=download_category&meta_value=craft-templates
+                                    [REST API] Meta query successful: found 5 downloads
+                                    [Category Page] Fetched 5 downloads for category: craft-templates
+                                    [Category Page] Download 1: {
+                                    id: 3603,
+                                    title: 'Vintage Cocktail Charms Coloring Pages',
+                                    category: 'coloring-pages',
+                                    expectedCategory: 'craft-templates'
+                                    }
+                                    [Category Page] Download 2: {
+                                    id: 3596,
+                                    title: 'Seashell and Starfish Embossed Ornament Craft',
+                                    category: 'craft-templates',
+                                    expectedCategory: 'craft-templates'
+                                    }
+                                    [Category Page] Download 3: {
+                                    id: 3592,
+                                    title: 'How to Create a Hip Jackalope Display',
+                                    category: 'diy-tutorials',
+                                    expectedCategory: 'craft-templates'
+                                    }
+                                    [Category Page] Download 4: {
+                                    id: 3590,
+                                    title: 'June Bug Craft Template',
+                                    category: 'craft-templates',
+                                    expectedCategory: 'craft-templates'
+                                    }
+                                    [Category Page] Download 5: {
+                                    id: 3589,
+                                    title: 'ABQ Neon Coloring Page',
+                                    category: 'coloring-pages',
+                                    expectedCategory: 'craft-templates'
+                                    }
+                                    [Category Page] Filtering out download "Vintage Cocktail Charms Coloring Pages" - category "coloring-pages" doesn't match "craft-templates"
+                                    [Category Page] Filtering out download "How to Create a Hip Jackalope Display" - category "diy-tutorials" doesn't match "craft-templates"
+                                    [Category Page] Filtering out download "ABQ Neon Coloring Page" - category "coloring-pages" doesn't match "craft-templates"
+                                    [Category Page] After filtering: 2 downloads match category "craft-templates"
+                                    [REST API] Fetching downloads for category: diy-tutorials
+                                    [REST API] Trying meta query for category diy-tutorials
+                                    [REST API] Attempt 1/3 for /wp-json/wp/v2/downloads?per_page=100&_embed=1&status=publish&meta_key=download_category&meta_value=diy-tutorials
+                                    [REST API] Success on attempt 1 for /wp-json/wp/v2/downloads?per_page=100&_embed=1&status=publish&meta_key=download_category&meta_value=diy-tutorials
+                                    [REST API] Meta query successful: found 5 downloads
+                                    [Category Page] Fetched 5 downloads for category: diy-tutorials
+                                    [Category Page] Download 1: {
+                                    id: 3603,
+                                    title: 'Vintage Cocktail Charms Coloring Pages',
+                                    category: 'coloring-pages',
+                                    expectedCategory: 'diy-tutorials'
+                                    }
+                                    [Category Page] Download 2: {
+                                    id: 3596,
+                                    title: 'Seashell and Starfish Embossed Ornament Craft',
+                                    category: 'craft-templates',
+                                    expectedCategory: 'diy-tutorials'
+                                    }
+                                    [Category Page] Download 3: {
+                                    id: 3592,
+                                    title: 'How to Create a Hip Jackalope Display',
+                                    category: 'diy-tutorials',
+                                    expectedCategory: 'diy-tutorials'
+                                    }
+                                    [Category Page] Download 4: {
+                                    id: 3590,
+                                    title: 'June Bug Craft Template',
+                                    category: 'craft-templates',
+                                    expectedCategory: 'diy-tutorials'
+                                    }
+                                    [Category Page] Download 5: {
+                                    id: 3589,
+                                    title: 'ABQ Neon Coloring Page',
+                                    category: 'coloring-pages',
+                                    expectedCategory: 'diy-tutorials'
+                                    }
+                                    [Category Page] Filtering out download "Vintage Cocktail Charms Coloring Pages" - category "coloring-pages" doesn't match "diy-tutorials"
+                                    [Category Page] Filtering out download "Seashell and Starfish Embossed Ornament Craft" - category "craft-templates" doesn't match "diy-tutorials"
+                                    [Category Page] Filtering out download "June Bug Craft Template" - category "craft-templates" doesn't match "diy-tutorials"
+                                    [Category Page] Filtering out download "ABQ Neon Coloring Page" - category "coloring-pages" doesn't match "diy-tutorials"
+                                    [Category Page] After filtering: 1 downloads match category "diy-tutorials"
+2025-11-25T22:47:05.568Z [WARNING]: [REST API] Attempt 1/3 for /wp-json/wp/v2/tags?per_page=100
+                                    [REST API] Attempt 1/3 for /wp-json/wp/v2/tags?per_page=100
+                                    [REST API] Attempt 1/3 for /wp-json/wp/v2/tags?per_page=100
+                                    [REST API] Attempt 1/3 for /wp-json/wp/v2/tags?per_page=100
+                                    [REST API] Attempt 1/3 for /wp-json/wp/v2/tags?per_page=100
+                                    [REST API] Attempt 1/3 for /wp-json/wp/v2/tags?per_page=100
+                                    [REST API] Attempt 1/3 for /wp-json/wp/v2/tags?per_page=100
+                                    [REST API] Attempt 1/3 for /wp-json/wp/v2/tags?per_page=100
+                                    [REST API] Success on attempt 1 for /wp-json/wp/v2/tags?per_page=100
+                                    [REST API] Success on attempt 1 for /wp-json/wp/v2/tags?per_page=100
+                                    [REST API] Success on attempt 1 for /wp-json/wp/v2/tags?per_page=100
+                                    [REST API] Success on attempt 1 for /wp-json/wp/v2/tags?per_page=100
+                                    [REST API] Success on attempt 1 for /wp-json/wp/v2/tags?per_page=100
+                                    [REST API] Success on attempt 1 for /wp-json/wp/v2/tags?per_page=100
+                                    [REST API] Success on attempt 1 for /wp-json/wp/v2/tags?per_page=100
+                                    [REST API] Success on attempt 1 for /wp-json/wp/v2/tags?per_page=100
+                                    [REST API] Headers attempt 1/3 for /wp-json/wp/v2/posts?per_page=6&orderby=date&order=desc&_embed=1
+2025-11-25T22:47:05.569Z [WARNING]: [REST API] Headers attempt 1/3 for /wp-json/wp/v2/posts?per_page=6&orderby=date&order=desc&_embed=1
+                                    [REST API] Headers success on attempt 1 for /wp-json/wp/v2/posts?per_page=6&orderby=date&order=desc&_embed=1
+                                    Pagination info from headers: {
+                                    totalPosts: 45,
+                                    totalPages: 8,
+                                    currentPage: 1,
+                                    perPage: 10,
+                                    'X-WP-Total': '45',
+                                    'X-WP-TotalPages': '8',
+                                    'X-WP-Query': null
+                                    }
+                                    [REST API] Headers attempt 1/3 for /wp-json/wp/v2/posts?per_page=100&orderby=date&order=desc&_embed=1
+                                    [REST API] Attempt 1/3 for /wp-json/wp/v2/categories?
+                                    [REST API] Attempt 1/3 for /wp-json/wp/v2/tags?per_page=100
+                                    [REST API] Success on attempt 1 for /wp-json/wp/v2/categories?
+                                    [REST API] Success on attempt 1 for /wp-json/wp/v2/tags?per_page=100
+2025-11-25T22:47:05.569Z [INFO]: Generating static pages (56/114)
+2025-11-25T22:47:05.835Z [WARNING]: [REST API] Headers success on attempt 1 for /wp-json/wp/v2/posts?per_page=100&orderby=date&order=desc&_embed=1
+                                    Pagination info from headers: {
+                                    totalPosts: 44,
+                                    totalPages: 1,
+                                    currentPage: 1,
+                                    perPage: 10,
+                                    'X-WP-Total': '44',
+                                    'X-WP-TotalPages': '1',
+                                    'X-WP-Query': null
+                                    }
+                                    [REST API] Headers attempt 1/3 for /wp-json/wp/v2/downloads?per_page=100&_embed=1&status=publish
+                                    [REST API] Headers success on attempt 1 for /wp-json/wp/v2/downloads?per_page=100&_embed=1&status=publish
+                                    Added 5 individual download pages to sitemap
+2025-11-25T22:47:05.836Z [WARNING]: [REST API] Headers success on attempt 1 for /wp-json/wp/v2/posts?per_page=6&orderby=date&order=desc&_embed=1
+                                    Pagination info from headers: {
+                                    totalPosts: 45,
+                                    totalPages: 8,
+                                    currentPage: 1,
+                                    perPage: 10,
+                                    'X-WP-Total': '45',
+                                    'X-WP-TotalPages': '8',
+                                    'X-WP-Query': null
+                                    }
+2025-11-25T22:47:05.954Z [INFO]: Generating static pages (85/114)
+2025-11-25T22:47:06.160Z [INFO]: ✓ Generating static pages (114/114)
+2025-11-25T22:47:06.161Z [WARNING]: [Download Page] Fetching download: diy-tutorials/jumbo-milagros
+                                    [REST API] Fetching download: diy-tutorials/jumbo-milagros
+                                    [REST API] Headers attempt 1/3 for /wp-json/wp/v2/downloads?per_page=100&_embed=1&status=publish
+                                    [REST API] Headers success on attempt 1 for /wp-json/wp/v2/downloads?per_page=100&_embed=1&status=publish
+                                    [REST API] Fetched 5 total downloads
+                                    [REST API] Download not found: diy-tutorials/jumbo-milagros
+                                    [Download Page] Download result: Not found
+                                    [Download Page] Download not found for diy-tutorials/jumbo-milagros
+                                    [REST API] Fetching download: diy-tutorials/jumbo-milagros
+                                    [REST API] Headers attempt 1/3 for /wp-json/wp/v2/downloads?per_page=100&_embed=1&status=publish
+                                    [REST API] Headers success on attempt 1 for /wp-json/wp/v2/downloads?per_page=100&_embed=1&status=publish
+                                    [REST API] Fetched 5 total downloads
+                                    [REST API] Download not found: diy-tutorials/jumbo-milagros
+                                    [Download Page] Fetching download: diy-tutorials/scary-silhouettes
+                                    [REST API] Fetching download: diy-tutorials/scary-silhouettes
+                                    [REST API] Headers attempt 1/3 for /wp-json/wp/v2/downloads?per_page=100&_embed=1&status=publish
+                                    [REST API] Headers success on attempt 1 for /wp-json/wp/v2/downloads?per_page=100&_embed=1&status=publish
+                                    [REST API] Fetched 5 total downloads
+                                    [REST API] Download not found: diy-tutorials/scary-silhouettes
+                                    [Download Page] Download result: Not found
+                                    [Download Page] Download not found for diy-tutorials/scary-silhouettes
+                                    [REST API] Fetching download: diy-tutorials/scary-silhouettes
+                                    [REST API] Headers attempt 1/3 for /wp-json/wp/v2/downloads?per_page=100&_embed=1&status=publish
+                                    [REST API] Headers success on attempt 1 for /wp-json/wp/v2/downloads?per_page=100&_embed=1&status=publish
+                                    [REST API] Fetched 5 total downloads
+                                    [REST API] Download not found: diy-tutorials/scary-silhouettes
+2025-11-25T22:47:07.186Z [INFO]: Finalizing page optimization ...
+2025-11-25T22:47:07.187Z [INFO]: Collecting build traces ...
+2025-11-25T22:47:34.913Z [INFO]: 
+2025-11-25T22:47:34.928Z [INFO]: Route (app)                                          Size  First Load JS  Revalidate  Expire
+                                 ┌ ○ /                                             2.08 kB         266 kB
+                                 ├ ○ /_not-found                                     120 B         264 kB
+                                 ├ ○ /about                                          120 B         264 kB
+                                 ├ ○ /admin                                          120 B         264 kB
+                                 ├ ƒ /api/analytics/web-vitals                       120 B         264 kB
+                                 ├ ƒ /api/cache                                      120 B         264 kB
+                                 ├ ƒ /api/categories                                 120 B         264 kB
+                                 ├ ƒ /api/docs                                       120 B         264 kB
+                                 ├ ƒ /api/downloads                                  120 B         264 kB
+                                 ├ ƒ /api/downloads/analytics                        120 B         264 kB
+                                 ├ ƒ /api/downloads/analytics/[downloadId]           120 B         264 kB
+                                 ├ ƒ /api/downloads/debug                            120 B         264 kB
+                                 ├ ƒ /api/downloads/track                            120 B         264 kB
+                                 ├ ƒ /api/health                                     120 B         264 kB
+                                 ├ ƒ /api/health-simple                              120 B         264 kB
+                                 ├ ƒ /api/indexnow                                   120 B         264 kB
+                                 ├ ƒ /api/media/upload                               120 B         264 kB
+                                 ├ ƒ /api/posts                                      120 B         264 kB
+                                 ├ ƒ /api/posts-simple                               120 B         264 kB
+                                 ├ ƒ /api/posts/[slug]                               120 B         264 kB
+                                 ├ ƒ /api/recommendations                            120 B         264 kB
+                                 ├ ƒ /api/search                                     120 B         264 kB
+                                 ├ ƒ /api/shop/etsy                                  119 B         264 kB
+                                 ├ ƒ /api/tags                                       120 B         264 kB
+                                 ├ ƒ /api/test-downloads                             120 B         264 kB
+                                 ├ ƒ /api/wordpress-webhook                          120 B         264 kB
+                                 ├ ○ /blog                                           173 B         264 kB
+                                 ├ ● /blog/[slug]                                  5.71 kB         269 kB
+                                 ├ ● /blog/category/[slug]                           119 B         264 kB
+                                 ├   ├ /blog/category/art-and-creativity
+                                 ├   ├ /blog/category/digital_marketing
+                                 ├   ├ /blog/category/diy_and_craft_projects
+                                 ├   └ [+3 more paths]
+                                 ├ ● /blog/tag/[slug]                                118 B         264 kB          1h      1y
+                                 ├   ├ /blog/tag/1970s                                                             1h      1y
+                                 ├   ├ /blog/tag/animated                                                          1h      1y
+                                 ├   ├ /blog/tag/art-to-wear                                                       1h      1y
+                                 ├   └ [+53 more paths]
+                                 ├ ○ /custom-kimonos                                 120 B         264 kB
+                                 ├ ○ /downloads                                    3.18 kB         267 kB
+                                 ├ ● /downloads/[category]                           185 B         264 kB
+                                 ├   ├ /downloads/coloring-pages
+                                 ├   ├ /downloads/craft-templates
+                                 ├   └ /downloads/diy-tutorials
+                                 ├ ● /downloads/[category]/[slug]                    340 B         264 kB
+                                 ├   ├ /downloads/diy-tutorials/jumbo-milagros
+                                 ├   ├ /downloads/diy-tutorials/scary-silhouettes
+                                 ├   ├ /downloads/diy-tutorials/sofa-table
+                                 ├   └ [+15 more paths]
+                                 ├ ƒ /feed.xml                                       120 B         264 kB
+                                 ├ ○ /manifest.webmanifest                           120 B         264 kB
+                                 ├ ○ /robots.txt                                     120 B         264 kB
+                                 ├ ○ /shop                                         1.66 kB         265 kB
+                                 └ ○ /sitemap.xml                                    120 B         264 kB
+                                 + First Load JS shared by all                      264 kB
+                                 ├ chunks/common-a0a61a5689c98af1.js             13.7 kB
+                                 └ chunks/vendors-7b925b84580601fb.js             248 kB
+                                 └ other shared chunks (total)                   1.92 kB
+                                 ƒ Middleware                                      40.7 kB
+                                 ○  (Static)   prerendered as static content
+                                 ●  (SSG)      prerendered as static HTML (uses generateStaticParams)
+                                 ƒ  (Dynamic)  server-rendered on demand
+2025-11-25T22:47:34.994Z [INFO]: # Executing command: echo "Build complete"
+                                 Build complete
+                                 # Completed phase: build
+                                 ## Completed Frontend Build
+2025-11-25T22:47:35.017Z [INFO]: ## Build completed successfully
+2025-11-25T22:47:35.018Z [INFO]: # Starting caching...
+2025-11-25T22:47:35.021Z [INFO]: # Creating cache artifact...
+2025-11-25T22:47:45.907Z [INFO]: # Created cache artifact
+2025-11-25T22:47:46.018Z [INFO]: # Uploading cache artifact...
+2025-11-25T22:47:55.676Z [INFO]: # Uploaded cache artifact
+2025-11-25T22:47:55.764Z [INFO]: # Caching completed
+2025-11-25T22:48:27.366Z [INFO]: # Starting environment caching...
+2025-11-25T22:48:27.464Z [INFO]: # Environment caching completed
+

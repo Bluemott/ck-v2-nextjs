@@ -514,6 +514,11 @@ export class RestAPIClient {
     if (params.status) searchParams.append('status', params.status);
     if (params.meta_key) searchParams.append('meta_key', params.meta_key);
     if (params.meta_value) searchParams.append('meta_value', params.meta_value);
+    
+    // Add cache-busting parameter during builds to bypass REST API cache
+    if (IS_BUILD) {
+      searchParams.append('_nocache', Date.now().toString());
+    }
 
     const endpoint = `${WP_ENDPOINTS.DOWNLOADS}?${searchParams.toString()}`;
 

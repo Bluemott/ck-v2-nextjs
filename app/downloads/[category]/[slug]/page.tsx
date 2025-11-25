@@ -17,37 +17,10 @@ interface DownloadPageProps {
   }>;
 }
 
-// Allow dynamic rendering for pages not generated at build time
-export const dynamicParams = true;
+// Force dynamic rendering - don't pre-render at build time
+export const dynamic = 'force-dynamic';
 
-// Revalidate pages every hour to pick up WordPress changes
-export const revalidate = 3600;
-
-export async function generateStaticParams() {
-  try {
-    const { downloads } = await restAPIClient.getDownloads({
-      per_page: 100,
-      _embed: true,
-      status: 'publish',
-    });
-
-    return downloads
-      .filter((download) => {
-        const acfData = download.acf || download.meta || {};
-        return acfData.download_slug && acfData.download_category;
-      })
-      .map((download) => {
-        const acfData = download.acf || download.meta || {};
-        return {
-          category: acfData.download_category,
-          slug: acfData.download_slug,
-        };
-      });
-  } catch (error) {
-    console.error('Error generating static params for download pages:', error);
-    return [];
-  }
-}
+// Removed generateStaticParams - pages are now fully dynamic
 
 export async function generateMetadata({
   params,

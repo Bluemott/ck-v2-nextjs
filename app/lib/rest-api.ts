@@ -76,6 +76,7 @@ export class RestAPIClient {
             ...options.headers,
           },
           signal: AbortSignal.timeout(timeout),
+          cache: 'no-store', // Bypass Next.js fetch cache
         });
 
         if (!response.ok) {
@@ -168,6 +169,7 @@ export class RestAPIClient {
             ...options.headers,
           },
           signal: AbortSignal.timeout(timeout),
+          cache: 'no-store', // Bypass Next.js fetch cache
         });
 
         if (!response.ok) {

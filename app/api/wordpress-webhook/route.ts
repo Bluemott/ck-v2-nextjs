@@ -1,3 +1,4 @@
+import { revalidatePath, revalidateTag } from 'next/cache';
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { invalidateDownloadsCache, invalidatePostCache } from '../../lib/cache';
@@ -85,15 +86,24 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       user_email,
     });
 
-    // Handle different post statuses and clear appropriate cache
+    // Handle different post statuses and clear appropriate cache + trigger ISR revalidation
     switch (post_status) {
       case 'publish':
-        // Handle published post - clear relevant cache
+        // Handle published post - clear relevant cache and trigger ISR
         console.warn(`Post ${post_id} published: ${post_title}`);
         if (post_type === 'post') {
           invalidatePostCache(new_slug || post_name);
+          // Trigger ISR revalidation for the specific blog post and index
+          revalidatePath(`/blog/${new_slug || post_name}`);
+          revalidatePath('/blog');
+          revalidateTag('posts');
+          console.warn(`ISR revalidation triggered for /blog/${new_slug || post_name}`);
         } else if (post_type === 'downloads') {
           invalidateDownloadsCache();
+          // Trigger ISR revalidation for downloads
+          revalidatePath('/downloads');
+          revalidateTag('downloads');
+          console.warn(`ISR revalidation triggered for /downloads`);
         }
         break;
 
@@ -103,22 +113,32 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
         break;
 
       case 'private':
-        // Handle private post - clear cache since it's no longer public
+        // Handle private post - clear cache and trigger ISR since it's no longer public
         console.warn(`Post ${post_id} made private: ${post_title}`);
         if (post_type === 'post') {
           invalidatePostCache(post_name);
+          revalidatePath(`/blog/${post_name}`);
+          revalidatePath('/blog');
+          revalidateTag('posts');
         } else if (post_type === 'downloads') {
           invalidateDownloadsCache();
+          revalidatePath('/downloads');
+          revalidateTag('downloads');
         }
         break;
 
       case 'trash':
-        // Handle deleted post - clear cache since it's deleted
+        // Handle deleted post - clear cache and trigger ISR since it's deleted
         console.warn(`Post ${post_id} moved to trash: ${post_title}`);
         if (post_type === 'post') {
           invalidatePostCache(post_name);
+          revalidatePath(`/blog/${post_name}`);
+          revalidatePath('/blog');
+          revalidateTag('posts');
         } else if (post_type === 'downloads') {
           invalidateDownloadsCache();
+          revalidatePath('/downloads');
+          revalidateTag('downloads');
         }
         break;
 
@@ -126,11 +146,16 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
         console.warn(
           `Post ${post_id} status changed to ${post_status}: ${post_title}`
         );
-        // For any other status changes, clear cache to be safe
+        // For any other status changes, clear cache and trigger ISR to be safe
         if (post_type === 'post') {
           invalidatePostCache(post_name);
+          revalidatePath(`/blog/${post_name}`);
+          revalidatePath('/blog');
+          revalidateTag('posts');
         } else if (post_type === 'downloads') {
           invalidateDownloadsCache();
+          revalidatePath('/downloads');
+          revalidateTag('downloads');
         }
     }
 

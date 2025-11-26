@@ -1,4 +1,16 @@
+import {
+  canMakeRequest,
+  recordFailure,
+  recordSuccess,
+  SERVICES,
+} from './circuit-breaker';
 import { env } from './env';
+import {
+  getFallbackCategories,
+  getFallbackDownloads,
+  getFallbackPosts,
+  getFallbackTags,
+} from './fallback-data';
 import type {
   WPRestCategory,
   WPRestDownload,
@@ -236,10 +248,19 @@ export class RestAPIClient {
   }
 
   // Get posts with pagination and filtering with proper typing
+  // Includes circuit breaker protection with fallback data
   async getPosts(params: WPRestQueryParams = {}): Promise<{
     posts: WPRestPost[];
     pagination: WPRestPagination;
   }> {
+    // Check circuit breaker before making request
+    if (!canMakeRequest(SERVICES.WORDPRESS_API)) {
+      if (!IS_BUILD) {
+        console.warn('[REST API] Circuit breaker OPEN, returning fallback posts');
+      }
+      return getFallbackPosts();
+    }
+
     const searchParams = new URLSearchParams();
 
     if (params.page) searchParams.append('page', params.page.toString());
@@ -258,6 +279,9 @@ export class RestAPIClient {
     try {
       const { data: posts, headers } =
         await this.makeRequestWithHeaders<WPRestPost[]>(endpoint);
+
+      // Record success for circuit breaker
+      recordSuccess(SERVICES.WORDPRESS_API);
 
       // Extract pagination information from WordPress REST API headers
       const totalPosts = parseInt(headers.get('X-WP-Total') || '0', 10);
@@ -291,18 +315,12 @@ export class RestAPIClient {
         pagination,
       };
     } catch (error) {
+      // Record failure for circuit breaker
+      recordFailure(SERVICES.WORDPRESS_API);
       console.error('Error fetching posts:', error);
-      return {
-        posts: [],
-        pagination: {
-          totalPosts: 0,
-          totalPages: 1,
-          currentPage: 1,
-          perPage: 0,
-          hasNextPage: false,
-          hasPreviousPage: false,
-        },
-      };
+      
+      // Return fallback data instead of empty response
+      return getFallbackPosts();
     }
   }
 
@@ -335,7 +353,7 @@ export class RestAPIClient {
     }
   }
 
-  // Get categories with proper typing
+  // Get categories with proper typing and circuit breaker protection
   async getCategories(
     params: {
       page?: number;
@@ -344,6 +362,14 @@ export class RestAPIClient {
       order?: 'asc' | 'desc';
     } = {}
   ): Promise<WPRestCategory[]> {
+    // Check circuit breaker
+    if (!canMakeRequest(SERVICES.WORDPRESS_API)) {
+      if (!IS_BUILD) {
+        console.warn('[REST API] Circuit breaker OPEN, returning fallback categories');
+      }
+      return getFallbackCategories();
+    }
+
     const searchParams = new URLSearchParams();
 
     if (params.page) searchParams.append('page', params.page.toString());
@@ -353,10 +379,19 @@ export class RestAPIClient {
     if (params.order) searchParams.append('order', params.order);
 
     const endpoint = `${WP_ENDPOINTS.CATEGORIES}?${searchParams.toString()}`;
-    return await this.makeRequest<WPRestCategory[]>(endpoint);
+    
+    try {
+      const result = await this.makeRequest<WPRestCategory[]>(endpoint);
+      recordSuccess(SERVICES.WORDPRESS_API);
+      return result;
+    } catch (error) {
+      recordFailure(SERVICES.WORDPRESS_API);
+      console.error('Error fetching categories:', error);
+      return getFallbackCategories();
+    }
   }
 
-  // Get tags with proper typing
+  // Get tags with proper typing and circuit breaker protection
   async getTags(
     params: {
       page?: number;
@@ -365,6 +400,14 @@ export class RestAPIClient {
       order?: 'asc' | 'desc';
     } = {}
   ): Promise<WPRestTag[]> {
+    // Check circuit breaker
+    if (!canMakeRequest(SERVICES.WORDPRESS_API)) {
+      if (!IS_BUILD) {
+        console.warn('[REST API] Circuit breaker OPEN, returning fallback tags');
+      }
+      return getFallbackTags();
+    }
+
     const searchParams = new URLSearchParams();
 
     // Default to 100 tags to ensure all tags are fetched
@@ -374,7 +417,16 @@ export class RestAPIClient {
     if (params.order) searchParams.append('order', params.order);
 
     const endpoint = `${WP_ENDPOINTS.TAGS}?${searchParams.toString()}`;
-    return await this.makeRequest<WPRestTag[]>(endpoint);
+    
+    try {
+      const result = await this.makeRequest<WPRestTag[]>(endpoint);
+      recordSuccess(SERVICES.WORDPRESS_API);
+      return result;
+    } catch (error) {
+      recordFailure(SERVICES.WORDPRESS_API);
+      console.error('Error fetching tags:', error);
+      return getFallbackTags();
+    }
   }
 
   // Search posts with proper typing
@@ -488,6 +540,7 @@ export class RestAPIClient {
   }
 
   // Get downloads with pagination and filtering
+  // Includes circuit breaker protection with fallback data
   async getDownloads(
     params: {
       page?: number;
@@ -504,6 +557,14 @@ export class RestAPIClient {
     downloads: WPRestDownload[];
     pagination: WPRestPagination;
   }> {
+    // Check circuit breaker
+    if (!canMakeRequest(SERVICES.WORDPRESS_DOWNLOADS)) {
+      if (!IS_BUILD) {
+        console.warn('[REST API] Circuit breaker OPEN, returning fallback downloads');
+      }
+      return getFallbackDownloads();
+    }
+
     const searchParams = new URLSearchParams();
 
     if (params.page) searchParams.append('page', params.page.toString());
@@ -528,6 +589,9 @@ export class RestAPIClient {
       const { data: downloads, headers } =
         await this.makeRequestWithHeaders<WPRestDownload[]>(endpoint);
 
+      // Record success for circuit breaker
+      recordSuccess(SERVICES.WORDPRESS_DOWNLOADS);
+
       // Extract pagination information from WordPress REST API headers
       const totalDownloads = parseInt(headers.get('X-WP-Total') || '0', 10);
       const totalPages = parseInt(headers.get('X-WP-TotalPages') || '1', 10);
@@ -548,18 +612,12 @@ export class RestAPIClient {
         pagination,
       };
     } catch (error) {
+      // Record failure for circuit breaker
+      recordFailure(SERVICES.WORDPRESS_DOWNLOADS);
       console.error('Error fetching downloads:', error);
-      return {
-        downloads: [],
-        pagination: {
-          totalPosts: 0,
-          totalPages: 1,
-          currentPage: 1,
-          perPage: 0,
-          hasNextPage: false,
-          hasPreviousPage: false,
-        },
-      };
+      
+      // Return fallback data instead of empty response
+      return getFallbackDownloads();
     }
   }
 

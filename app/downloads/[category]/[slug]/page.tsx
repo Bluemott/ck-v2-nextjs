@@ -17,10 +17,8 @@ interface DownloadPageProps {
   }>;
 }
 
-// Force dynamic rendering - don't pre-render at build time
-export const dynamic = 'force-dynamic';
-
-// Removed generateStaticParams - pages are now fully dynamic
+// ISR: Revalidate every 10 minutes, or on-demand via webhook
+export const revalidate = 600;
 
 export async function generateMetadata({
   params,

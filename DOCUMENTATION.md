@@ -1,9 +1,9 @@
 # Cowboy Kimono v2 - Comprehensive Documentation
 
-**Version:** 2.4.0  
-**Status:** Production Ready with Enhanced Performance Optimizations  
-**Last Updated:** 2025-01-25  
-**Architecture:** Next.js 15.3.4 + WordPress REST API + AWS Serverless  
+**Version:** 2.5.0  
+**Status:** Production Ready with Enhanced Caching & ISR  
+**Last Updated:** 2025-11-26  
+**Architecture:** Next.js 15.3.4 + WordPress REST API + AWS Serverless + Redis + SWR  
 **Business:** Handpainted Denim Apparel & Custom Jackets  
 **Email Service:** AWS WorkMail (migrated from SES-based email processing)
 
@@ -22,6 +22,7 @@
 9. [Best Practices](#best-practices)
 10. [Enhanced Sitemap & SEO](#enhanced-sitemap--seo)
 11. [Downloads System](#downloads-system)
+12. [ISR & Caching System](#isr--caching-system)
 
 ## 📚 **Additional Documentation**
 
@@ -1964,8 +1965,117 @@ node scripts/audit-seo.js
 
 ---
 
-**Documentation Version:** 2.8.0  
-**Last Updated:** 2025-01-25  
-**Status:** Production Ready with Enhanced Downloads System
+## 🔄 **ISR & Caching System**
 
-**Implementation Status:** All major features implemented and tested in production environment. CloudFront removed from WordPress API path. WordPress server cleaned up and properly configured for direct API access with specific CORS headers. Lambda validation errors fixed and CORS issues resolved through proper WordPress configuration. Downloads system completely overhauled with individual pages, analytics tracking, and enhanced SEO.
+### **Overview**
+
+The site now uses a robust multi-layer caching and revalidation system for optimal performance and content freshness:
+
+1. **ISR (Incremental Static Regeneration)** - Pages revalidate automatically
+2. **Redis Caching** - Distributed cache shared with WordPress
+3. **SWR (Stale-While-Revalidate)** - Client-side data fetching with background refresh
+4. **Circuit Breaker** - Automatic fallbacks when WordPress is unavailable
+
+### **ISR Configuration**
+
+| Page Type | Revalidation Time | Webhook Trigger |
+|-----------|-------------------|-----------------|
+| Blog Posts | 5 minutes | Yes |
+| Blog Index | 5 minutes | Yes |
+| Downloads | 10 minutes | Yes |
+| Download Index | 10 minutes | Yes |
+
+**Files:**
+- `app/blog/[slug]/page.tsx` - `export const revalidate = 300`
+- `app/downloads/[category]/[slug]/page.tsx` - `export const revalidate = 600`
+
+### **WordPress Webhook Integration**
+
+When content is created/updated in WordPress, a webhook triggers instant revalidation:
+
+**Endpoint:** `https://cowboykimono.com/api/wordpress-webhook`
+
+**WordPress Plugin:** `wordpress/nextjs-webhook-plugin.php`
+
+**Installation:**
+1. Copy `wordpress/nextjs-webhook-plugin.php` to `wp-content/plugins/nextjs-webhook/nextjs-webhook.php`
+2. Activate in WordPress admin
+3. Configure webhook URL in Settings > Next.js Webhook
+
+### **SWR Hooks**
+
+Client-side data fetching with automatic caching:
+
+```typescript
+// Usage examples
+import { usePosts, useCategories, useTags } from '@/app/lib/hooks';
+
+// Fetch posts with pagination
+const { posts, isLoading, hasNextPage } = usePosts({ page: 1, perPage: 10 });
+
+// Search posts
+const { results, isSearching } = useSearchPosts(searchTerm);
+
+// Fetch categories/tags
+const { categories } = useCategories();
+const { tags } = useTags();
+```
+
+**Features:**
+- Automatic request deduplication
+- Background revalidation on focus/reconnect
+- Built-in error retry
+- Stale-while-revalidate pattern
+
+### **Circuit Breaker**
+
+Protects against cascading failures when WordPress is down:
+
+```typescript
+import { getCircuitStatus, SERVICES } from '@/app/lib/circuit-breaker';
+
+// Check WordPress API status
+const status = getCircuitStatus(SERVICES.WORDPRESS_API);
+// { state: 'CLOSED' | 'OPEN' | 'HALF_OPEN', failures: number, ... }
+```
+
+**States:**
+- **CLOSED** - Normal operation, requests pass through
+- **OPEN** - Too many failures, requests return fallback data
+- **HALF_OPEN** - Testing if service recovered
+
+**Configuration:**
+- Failure threshold: 5 failures
+- Reset timeout: 30 seconds
+- Success threshold: 2 successes to close
+
+### **Redis Configuration**
+
+Redis is used for distributed caching (shared with WordPress Lightsail):
+
+**Environment Variable:**
+```env
+REDIS_URL=redis://127.0.0.1:6379
+```
+
+**Key Prefix:** `nextjs:` (to avoid conflicts with WordPress Redis cache)
+
+### **Cache Invalidation**
+
+```typescript
+import { invalidatePostCache, invalidateDownloadsCache } from '@/app/lib/cache';
+
+// Clear specific post cache
+invalidatePostCache('post-slug');
+
+// Clear all downloads cache
+invalidateDownloadsCache();
+```
+
+---
+
+**Documentation Version:** 2.9.0  
+**Last Updated:** 2025-11-26  
+**Status:** Production Ready with Enhanced ISR, Redis Caching, SWR, and Circuit Breaker
+
+**Implementation Status:** All major features implemented and tested. ISR enabled for blog and downloads with webhook-triggered revalidation. SWR hooks provide client-side caching with background refresh. Circuit breaker protects against WordPress API failures with automatic fallbacks. Redis integration ready for distributed caching.

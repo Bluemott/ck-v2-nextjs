@@ -2,7 +2,11 @@ import { Metadata } from 'next';
 import Script from 'next/script';
 import { blogStructuredData } from '../components/StructuredData';
 import { generateSEOMetadata } from '../lib/seo';
-import BlogClient from './BlogClient';
+// Use SWR-based client for better caching and background revalidation
+import BlogClientSWR from './BlogClientSWR';
+
+// ISR: Revalidate every 5 minutes for fresh content
+export const revalidate = 300;
 
 export const metadata: Metadata = generateSEOMetadata({
   title: 'Blog',
@@ -29,7 +33,7 @@ export default function BlogPage() {
           __html: JSON.stringify(blogStructuredData),
         }}
       />
-      <BlogClient />
+      <BlogClientSWR />
     </>
   );
 }

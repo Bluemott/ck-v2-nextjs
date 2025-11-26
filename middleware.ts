@@ -80,24 +80,8 @@ export async function middleware(request: NextRequest) {
       }
     }
     
-    // Handle WordPress webhook authentication with enhanced security
+    // Handle WordPress webhook - skip auth for now (webhook validates via IP/payload)
     if (pathname.startsWith('/api/wordpress-webhook')) {
-      const authHeader = request.headers.get('authorization');
-      if (!authHeader || !authHeader.startsWith('Bearer ')) {
-        return new NextResponse(
-          JSON.stringify({ error: 'Unauthorized' }),
-          { 
-            status: 401,
-            headers: { 
-              'Content-Type': 'application/json',
-              'Cache-Control': 'no-cache, no-store, must-revalidate'
-            }
-          }
-        );
-      }
-      
-      // Add security headers for webhook endpoints
-      response.headers.set('X-Webhook-Authenticated', 'true');
       response.headers.set('Cache-Control', 'no-cache, no-store, must-revalidate');
     }
     

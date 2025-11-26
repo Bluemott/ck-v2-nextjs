@@ -363,13 +363,17 @@ export const wordpressWebhookSchema = z.object({
     .string()
     .nullable()
     .optional()
-    .transform((val) => (val ? sanitizeText(val) : val)),
+    .transform((val) => (val ? sanitizeText(val) : undefined)),
   new_slug: z
     .string()
     .nullable()
     .optional()
-    .transform((val) => (val ? sanitizeText(val) : val)),
-  timestamp: z.string().nullable().optional(), // Allow any string or null
+    .transform((val) => (val ? sanitizeText(val) : undefined)),
+  timestamp: z
+    .string()
+    .nullable()
+    .optional()
+    .transform((val) => val ?? undefined), // Convert null to undefined
   user_id: z.number().int().positive().optional(),
   user_login: z
     .string()

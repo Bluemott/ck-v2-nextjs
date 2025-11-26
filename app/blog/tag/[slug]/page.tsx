@@ -75,7 +75,6 @@ export async function generateStaticParams() {
 
 // Allow dynamic paths for tags not pre-built
 export const dynamicParams = true;
-export const revalidate = 3600; // Revalidate every hour
 
 // Fallback component for missing or empty tags
 async function TagFallback({ tagName }: { tagName?: string }) {

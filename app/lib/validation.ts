@@ -345,7 +345,7 @@ export type SearchParams = z.infer<typeof searchParamsSchema>;
 
 // WordPress Webhook Validation Schema - Enhanced with proper typing and sanitization
 export const wordpressWebhookSchema = z.object({
-  post_id: z.number().int().positive(),
+  post_id: z.number().int().nonnegative(), // Allow 0 for test webhooks
   post_title: z
     .string()
     .min(1)
@@ -361,13 +361,15 @@ export const wordpressWebhookSchema = z.object({
     .transform((val) => sanitizeText(val)),
   old_slug: z
     .string()
+    .nullable()
     .optional()
     .transform((val) => (val ? sanitizeText(val) : val)),
   new_slug: z
     .string()
+    .nullable()
     .optional()
     .transform((val) => (val ? sanitizeText(val) : val)),
-  timestamp: z.string().datetime().optional(),
+  timestamp: z.string().nullable().optional(), // Allow any string or null
   user_id: z.number().int().positive().optional(),
   user_login: z
     .string()

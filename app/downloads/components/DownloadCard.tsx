@@ -22,6 +22,45 @@ interface DownloadCardProps {
   onDownload?: (_downloadId: string, _title: string) => void;
 }
 
+// Decode HTML entities like &#8217; to actual characters
+function decodeHtmlEntities(text: string): string {
+  if (typeof window !== 'undefined') {
+    const textarea = document.createElement('textarea');
+    textarea.innerHTML = text;
+    return textarea.value;
+  }
+  // Server-side fallback for common entities
+  return text
+    .replace(/&#8217;/g, "'")
+    .replace(/&#8216;/g, "'")
+    .replace(/&#8220;/g, '"')
+    .replace(/&#8221;/g, '"')
+    .replace(/&#038;/g, '&')
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"')
+    .replace(/&#039;/g, "'")
+    .replace(/&apos;/g, "'");
+}
+
+// Normalize thumbnail URL to ensure it's valid
+function normalizeThumbnailUrl(url: string): string {
+  if (!url || url === '/images/placeholder.svg') return url;
+  
+  // If it's already a full URL, ensure HTTPS
+  if (url.startsWith('http://')) {
+    return url.replace('http://', 'https://');
+  }
+  
+  // If it's a relative URL from WordPress, add the domain
+  if (url.startsWith('/wp-content/')) {
+    return `https://api.cowboykimono.com${url}`;
+  }
+  
+  return url;
+}
+
 export default function DownloadCard({
   id,
   title,
@@ -38,6 +77,10 @@ export default function DownloadCard({
   onDownload,
 }: DownloadCardProps) {
   const [imageError, setImageError] = useState(false);
+  
+  // Decode title and normalize thumbnail
+  const decodedTitle = decodeHtmlEntities(title);
+  const normalizedThumbnail = normalizeThumbnailUrl(thumbnail);
 
   const getDifficultyColor = (difficulty?: string) => {
     switch (difficulty) {
@@ -65,7 +108,7 @@ export default function DownloadCard({
       // Create a temporary anchor element to trigger download
       const link = document.createElement('a');
       link.href = downloadUrl;
-      link.download = title; // Set the filename for download
+      link.download = decodedTitle; // Set the filename for download
       link.target = '_blank'; // Open in new tab as fallback
       document.body.appendChild(link);
       link.click();
@@ -77,14 +120,15 @@ export default function DownloadCard({
     <div className="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2 group">
       {/* Thumbnail */}
       <div className="aspect-[4/3] relative bg-gray-100 overflow-hidden">
-        {!imageError && thumbnail && thumbnail !== '/images/placeholder.svg' ? (
+        {!imageError && normalizedThumbnail && normalizedThumbnail !== '/images/placeholder.svg' ? (
           <Image
-            src={thumbnail}
-            alt={title}
+            src={normalizedThumbnail}
+            alt={decodedTitle}
             fill
             className="object-cover group-hover:scale-110 transition-transform duration-700"
             sizes="(max-width: 768px) 50vw, (max-width: 1024px) 25vw, 20vw"
             onError={() => setImageError(true)}
+            unoptimized={normalizedThumbnail.includes('api.cowboykimono.com')}
           />
         ) : (
           <div className="w-full h-full bg-gray-200 flex items-center justify-center">
@@ -101,7 +145,7 @@ export default function DownloadCard({
       <div className="p-4 sm:p-6 lg:p-8 space-y-3">
         {/* Title */}
         <h3 className="text-lg font-semibold text-gray-900 line-clamp-2 group-hover:text-[#1e2939] transition-colors duration-300 serif">
-          {title}
+          {decodedTitle}
         </h3>
 
         {/* Description */}

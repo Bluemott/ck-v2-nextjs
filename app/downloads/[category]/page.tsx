@@ -9,6 +9,9 @@ import { restAPIClient } from '../../lib/rest-api';
 import { generateSEOMetadata } from '../../lib/seo';
 import DownloadCard from '../components/DownloadCard';
 
+// ISR: Revalidate every 10 minutes
+export const revalidate = 600;
+
 interface CategoryPageProps {
   params: Promise<{
     category: string;

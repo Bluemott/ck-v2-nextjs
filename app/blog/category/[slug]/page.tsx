@@ -6,6 +6,9 @@ import { decodeHtmlEntities, fetchCategoryBySlug } from '../../../lib/api';
 import { generateSEOMetadata } from '../../../lib/seo';
 import BlogClient from '../../BlogClient';
 
+// ISR: Revalidate every 5 minutes
+export const revalidate = 300;
+
 interface CategoryPageProps {
   params: Promise<{ slug: string }>;
 }

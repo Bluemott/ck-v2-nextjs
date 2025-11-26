@@ -104,7 +104,7 @@ export async function generateStaticParams() {
     const { fetchPosts } = await import('../../lib/api');
     // Increased to match sitemap coverage for better indexation
     // The build-time cache will share data with sitemap generation
-    const posts = await fetchPosts({ per_page: 500 });
+    const posts = await fetchPosts({ per_page: 100 });
 
     return posts.map((post) => ({
       slug: post.slug,

@@ -261,6 +261,7 @@ const BlogClient = ({
     if (currentPage === 1) {
       loadSidebarData();
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentPage, initialCategory, initialTag, isSearching]);
 
   // Remove the old client-side search filtering effect as we now use WordPress search

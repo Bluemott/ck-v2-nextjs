@@ -6,7 +6,7 @@ import { generateSEOMetadata } from '../lib/seo';
 import BlogClientSWR from './BlogClientSWR';
 
 // ISR: Revalidate every 5 minutes for fresh content
-export const revalidate = 300;
+export const revalidate = 60;
 
 export const metadata: Metadata = generateSEOMetadata({
   title: 'Blog',

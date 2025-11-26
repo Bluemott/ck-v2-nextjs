@@ -135,20 +135,54 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
       `[Category Page] After filtering: ${filteredDownloads.length} downloads match category "${category}"`
     );
 
+    // Helper function to get proper thumbnail URL
+    const getThumbnailUrl = (
+      acfThumbnail: string | number | undefined,
+      embeddedMedia: { id: number; source_url: string } | undefined
+    ): string => {
+      // If ACF thumbnail is a URL, use it
+      if (acfThumbnail && typeof acfThumbnail === 'string' && acfThumbnail.startsWith('http')) {
+        return acfThumbnail;
+      }
+      // If embedded media is available, use it
+      if (embeddedMedia && embeddedMedia.source_url) {
+        return embeddedMedia.source_url;
+      }
+      return '/images/placeholder.svg';
+    };
+
+    // Helper function to get proper download URL
+    const getDownloadUrl = (
+      downloadType: string | undefined,
+      downloadUrl: string | undefined,
+      downloadFile: string | number | undefined
+    ): string => {
+      if (downloadUrl && typeof downloadUrl === 'string') {
+        if (downloadUrl.startsWith('http') || downloadUrl.startsWith('/')) {
+          return downloadUrl;
+        }
+      }
+      if (downloadType === 'blog-post') return '#';
+      if (downloadFile && typeof downloadFile === 'string' && downloadFile.startsWith('http')) {
+        return downloadFile;
+      }
+      return '#';
+    };
+
     // Transform downloads to match DownloadCard props
     const transformedDownloads = filteredDownloads.map((download) => {
       const acfData = download.acf || download.meta || {};
-      const thumbnailUrl =
-        download._embedded?.['wp:featuredmedia']?.[0]?.source_url ||
-        '/images/placeholder.svg';
+      const thumbnailUrl = getThumbnailUrl(
+        acfData.download_thumbnail,
+        download._embedded?.['wp:featuredmedia']?.[0]
+      );
 
       // Get download URL
-      let downloadUrl = '#';
-      if (acfData.download_type === 'blog-post' && acfData.download_url) {
-        downloadUrl = acfData.download_url;
-      } else if (acfData.download_file) {
-        downloadUrl = `https://api.cowboykimono.com/wp-content/uploads/2025/10/media-${acfData.download_file}.pdf`;
-      }
+      const downloadUrl = getDownloadUrl(
+        acfData.download_type,
+        acfData.download_url,
+        acfData.download_file
+      );
 
       return {
         id: `download-${download.id}`,

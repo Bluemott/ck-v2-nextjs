@@ -21,8 +21,8 @@ import {
 import { env } from '../../lib/env';
 import { generateSEOMetadata } from '../../lib/seo';
 
-// ISR: Revalidate every 5 minutes, or on-demand via webhook
-export const revalidate = 300;
+// ISR: Revalidate every 60 seconds for fresher content, or on-demand via webhook
+export const revalidate = 60;
 
 interface BlogPostPageProps {
   params: Promise<{ slug: string }>;

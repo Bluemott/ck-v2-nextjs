@@ -195,14 +195,14 @@ export const healthCheckResponseSchema = z.object({
 });
 
 export const webhookPayloadSchema = z.object({
-  post_id: z.number().int().positive(),
+  post_id: z.number().int().nonnegative(), // Allow 0 for test webhooks
   post_title: z.string().min(1),
   post_name: z.string().min(1),
   post_status: z.enum(['publish', 'draft', 'private', 'trash']),
   post_type: z.string().min(1),
-  old_slug: z.string().optional(),
-  new_slug: z.string().optional(),
-  timestamp: z.string().optional(),
+  old_slug: z.string().nullable().optional(),
+  new_slug: z.string().nullable().optional(),
+  timestamp: z.string().nullable().optional(),
   user_id: z.number().int().positive().optional(),
   user_login: z.string().optional(),
   user_email: z.string().email().optional(),

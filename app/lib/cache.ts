@@ -189,7 +189,7 @@ export class CacheManager {
     const post = await restAPIClient.getPostBySlug(slug);
 
     if (post) {
-      this.set(cacheKey, post, 300000); // 5 minutes cache for individual posts
+      this.set(cacheKey, post, 60000); // 1 minute cache for individual posts
       if (monitoring) {
         await monitoring.recordCacheMiss('wordpress_post');
       }

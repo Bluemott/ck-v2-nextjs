@@ -40,9 +40,24 @@ const healthHandler = async ({ responseBuilder }: {
   };
 
   try {
-    // Check WordPress API
+    // Check WordPress API with enhanced diagnostics
     try {
       const wpStartTime = Date.now();
+      const apiUrl = env.NEXT_PUBLIC_WORDPRESS_REST_URL;
+      
+      // Test basic connectivity first
+      let connectivityCheck = false;
+      try {
+        const connectivityResponse = await fetch(`${apiUrl}/wp-json/`, {
+          method: 'HEAD',
+          signal: AbortSignal.timeout(5000),
+        });
+        connectivityCheck = connectivityResponse.ok || connectivityResponse.status === 200;
+      } catch {
+        // Connectivity failed, will be caught in main try-catch
+      }
+      
+      // Test posts endpoint
       const wpResponse = await restAPIClient.getPosts({ per_page: 1 });
       const wpResponseTime = Date.now() - wpStartTime;
       
@@ -51,20 +66,51 @@ const healthHandler = async ({ responseBuilder }: {
         status: 'healthy',
         responseTime: wpResponseTime,
         postsAvailable: wpResponse.pagination.totalPosts,
-        apiUrl: env.NEXT_PUBLIC_WORDPRESS_REST_URL,
+        apiUrl,
         lastCheck: new Date().toISOString(),
+        connectivity: connectivityCheck,
       };
       healthData.metrics.wordpressStatus = wordpressStatus;
       
       // Log WordPress API performance
       await monitoring.recordAPICall('/wp-json/wp/v2/posts', wpResponseTime, 200);
       
+      // Check response time thresholds
+      if (wpResponseTime > 5000) {
+        healthData.issues.push(`WordPress API slow response: ${wpResponseTime}ms`);
+        wordpressStatus.status = 'degraded';
+      }
+      
     } catch (error) {
       healthData.checks.wordpress = false;
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-      healthData.issues.push(`WordPress API error: ${errorMessage}`);
+      
+      // Enhanced error diagnostics
+      let detailedError = errorMessage;
+      if (errorMessage.includes('500') || errorMessage.includes('501')) {
+        detailedError = `WordPress API server error (${errorMessage}). Check Lightsail instance logs and firewall rules.`;
+      } else if (errorMessage.includes('timeout') || errorMessage.includes('ECONNREFUSED')) {
+        detailedError = `WordPress API connectivity issue (${errorMessage}). Check firewall rules and instance status.`;
+      } else if (errorMessage.includes('ENOTFOUND') || errorMessage.includes('DNS')) {
+        detailedError = `WordPress API DNS resolution failed (${errorMessage}). Check DNS configuration.`;
+      }
+      
+      healthData.issues.push(`WordPress API error: ${detailedError}`);
+      
+      // Set WordPress status with error details
+      healthData.metrics.wordpressStatus = {
+        status: 'unhealthy',
+        responseTime: 0,
+        postsAvailable: 0,
+        apiUrl: env.NEXT_PUBLIC_WORDPRESS_REST_URL,
+        lastCheck: new Date().toISOString(),
+        connectivity: false,
+        error: detailedError,
+      };
+      
       await monitoring.error('WordPress API health check failed', { 
-        error: errorMessage,
+        error: detailedError,
+        originalError: errorMessage,
         requestId: responseBuilder.getRequestId(),
       });
     }

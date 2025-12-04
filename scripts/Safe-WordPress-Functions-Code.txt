@@ -1,0 +1,32 @@
+// SAFE WordPress functions.php code - Copy to bottom of your theme's functions.php
+
+// Block WordPress REST API and feeds from search engines (SAFE - won't block admin)
+add_action('template_redirect', function() {
+    // Skip admin, AJAX, and cron requests completely
+    if (is_admin() || wp_doing_ajax() || wp_doing_cron()) {
+        return;
+    }
+    
+    $host = isset($_SERVER['HTTP_HOST']) ? $_SERVER['HTTP_HOST'] : '';
+    $request_uri = isset($_SERVER['REQUEST_URI']) ? $_SERVER['REQUEST_URI'] : '';
+    
+    // ONLY block on main domain - NEVER on admin/api/wp-origin subdomains
+    $is_main_domain = ($host === 'cowboykimono.com' || $host === 'www.cowboykimono.com');
+    
+    if ($is_main_domain) {
+        // Block wp-json on main domain only
+        if (strpos($request_uri, '/wp-json/') === 0) {
+            header('X-Robots-Tag: noindex, nofollow');
+            http_response_code(403);
+            exit;
+        }
+        
+        // Block feed URLs on main domain only
+        if (preg_match('#^/feed/?$#', $request_uri)) {
+            header('X-Robots-Tag: noindex, nofollow');
+            http_response_code(403);
+            exit;
+        }
+    }
+}, 999);
+

@@ -1,8 +1,8 @@
 # Cowboy Kimono v2 - Comprehensive Documentation
 
-**Version:** 2.5.0  
+**Version:** 2.5.1  
 **Status:** Production Ready with Enhanced Caching & ISR  
-**Last Updated:** 2025-11-26  
+**Last Updated:** 2025-01-26  
 **Architecture:** Next.js 15.3.4 + WordPress REST API + AWS Serverless + Redis + SWR  
 **Business:** Handpainted Denim Apparel & Custom Jackets  
 **Email Service:** AWS WorkMail (migrated from SES-based email processing)
@@ -997,6 +997,129 @@ sudo ./scripts/update-redis-dropin.sh
 - WordPress API connectivity: ✅ API status: 200
 - No more WordPress API connectivity issues in health reports
 - API endpoint confirmed working with curl test
+
+#### **Lightsail Firewall & Connectivity Issues** ✅ **ENHANCED RECOVERY PROCEDURES** (2025-01-26)
+
+**Problem:** SSH connection timeouts and API 500/501 errors despite server showing as online
+
+**Root Cause:** Lightsail firewall rules became out of sync with instance network configuration
+
+**Symptoms:**
+- SSH connections timing out (port 22 blocked)
+- WordPress API returning 500/501 errors (port 443 blocked)
+- All network ports blocked despite firewall rules showing as "active" in console
+- Instance shows green/online status but not responding to requests
+- AWS Systems Manager also not accessible
+
+**Complete Solution Applied:**
+1. Re-applied firewall rules in Lightsail console (removed and re-added SSH and HTTPS rules)
+2. Restarted instance to refresh network state
+3. Verified connectivity restored
+
+**Root Cause Analysis:**
+- Firewall rule sync failure between Lightsail platform and instance network configuration
+- Instance network state became stale after extended uptime
+- Platform updates or network state changes can cause firewall rules to stop working despite appearing active
+- Recurring issue suggests underlying instability requiring enhanced monitoring
+
+**Enhanced Recovery Procedures:**
+
+1. **Comprehensive Recovery Runbook:**
+   - See `LIGHTSAIL_RECOVERY_RUNBOOK.md` for complete step-by-step recovery procedures
+   - Includes diagnosis, recovery, verification, and prevention phases
+   - Provides command reference and escalation procedures
+
+2. **Enhanced Monitoring:**
+   - `scripts/monitor-lightsail-connectivity.ps1` - Enhanced with email/SNS notifications
+   - Supports automatic alerting via email or AWS SNS
+   - Optional auto-fix firewall rules (requires AWS CLI)
+   - Continuous monitoring every 5 minutes with configurable intervals
+
+3. **CloudWatch Integration:**
+   - `scripts/setup-cloudwatch-alarms.ps1` - Automated CloudWatch alarm setup
+   - Monitors instance status, network metrics, and API health
+   - SNS topic integration for notifications
+   - CloudWatch dashboard creation
+
+4. **Enhanced Health Check:**
+   - `app/api/health/route.ts` - Enhanced WordPress API connectivity diagnostics
+   - Detailed error messages for 500/501 errors
+   - Connectivity status reporting
+   - Response time monitoring
+
+5. **Regular Health Checks:**
+   - Run `scripts/test-ssh-connection.ps1` weekly for connectivity verification
+   - Run `scripts/diagnose-api-errors.js` to test API endpoints
+   - Monitor health check endpoint: `https://cowboykimono.com/api/health`
+
+6. **Best Practices:**
+   - Use static IP for more stable networking
+   - Schedule monthly maintenance restarts to refresh network state
+   - Document all firewall rule changes
+   - Verify connectivity immediately after any instance changes
+   - Set up automated monitoring with alerts
+
+**Diagnostic Tools:**
+- `scripts/test-ssh-connection.ps1` - Test SSH/HTTPS connectivity
+- `scripts/diagnose-api-errors.js` - Test WordPress API endpoints
+- `scripts/monitor-lightsail-connectivity.ps1` - Continuous monitoring with email/SNS alerts
+- `scripts/setup-cloudwatch-alarms.ps1` - CloudWatch alarm setup
+- `app/api/health/route.ts` - Enhanced health check endpoint
+
+**Recovery Documentation:**
+- `LIGHTSAIL_RECOVERY_RUNBOOK.md` - Complete recovery procedures and runbook
+- `LIGHTSAIL_FIREWALL_PREVENTION.md` - Prevention strategies and root cause analysis
+
+**Usage Examples:**
+
+```powershell
+# Enhanced monitoring with email alerts
+powershell -ExecutionPolicy Bypass -File scripts/monitor-lightsail-connectivity.ps1 `
+    -InstanceIP "34.194.14.49" `
+    -APIUrl "https://api.cowboykimono.com" `
+    -EmailTo "your-email@example.com" `
+    -SMTPServer "smtp.gmail.com" `
+    -SMTPPort "587" `
+    -SMTPUser "your-email@gmail.com" `
+    -SMTPPassword "your-app-password"
+
+# Setup CloudWatch alarms
+powershell -ExecutionPolicy Bypass -File scripts/setup-cloudwatch-alarms.ps1 `
+    -InstanceName "WordPressInstance" `
+    -SNSTopicArn "arn:aws:sns:us-east-1:123456789012:Alerts" `
+    -Region "us-east-1"
+```
+
+#### **Lightsail Firewall & Connectivity Issues** ✅ **RESOLVED**
+
+**Problem:** SSH connection timeouts and API 500/501 errors despite server showing as online
+
+**Root Cause:** Lightsail firewall rules became out of sync with instance network configuration
+
+**Symptoms:**
+- SSH connections timing out (port 22 blocked)
+- WordPress API returning 500/501 errors (port 443 blocked)
+- All network ports blocked despite firewall rules showing as "active" in console
+- Instance shows green/online status but not responding to requests
+
+**Complete Solution Applied:**
+1. Re-applied firewall rules in Lightsail console
+2. Restarted instance to refresh network state
+3. Verified connectivity restored
+
+**Prevention:**
+- Use automated monitoring: `scripts/monitor-lightsail-connectivity.ps1`
+- Run periodic health checks: `scripts/test-ssh-connection.ps1`
+- Use static IP for more stable networking
+- Schedule monthly maintenance restarts
+- Document all firewall rule changes
+
+**Diagnostic Tools:**
+- `scripts/test-ssh-connection.ps1` - Test SSH/HTTPS connectivity
+- `scripts/diagnose-api-errors.js` - Test WordPress API endpoints
+- `scripts/monitor-lightsail-connectivity.ps1` - Continuous monitoring
+
+**See:** `LIGHTSAIL_FIREWALL_PREVENTION.md` for complete prevention guide
 
 #### **Performance Issues**
 

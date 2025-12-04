@@ -50,6 +50,17 @@ export async function middleware(request: NextRequest) {
     // Set canonical URL header
     response.headers.set('Link', `<${canonicalUrl}>; rel="canonical"`);
     
+    // Add X-Robots-Tag header for blocked paths (wp-json, feeds, admin)
+    if (
+      pathname.startsWith('/wp-json/') ||
+      pathname.startsWith('/feed') ||
+      pathname.startsWith('/feed/') ||
+      pathname.startsWith('/wp-admin/') ||
+      pathname.startsWith('/admin/')
+    ) {
+      response.headers.set('X-Robots-Tag', 'noindex, nofollow');
+    }
+    
     // Enhanced caching headers for static assets
     if (pathname.startsWith('/images/') || pathname.startsWith('/downloads/')) {
       response.headers.set('Cache-Control', 'public, max-age=31536000, immutable');

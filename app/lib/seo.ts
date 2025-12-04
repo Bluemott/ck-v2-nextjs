@@ -270,19 +270,19 @@ export const defaultMetadata: Metadata = {
     address: false,
     telephone: false,
   },
-  metadataBase: new URL('https://cowboykimonos.com'),
+  metadataBase: new URL('https://cowboykimono.com'),
   alternates: {
-    canonical: 'https://cowboykimonos.com/',
+    canonical: 'https://cowboykimono.com/',
   },
   openGraph: {
     title: 'Cowboy Kimono - Handpainted Denim Apparel',
     description:
       'Discover unique handpainted denim jackets and apparel. Custom handcrafted denim with artistic flair and Western-inspired designs.',
-    url: 'https://cowboykimonos.com/',
+    url: 'https://cowboykimono.com/',
     siteName: 'Cowboy Kimono',
     images: [
       {
-        url: 'https://cowboykimonos.com/images/CK_Logo_Blog.webp',
+        url: 'https://cowboykimono.com/images/CK_Logo_Blog.webp',
         width: 1200,
         height: 630,
         alt: 'Cowboy Kimono - Handpainted Denim Apparel',
@@ -296,7 +296,7 @@ export const defaultMetadata: Metadata = {
     title: 'Cowboy Kimono - Handpainted Denim Apparel',
     description:
       'Discover unique handpainted denim jackets and apparel with artistic flair.',
-    images: ['https://cowboykimonos.com/images/CK_Logo_Blog.webp'],
+    images: ['https://cowboykimono.com/images/CK_Logo_Blog.webp'],
     creator: '@cowboykimono',
     site: '@cowboykimono',
   },

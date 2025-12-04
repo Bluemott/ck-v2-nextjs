@@ -1,0 +1,91 @@
+{
+  "timestamp": "2025-12-04T16:56:35.619Z",
+  "apiUrl": "https://api.cowboykimono.com",
+  "prodUrl": "https://cowboykimono.com",
+  "tests": [
+    {
+      "name": "Basic Connectivity",
+      "status": "pass",
+      "details": {
+        "status": 200,
+        "headers": [
+          "date",
+          "server",
+          "link",
+          "keep-alive",
+          "connection",
+          "content-type"
+        ]
+      }
+    },
+    {
+      "name": "WordPress Health Check",
+      "status": "pass",
+      "details": {
+        "status": 200,
+        "routesAvailable": true
+      }
+    },
+    {
+      "name": "Posts Endpoint",
+      "status": "pass",
+      "details": {
+        "status": 200,
+        "contentType": "application/json; charset=UTF-8"
+      }
+    },
+    {
+      "name": "Categories Endpoint",
+      "status": "pass",
+      "details": {
+        "status": 200
+      }
+    },
+    {
+      "name": "CORS Headers",
+      "status": "pass",
+      "details": {
+        "corsHeaders": {
+          "access-control-allow-origin": "https://cowboykimono.com",
+          "access-control-allow-methods": "OPTIONS, GET, POST, PUT, PATCH, DELETE",
+          "access-control-allow-headers": "Authorization, Content-Type"
+        },
+        "hasCORS": true
+      }
+    },
+    {
+      "name": "OPTIONS Request (CORS Preflight)",
+      "status": "pass",
+      "details": {
+        "status": 200,
+        "allowedMethods": "GET, POST, PUT, DELETE, OPTIONS"
+      }
+    },
+    {
+      "name": "Request from Production Origin",
+      "status": "pass",
+      "details": {
+        "status": 200
+      }
+    },
+    {
+      "name": "WordPress Error Log Check",
+      "status": "info",
+      "details": {
+        "message": "Manual check required - see troubleshooting guide",
+        "locations": [
+          "Lightsail WordPress instance logs",
+          "WordPress debug.log file",
+          "PHP error logs",
+          "Apache/Nginx error logs"
+        ]
+      }
+    }
+  ],
+  "summary": {
+    "total": 8,
+    "passed": 7,
+    "failed": 0,
+    "errors": []
+  }
+}

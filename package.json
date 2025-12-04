@@ -36,6 +36,7 @@
     "test:enhanced-lambda": "node scripts/test-enhanced-lambda.js",
     "test:enhanced-cloudfront": "node scripts/test-enhanced-cloudfront.js",
     "test:sitemap": "node scripts/test-sitemap.js",
+    "validate:gsc-fixes": "node scripts/validate-gsc-fixes.js",
     "test:structured-data": "node scripts/test-structured-data.js",
     "test:structured-data-comprehensive": "node scripts/test-structured-data-comprehensive.js",
     "verify:amplify-redirects": "node scripts/verify-amplify-redirects.js",

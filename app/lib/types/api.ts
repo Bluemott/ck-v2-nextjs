@@ -41,6 +41,8 @@ export interface WordPressHealthStatus {
   postsAvailable: number;
   apiUrl: string;
   lastCheck: string;
+  connectivity?: boolean;
+  error?: string;
 }
 
 // WordPress REST API Response Types
@@ -189,6 +191,8 @@ export const healthCheckResponseSchema = z.object({
       postsAvailable: z.number(),
       apiUrl: z.string(),
       lastCheck: z.string(),
+      connectivity: z.boolean().optional(),
+      error: z.string().optional(),
     }).nullable(),
   }),
   issues: z.array(z.string()),

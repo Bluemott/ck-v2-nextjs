@@ -15,10 +15,20 @@ export interface RedirectMapping {
 }
 
 // Common WordPress legacy patterns that need redirects
+// Note: Date-based URLs from api.cowboykimono.com should be blocked at WordPress level
+// These patterns handle any that might reach the main domain
 const WORDPRESS_LEGACY_PATTERNS: RedirectMapping[] = [
-  // Old WordPress date-based URLs
+  // Old WordPress date-based URLs (with day) - using catch-all for flexibility
   {
-    source: '/:year(\\d{4})/:month(\\d{2})/:slug',
+    source: '/:year/:month/:day/:slug',
+    destination: '/blog/:slug',
+    permanent: true,
+    category: 'wordpress-legacy',
+    reason: 'WordPress date-based URLs with day to blog structure',
+  },
+  // Old WordPress date-based URLs (without day)
+  {
+    source: '/:year/:month/:slug',
     destination: '/blog/:slug',
     permanent: true,
     category: 'wordpress-legacy',
@@ -98,11 +108,77 @@ const BLOCKED_URLS_REDIRECTS: RedirectMapping[] = [
     category: 'old-patterns',
     reason: 'Old kimono builder to custom kimonos page',
   },
+  // Redirect old HTML file patterns
+  {
+    source: '/index.html',
+    destination: '/',
+    permanent: true,
+    category: 'old-patterns',
+    reason: 'Old HTML file pattern to root',
+  },
+  {
+    source: '/shop.html',
+    destination: '/shop',
+    permanent: true,
+    category: 'old-patterns',
+    reason: 'Old HTML file pattern to shop',
+  },
+  {
+    source: '/blog.html',
+    destination: '/blog',
+    permanent: true,
+    category: 'old-patterns',
+    reason: 'Old HTML file pattern to blog',
+  },
+  {
+    source: '/blog.html/',
+    destination: '/blog',
+    permanent: true,
+    category: 'old-patterns',
+    reason: 'Old HTML file pattern to blog',
+  },
+  {
+    source: '/craft-templates.html',
+    destination: '/downloads/craft-templates',
+    permanent: true,
+    category: 'old-patterns',
+    reason: 'Old HTML file pattern to downloads',
+  },
+  {
+    source: '/diy-tutorials.html',
+    destination: '/downloads/diy-tutorials',
+    permanent: true,
+    category: 'old-patterns',
+    reason: 'Old HTML file pattern to downloads',
+  },
+  {
+    source: '/wip.html',
+    destination: '/',
+    permanent: true,
+    category: 'old-patterns',
+    reason: 'Old work in progress page to root',
+  },
+  {
+    source: '/create-your-kimono/',
+    destination: '/custom-kimonos',
+    permanent: true,
+    category: 'old-patterns',
+    reason: 'Old create kimono page to custom kimonos',
+  },
+  {
+    source: '/rise-and-shine-fathers-day/',
+    destination: '/blog/rise-and-shine-fathers-day',
+    permanent: true,
+    category: 'old-patterns',
+    reason: 'Old root-level blog post to blog structure',
+  },
+  // Note: Query parameter redirects need to be handled at server/middleware level
+  // as Next.js redirects don't support query parameters in source patterns
 ];
 
-// Common blog post redirects (these would be populated from GSC 404 data)
+// Common blog post redirects (populated from GSC 404 data)
 const BLOG_REDIRECTS: RedirectMapping[] = [
-  // Example: Known blog post redirects
+  // Known blog post redirects from GSC 404 errors
   {
     source: '/blog/how-to-create-a-hip-jackalope-display',
     destination: '/blog/jackalope-garden-display-diy',
@@ -110,7 +186,55 @@ const BLOG_REDIRECTS: RedirectMapping[] = [
     category: 'blog',
     reason: 'Blog post slug change',
   },
-  // Add more blog redirects as needed from GSC data
+  {
+    source: '/blog/catch-of-the-day-this-diy-skirt-2',
+    destination: '/blog/diy-sardine-skirt',
+    permanent: true,
+    category: 'blog',
+    reason: 'Blog post slug change',
+  },
+  {
+    source: '/blog/red-and-green-chile-hominy-casserole',
+    destination: '/blog/green-chile-hominy-casserole',
+    permanent: true,
+    category: 'blog',
+    reason: 'Blog post slug change',
+  },
+  {
+    source: '/blog/do-these-stripes-and-polka-dots-make-my-tail-look-big-t-rexs-fashion-crisis',
+    destination: '/blog',
+    permanent: true,
+    category: 'blog',
+    reason: 'Blog post removed or merged',
+  },
+  {
+    source: '/blog/the-creative-process-behind-each-painted-jacket-2',
+    destination: '/blog/the-creative-process',
+    permanent: true,
+    category: 'blog',
+    reason: 'Blog post slug change',
+  },
+  {
+    source: '/blog/new-in-the-shop-a-velvet-skirt-with-some-serious-70s-mojo-2',
+    destination: '/blog/1970s-green-velvet-skirt',
+    permanent: true,
+    category: 'blog',
+    reason: 'Blog post slug change',
+  },
+  {
+    source: '/blog/3-sign-designs-inspired-by-vintage-chintz-and-steam-trains',
+    destination: '/blog/vintage-chintz-and-steam-trains',
+    permanent: true,
+    category: 'blog',
+    reason: 'Blog post slug change',
+  },
+  {
+    source: '/3-sign-designs-inspired-',
+    destination: '/blog/vintage-chintz-and-steam-trains',
+    permanent: true,
+    category: 'blog',
+    reason: 'Incomplete URL redirect',
+  },
 ];
 
 // Download page redirects

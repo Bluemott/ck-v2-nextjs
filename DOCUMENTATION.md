@@ -1404,11 +1404,11 @@ The following redirects have been confirmed on the live site:
 - SEO penalty from broken redirect chains (308 → 404)
 - Poor user experience when accessing tag/category URLs
 
-**Next Steps (URGENT - Issue Still Persisting):**
+**Resolution:**
 
-1. ✅ **Code Fix Applied:** Added route guards in `/app/blog/[slug]/page.tsx` to prevent matching tag/category paths
-2. ✅ **Code Deployed:** Fix has been deployed to production
-3. ⚠️ **Issue Still Persisting:** Redirects are happening before Next.js processes requests
+1. ✅ **Root Cause Found:** WordPress legacy redirect patterns in `redirect-mappings.ts` were too broad
+2. ✅ **Fix Applied:** Changed redirect patterns to use regex constraints for numeric year/month
+3. ✅ **Route Guards Added:** Added guards in `/app/blog/[slug]/page.tsx` as additional safety
 
 **Investigation Findings:**
 
@@ -1419,96 +1419,46 @@ The following redirects have been confirmed on the live site:
 - ⚠️ Network headers show request reaches Next.js as `/blog/memorial-day` (redirect happens before Next.js)
 - ⚠️ No `Location` header in response (not a redirect response, but a 404 for the redirected URL)
 
-**Root Cause Identified:**
+**Root Cause Identified (SOLVED):**
 
-The redirect is happening **before the request reaches Next.js**. The network headers show:
+The redirect was caused by **Next.js redirect configuration** in `app/lib/redirect-mappings.ts`. The WordPress legacy redirect pattern:
 
-- Request URL: `/blog/memorial-day` (already redirected)
-- Response: 404 (not a redirect response)
-- Canonical: `<https://cowboykimono.com/blog/memorial-day>`
+```typescript
+source: '/:year/:month/:slug',
+destination: '/blog/:slug',
+```
 
-This means something is redirecting `/blog/tag/memorial-day` → `/blog/memorial-day` at the infrastructure level (CloudFront/Amplify) before Next.js can process it.
+This pattern matched ANY three-segment path, including:
 
-**Possible Causes:**
+- `/blog/tag/memorial-day` where `:year`="blog", `:month`="tag", `:slug`="memorial-day"
+- Result: Redirected to `/blog/memorial-day` (404)
 
-1. **CloudFront Distribution (Separate from Amplify):**
-   - Check if there's a separate CloudFront distribution (not the one auto-created by Amplify)
-   - AWS Console → CloudFront → Distributions
-   - Look for a distribution with domain `cowboykimono.com`
-   - Check "Behaviors" tab for redirect rules
-   - Check "Functions" tab for CloudFront Functions that might modify URLs
+**Fix Applied:**
 
-2. **Next.js Route Matching Issue:**
-   - Next.js might be matching `/blog/tag/memorial-day` to `/blog/[slug]` route
-   - The route guards we added should prevent this, but route matching happens before component execution
-   - May need to use Next.js `rewrites` instead of relying on route guards
+Changed the redirect patterns to use regex constraints for numeric year/month:
 
-3. **Browser/Client-Side Redirect:**
-   - Check browser console for JavaScript redirects
-   - Check if there's any client-side routing code that's causing this
+```typescript
+source: '/:year(\\d{4})/:month(\\d{2})/:slug',
+destination: '/blog/:slug',
+```
 
-**Additional Troubleshooting Steps:**
+This ensures only actual WordPress date-based URLs are redirected (e.g., `/2024/01/post-slug`), not `/blog/tag/*` or `/blog/category/*` URLs.
 
-Since the redirect persists despite no redirect rules in Amplify or WordPress, check:
+**Lesson Learned:**
 
-1. **CloudFront Functions (if using separate CloudFront):**
-   - AWS Console → CloudFront → Your Distribution
-   - "Functions" tab → Check for any functions that modify request URLs
-   - Look for functions that might strip `/tag/` or `/category/` from URLs
+When creating catch-all redirect patterns for WordPress legacy URLs, always use regex constraints to ensure patterns only match the intended URLs. Generic patterns like `/:year/:month/:slug` can match unintended paths like `/blog/tag/memorial-day`.
 
-2. **Lambda@Edge Functions:**
-   - CloudFront → Your Distribution → "Behaviors" tab
-   - Check if any behaviors have Lambda@Edge functions attached
-   - These can modify request URLs before they reach the origin
+**After Deployment:**
 
-3. **Next.js Route Matching:**
-   - The issue might be that Next.js is matching `/blog/tag/memorial-day` to `/blog/[slug]` where slug = "tag/memorial-day"
-   - Our route guards should prevent this, but route matching happens at build time
-   - Check `.next/routes-manifest.json` after build to see how routes are being matched
+1. **Test URLs:**
+   - `https://cowboykimono.com/blog/tag/memorial-day` should return 200 (tag page)
+   - `https://cowboykimono.com/blog/category/uncategorized` should return 200 (category page)
+   - Use curl to verify: `curl -I https://cowboykimono.com/blog/tag/memorial-day`
+   - No `Location` header should appear (no redirect)
 
-4. **Browser Cache:**
-   - Clear browser cache and test in incognito mode
-   - The redirect might be cached by the browser
-
-5. **CDN Cache:**
-   - CloudFront/Amplify might be caching the redirect response
-   - Try invalidating the CloudFront cache for these URLs
-
-**CRITICAL: CloudFront Cache Invalidation Required**
-
-Based on the network headers analysis, the redirect is happening at CloudFront level and may be cached.
-
-**Immediate Action Required:**
-
-1. **Invalidate CloudFront Cache:**
-   - AWS Console → CloudFront → Find distribution for `cowboykimono.com`
-   - Go to "Invalidations" tab
-   - Create new invalidation with these paths:
-     - `/blog/tag/*`
-     - `/blog/category/*`
-     - `/blog/*` (to clear all blog-related cached redirects)
-   - Wait for invalidation to complete (usually 5-15 minutes)
-
-2. **Check CloudFront Distribution:**
-   - "Behaviors" tab - look for any path patterns matching `/blog/*`
-   - "Functions" tab - check for CloudFront Functions that modify request URLs
-   - "Error Pages" tab - check for custom error responses that might redirect
-   - "Origins" tab - verify the origin is pointing to Amplify, not WordPress
-
-3. **Test After Cache Invalidation:**
-   - Clear browser cache
-   - Test in incognito mode
-   - Use curl to test: `curl -I https://cowboykimono.com/blog/tag/memorial-day`
-   - Look for `Location` header in the response (should be absent if fixed)
-
-**If Issue Persists After Cache Invalidation:**
-
-The redirect may be coming from:
-
-- CloudFront Function (check "Functions" tab)
-- Lambda@Edge function (check "Behaviors" → "Lambda Function Associations")
-- Origin request policy modifying URLs
-- A separate CloudFront distribution (not the Amplify-managed one)
+2. **Clear Browser Cache:**
+   - 308 redirects are cached by browsers
+   - Test in incognito mode or clear cache to see updated behavior
 
 #### **Broken Redirect Patterns**
 

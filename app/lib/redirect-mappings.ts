@@ -17,18 +17,22 @@ export interface RedirectMapping {
 // Common WordPress legacy patterns that need redirects
 // Note: Date-based URLs from api.cowboykimono.com should be blocked at WordPress level
 // These patterns handle any that might reach the main domain
+// IMPORTANT: Use regex constraints to prevent matching /blog/tag/* and /blog/category/* URLs
 const WORDPRESS_LEGACY_PATTERNS: RedirectMapping[] = [
-  // Old WordPress date-based URLs (with day) - using catch-all for flexibility
+  // Old WordPress date-based URLs (with day) - using regex for numeric year/month/day
+  // Pattern: /2024/01/15/post-slug → /blog/post-slug
   {
-    source: '/:year/:month/:day/:slug',
+    source: '/:year(\\d{4})/:month(\\d{2})/:day(\\d{2})/:slug',
     destination: '/blog/:slug',
     permanent: true,
     category: 'wordpress-legacy',
     reason: 'WordPress date-based URLs with day to blog structure',
   },
-  // Old WordPress date-based URLs (without day)
+  // Old WordPress date-based URLs (without day) - using regex for numeric year/month
+  // Pattern: /2024/01/post-slug → /blog/post-slug
+  // NOTE: This must use regex constraints to avoid matching /blog/tag/* and /blog/category/*
   {
-    source: '/:year/:month/:slug',
+    source: '/:year(\\d{4})/:month(\\d{2})/:slug',
     destination: '/blog/:slug',
     permanent: true,
     category: 'wordpress-legacy',

@@ -1005,6 +1005,7 @@ sudo ./scripts/update-redis-dropin.sh
 **Root Cause:** Lightsail firewall rules became out of sync with instance network configuration
 
 **Symptoms:**
+
 - SSH connections timing out (port 22 blocked)
 - WordPress API returning 500/501 errors (port 443 blocked)
 - All network ports blocked despite firewall rules showing as "active" in console
@@ -1012,11 +1013,13 @@ sudo ./scripts/update-redis-dropin.sh
 - AWS Systems Manager also not accessible
 
 **Complete Solution Applied:**
+
 1. Re-applied firewall rules in Lightsail console (removed and re-added SSH and HTTPS rules)
 2. Restarted instance to refresh network state
 3. Verified connectivity restored
 
 **Root Cause Analysis:**
+
 - Firewall rule sync failure between Lightsail platform and instance network configuration
 - Instance network state became stale after extended uptime
 - Platform updates or network state changes can cause firewall rules to stop working despite appearing active
@@ -1060,6 +1063,7 @@ sudo ./scripts/update-redis-dropin.sh
    - Set up automated monitoring with alerts
 
 **Diagnostic Tools:**
+
 - `scripts/test-ssh-connection.ps1` - Test SSH/HTTPS connectivity
 - `scripts/diagnose-api-errors.js` - Test WordPress API endpoints
 - `scripts/monitor-lightsail-connectivity.ps1` - Continuous monitoring with email/SNS alerts
@@ -1067,6 +1071,7 @@ sudo ./scripts/update-redis-dropin.sh
 - `app/api/health/route.ts` - Enhanced health check endpoint
 
 **Recovery Documentation:**
+
 - `LIGHTSAIL_RECOVERY_RUNBOOK.md` - Complete recovery procedures and runbook
 - `LIGHTSAIL_FIREWALL_PREVENTION.md` - Prevention strategies and root cause analysis
 
@@ -1097,17 +1102,20 @@ powershell -ExecutionPolicy Bypass -File scripts/setup-cloudwatch-alarms.ps1 `
 **Root Cause:** Lightsail firewall rules became out of sync with instance network configuration
 
 **Symptoms:**
+
 - SSH connections timing out (port 22 blocked)
 - WordPress API returning 500/501 errors (port 443 blocked)
 - All network ports blocked despite firewall rules showing as "active" in console
 - Instance shows green/online status but not responding to requests
 
 **Complete Solution Applied:**
+
 1. Re-applied firewall rules in Lightsail console
 2. Restarted instance to refresh network state
 3. Verified connectivity restored
 
 **Prevention:**
+
 - Use automated monitoring: `scripts/monitor-lightsail-connectivity.ps1`
 - Run periodic health checks: `scripts/test-ssh-connection.ps1`
 - Use static IP for more stable networking
@@ -1115,6 +1123,7 @@ powershell -ExecutionPolicy Bypass -File scripts/setup-cloudwatch-alarms.ps1 `
 - Document all firewall rule changes
 
 **Diagnostic Tools:**
+
 - `scripts/test-ssh-connection.ps1` - Test SSH/HTTPS connectivity
 - `scripts/diagnose-api-errors.js` - Test WordPress API endpoints
 - `scripts/monitor-lightsail-connectivity.ps1` - Continuous monitoring
@@ -1346,6 +1355,208 @@ const canonicalUrl = isWWW
 response.headers.set('Link', `<${canonicalUrl}>; rel="canonical"`);
 ```
 
+### **WordPress Redirect Cleanup** ✅ **DOCUMENTED**
+
+**Status:** Manual cleanup required in WordPress  
+**Last Updated:** January 2025  
+**Investigation Date:** January 2025
+
+#### **Problem Overview**
+
+Ahrefs SEO audit identified 73 broken redirects where tag/category/download pages redirect to non-existent blog posts (308 → 404). These redirects are **NOT** in AWS Amplify (only catch-all rewrite exists) and **NOT** in Next.js code. They are likely configured in WordPress.
+
+#### **Confirmed Redirect Issues (Live Site Testing)**
+
+**Test Date:** January 2025
+
+The following redirects have been confirmed on the live site:
+
+1. **Tag URL Redirect:**
+   - Source: `https://cowboykimono.com/blog/tag/memorial-day`
+   - Redirects to: `https://cowboykimono.com/blog/memorial-day`
+   - Result: **404 Error** (Post Not Found)
+   - Status Code: 308 (Permanent Redirect) → 404
+
+2. **Category URL Redirect:**
+   - Source: `https://cowboykimono.com/blog/category/uncategorized`
+   - Redirects to: `https://cowboykimono.com/blog/uncategorized`
+   - Result: **404 Error** (Post Not Found)
+   - Status Code: 308 (Permanent Redirect) → 404
+
+**Pattern Confirmed:**
+
+- WordPress is redirecting `/blog/tag/[slug]` → `/blog/[slug]`
+- WordPress is redirecting `/blog/category/[slug]` → `/blog/[slug]`
+- These redirects assume the slug is a blog post, but tags/categories are not blog posts
+- Next.js correctly handles tag/category pages at `/blog/tag/[slug]` and `/blog/category/[slug]` routes
+- The WordPress redirects are interfering with Next.js routing
+
+#### **Investigation Summary (January 2025)**
+
+**Root Cause:** WordPress redirect plugins or .htaccess rules are automatically redirecting tag/category URLs to blog post URLs, assuming any slug after `/blog/` is a blog post. This conflicts with Next.js routing which correctly handles tag and category pages at `/blog/tag/[slug]` and `/blog/category/[slug]`.
+
+**Impact:**
+
+- 73 broken redirects identified by Ahrefs SEO audit
+- Tag and category pages cannot be accessed directly
+- SEO penalty from broken redirect chains (308 → 404)
+- Poor user experience when accessing tag/category URLs
+
+**Next Steps:**
+
+1. Access WordPress admin at `https://admin.cowboykimono.com/wp-admin`
+2. Check redirect plugins for rules matching broken patterns
+3. Remove or disable redirects that redirect tag/category URLs to blog posts
+4. Verify fixes using validation script and direct URL testing
+
+#### **Broken Redirect Patterns**
+
+The following redirect patterns are causing 308 → 404 redirect chains:
+
+1. **Tag URLs redirecting to non-existent blog posts:**
+   - `/blog/tag/[slug]` → `/blog/[slug]` (when blog post doesn't exist)
+   - Examples: `/blog/tag/memorial-day` → `/blog/memorial-day` (404)
+
+2. **Category URLs redirecting to non-existent blog posts:**
+   - `/blog/category/[slug]` → `/blog/[slug]` (when blog post doesn't exist)
+   - Examples: `/blog/category/uncategorized` → `/blog/uncategorized` (404)
+
+3. **Download URLs redirecting to non-existent blog posts:**
+   - `/downloads/[category]/[slug]` → `/blog/[slug]` (when blog post doesn't exist)
+   - Examples: `/downloads/diy-tutorials/jackalope-display` → `/blog/jackalope-display` (404)
+
+#### **Where to Find These Redirects**
+
+Since AWS Amplify only has a catch-all rewrite rule, these redirects are likely configured in:
+
+1. **WordPress Redirect Plugins** (most likely):
+   - Redirection plugin
+   - Yoast SEO redirects
+   - Rank Math redirects
+   - Other redirect plugins
+
+2. **WordPress .htaccess File**:
+   - Check `wp-content/.htaccess` or root `.htaccess`
+   - Look for redirect rules matching the patterns above
+
+3. **WordPress Permalink Settings**:
+   - Settings → Permalinks
+   - Check if custom permalink structure is causing redirects
+
+4. **WordPress Functions/Theme Code**:
+   - Check `functions.php` for redirect hooks
+   - Look for `wp_redirect()` or `wp_safe_redirect()` calls
+
+#### **Step-by-Step Cleanup Instructions**
+
+1. **Access WordPress Admin**
+   - Navigate to `https://admin.cowboykimono.com/wp-admin`
+   - Log in with admin credentials
+
+2. **Check Redirect Plugins**
+   - Go to Plugins → Installed Plugins
+   - Look for redirect plugins (Redirection, Yoast, etc.)
+   - Access the redirect plugin's settings
+   - Search for redirects matching the broken patterns:
+     - Source: `/blog/tag/*` → Destination: `/blog/*`
+     - Source: `/blog/category/*` → Destination: `/blog/*`
+     - Source: `/downloads/*/*` → Destination: `/blog/*`
+   - **Specific Redirects to Remove:**
+     - `/blog/tag/memorial-day` → `/blog/memorial-day` (confirmed broken)
+     - `/blog/category/uncategorized` → `/blog/uncategorized` (confirmed broken)
+     - Any redirect matching pattern: `/blog/tag/:tag` → `/blog/:tag`
+     - Any redirect matching pattern: `/blog/category/:category` → `/blog/:category`
+   - Delete or disable these redirect rules
+
+3. **Check WordPress .htaccess**
+   - Access WordPress files via SSH or FTP
+   - Check `.htaccess` file in WordPress root
+   - Look for `Redirect` or `RewriteRule` directives matching broken patterns
+   - Remove or comment out broken redirect rules
+
+4. **Check Permalink Settings**
+   - Go to Settings → Permalinks
+   - Ensure permalink structure doesn't conflict with Next.js routes
+   - Save permalink settings to regenerate `.htaccess` if needed
+
+5. **Check Functions/Theme Code**
+   - Review `wp-content/themes/*/functions.php`
+   - Look for redirect hooks or functions
+   - Check for `template_redirect` or `init` hooks with redirects
+
+6. **Verify Redirect Removal**
+   - Use the validation script: `node scripts/validate-redirects.js`
+   - Test URLs directly: `curl -I https://cowboykimono.com/blog/tag/memorial-day`
+   - **Expected Results After Fix:**
+     - `/blog/tag/memorial-day` should return **200 OK** (tag page renders)
+     - `/blog/category/uncategorized` should return **200 OK** (category page renders)
+     - No redirect to `/blog/[slug]` for tag/category URLs
+   - Check Ahrefs audit after cleanup to confirm issues are resolved
+
+#### **Prevention**
+
+The following code changes prevent these issues from recurring:
+
+1. **Sitemap Filtering** (`app/sitemap.ts`)
+   - Automatically excludes URLs that would redirect to 404s
+   - Validates tag/category/download URLs before adding to sitemap
+   - Prevents broken redirect URLs from appearing in sitemap
+
+2. **Redirect Validation** (`scripts/validate-redirects.js`)
+   - Validates all redirects don't point to non-existent pages
+   - Checks known broken redirect patterns
+   - Can be run periodically to catch new broken redirects
+
+3. **Canonical Tag Fixes** (`app/blog/[slug]/page.tsx`)
+   - Removes canonical tags from 404 pages
+   - Prevents self-referencing canonical URLs on error pages
+
+4. **WordPress Best Practices**
+   - Avoid creating redirects from tag/category pages to blog posts
+   - Use Next.js routing for tag/category pages (already implemented)
+   - Only create redirects when content actually moves or is deleted
+   - Regularly audit redirect plugins for broken redirects
+
+#### **Validation Script**
+
+Run the validation script to check for broken redirects:
+
+```bash
+node scripts/validate-redirects.js
+```
+
+The script will:
+
+- Validate redirect mappings from `redirect-mappings.ts`
+- Check known broken redirect patterns from Ahrefs audit
+- Report which redirects are still broken and need AWS cleanup
+
+#### **Expected Results After Cleanup**
+
+- ✅ No broken redirects (308 → 404 chains)
+- ✅ Tag/category/download pages render correctly (200 status)
+- ✅ All sitemap URLs return 200 status codes
+- ✅ No canonical tags on 404 pages
+- ✅ Improved SEO score in Ahrefs audit
+
+#### **Troubleshooting**
+
+If redirects persist after WordPress cleanup:
+
+1. **Check CloudFront Behaviors** (if using CloudFront directly):
+   - AWS Console → CloudFront → Your Distribution
+   - Check "Behaviors" tab for redirect rules
+   - Remove any redirects matching broken patterns
+
+2. **Check WordPress REST API**:
+   - Verify WordPress isn't handling these routes
+   - Check if WordPress permalink structure conflicts with Next.js
+
+3. **Test Direct Access**:
+   - Test URLs directly: `curl -I https://cowboykimono.com/blog/tag/memorial-day`
+   - Check response headers for `Location` header
+   - Verify final destination doesn't return 404
+
 ### **SEO Benefits**
 
 #### **Improved Search Rankings**
@@ -1353,18 +1564,21 @@ response.headers.set('Link', `<${canonicalUrl}>; rel="canonical"`);
 - Consistent canonical URLs prevent duplicate content issues
 - Proper priority values help search engines understand content importance
 - Enhanced sitemap structure improves crawl efficiency
+- No broken redirects improve crawl budget utilization
 
 #### **Performance Improvements**
 
 - Eliminates redirect chains and reduces page load time
 - Direct access to canonical URLs improves user experience
 - Reduced server load from unnecessary redirects
+- Faster page indexing with valid sitemap URLs
 
 #### **User Experience**
 
 - Clear signal to search engines about preferred domain
 - Consistent URL structure across all pages
 - Improved page load times with proper canonicalization
+- No 404 errors from broken redirects
 
 ---
 
@@ -2101,14 +2315,15 @@ The site now uses a robust multi-layer caching and revalidation system for optim
 
 ### **ISR Configuration**
 
-| Page Type | Revalidation Time | Webhook Trigger |
-|-----------|-------------------|-----------------|
-| Blog Posts | 5 minutes | Yes |
-| Blog Index | 5 minutes | Yes |
-| Downloads | 10 minutes | Yes |
-| Download Index | 10 minutes | Yes |
+| Page Type      | Revalidation Time | Webhook Trigger |
+| -------------- | ----------------- | --------------- |
+| Blog Posts     | 5 minutes         | Yes             |
+| Blog Index     | 5 minutes         | Yes             |
+| Downloads      | 10 minutes        | Yes             |
+| Download Index | 10 minutes        | Yes             |
 
 **Files:**
+
 - `app/blog/[slug]/page.tsx` - `export const revalidate = 300`
 - `app/downloads/[category]/[slug]/page.tsx` - `export const revalidate = 600`
 
@@ -2121,6 +2336,7 @@ When content is created/updated in WordPress, a webhook triggers instant revalid
 **WordPress Plugin:** `wordpress/nextjs-webhook-plugin.php`
 
 **Installation:**
+
 1. Copy `wordpress/nextjs-webhook-plugin.php` to `wp-content/plugins/nextjs-webhook/nextjs-webhook.php`
 2. Activate in WordPress admin
 3. Configure webhook URL in Settings > Next.js Webhook
@@ -2145,6 +2361,7 @@ const { tags } = useTags();
 ```
 
 **Features:**
+
 - Automatic request deduplication
 - Background revalidation on focus/reconnect
 - Built-in error retry
@@ -2163,11 +2380,13 @@ const status = getCircuitStatus(SERVICES.WORDPRESS_API);
 ```
 
 **States:**
+
 - **CLOSED** - Normal operation, requests pass through
 - **OPEN** - Too many failures, requests return fallback data
 - **HALF_OPEN** - Testing if service recovered
 
 **Configuration:**
+
 - Failure threshold: 5 failures
 - Reset timeout: 30 seconds
 - Success threshold: 2 successes to close
@@ -2177,6 +2396,7 @@ const status = getCircuitStatus(SERVICES.WORDPRESS_API);
 Redis is used for distributed caching (shared with WordPress Lightsail):
 
 **Environment Variable:**
+
 ```env
 REDIS_URL=redis://127.0.0.1:6379
 ```

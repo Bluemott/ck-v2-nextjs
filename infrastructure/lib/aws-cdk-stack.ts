@@ -175,8 +175,9 @@ export class WordPressBlogStack extends cdk.Stack {
           cachedMethods: cloudfront.CachedMethods.CACHE_GET_HEAD,
         },
         additionalBehaviors: {
-          // Next.js API routes (analytics, etc.) - route to API Gateway
-          '/api/*': {
+          // Lambda API routes only - route to API Gateway
+          // Note: Next.js API routes (like /api/analytics/*) are handled by Amplify, not API Gateway
+          '/api/recommendations*': {
             origin: new origins.HttpOrigin(
               `${api.restApiId}.execute-api.${this.region}.amazonaws.com`,
               {

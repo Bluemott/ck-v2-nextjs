@@ -201,7 +201,8 @@ const BLOG_REDIRECTS: RedirectMapping[] = [
     reason: 'Blog post slug change',
   },
   {
-    source: '/blog/do-these-stripes-and-polka-dots-make-my-tail-look-big-t-rexs-fashion-crisis',
+    source:
+      '/blog/do-these-stripes-and-polka-dots-make-my-tail-look-big-t-rexs-fashion-crisis',
     destination: '/blog',
     permanent: true,
     category: 'blog',
@@ -371,6 +372,35 @@ export function validateRedirectMappings(): {
   });
 
   return { valid, invalid };
+}
+
+// Validate a single redirect slug (extracted from redirect patterns)
+// This function is used during build to validate redirect destinations
+export function validateRedirectSlug(slug: string | undefined): {
+  valid: boolean;
+  reason?: string;
+} {
+  // Handle undefined or null slug
+  if (!slug) {
+    return { valid: false, reason: 'Slug is required' };
+  }
+
+  // Skip validation for wildcard patterns
+  if (slug.includes(':') || slug.includes('*')) {
+    return { valid: true };
+  }
+
+  // Basic slug validation
+  if (slug.length === 0) {
+    return { valid: false, reason: 'Slug cannot be empty' };
+  }
+
+  // Check for invalid characters (basic validation)
+  if (/[<>"{}|\\^`]/.test(slug)) {
+    return { valid: false, reason: 'Slug contains invalid characters' };
+  }
+
+  return { valid: true };
 }
 
 // Export for use in redirect-manager.ts

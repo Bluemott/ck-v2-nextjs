@@ -24,6 +24,9 @@ import { generateSEOMetadata } from '../../lib/seo';
 // ISR: Revalidate every 60 seconds for fresher content, or on-demand via webhook
 export const revalidate = 60;
 
+// Generate dynamic route segments - exclude tag/category paths
+export const dynamicParams = true;
+
 interface BlogPostPageProps {
   params: Promise<{ slug: string }>;
 }
@@ -126,10 +129,13 @@ export async function generateStaticParams() {
       .filter((param) => {
         // Exclude any slugs that look like tag/category paths
         // This prevents the blog post route from matching tag/category URLs
+        // Also exclude slugs that contain slashes (which would indicate nested paths)
         return (
           !param.slug.includes('/') &&
           !param.slug.startsWith('tag') &&
-          !param.slug.startsWith('category')
+          !param.slug.startsWith('category') &&
+          param.slug !== 'tag' &&
+          param.slug !== 'category'
         );
       });
   } catch (error) {

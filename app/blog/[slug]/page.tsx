@@ -32,6 +32,19 @@ export async function generateMetadata({
   params,
 }: BlogPostPageProps): Promise<Metadata> {
   const { slug } = await params;
+
+  // Prevent blog post route from matching tag/category URLs
+  if (slug.startsWith('tag/') || slug.startsWith('category/')) {
+    return {
+      title: 'Post Not Found',
+      description: 'The requested blog post could not be found.',
+      robots: {
+        index: false,
+        follow: false,
+      },
+    };
+  }
+
   const post = await fetchPostBySlug(slug);
 
   if (!post || post.status !== 'publish') {
@@ -106,9 +119,19 @@ export async function generateStaticParams() {
     // The build-time cache will share data with sitemap generation
     const posts = await fetchPosts({ per_page: 100 });
 
-    return posts.map((post) => ({
-      slug: post.slug,
-    }));
+    return posts
+      .map((post) => ({
+        slug: post.slug,
+      }))
+      .filter((param) => {
+        // Exclude any slugs that look like tag/category paths
+        // This prevents the blog post route from matching tag/category URLs
+        return (
+          !param.slug.includes('/') &&
+          !param.slug.startsWith('tag') &&
+          !param.slug.startsWith('category')
+        );
+      });
   } catch (error) {
     console.error('Error generating static params:', error);
     return [];
@@ -117,6 +140,13 @@ export async function generateStaticParams() {
 
 export default async function BlogPostPage({ params }: BlogPostPageProps) {
   const { slug } = await params;
+
+  // Prevent blog post route from matching tag/category URLs
+  // These should be handled by /blog/tag/[slug] and /blog/category/[slug] routes
+  if (slug.startsWith('tag/') || slug.startsWith('category/')) {
+    notFound();
+  }
+
   const post = await fetchPostBySlug(slug);
 
   if (!post || post.status !== 'publish') {

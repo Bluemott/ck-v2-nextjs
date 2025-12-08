@@ -1393,7 +1393,9 @@ The following redirects have been confirmed on the live site:
 
 #### **Investigation Summary (January 2025)**
 
-**Root Cause:** WordPress redirect plugins or .htaccess rules are automatically redirecting tag/category URLs to blog post URLs, assuming any slug after `/blog/` is a blog post. This conflicts with Next.js routing which correctly handles tag and category pages at `/blog/tag/[slug]` and `/blog/category/[slug]`.
+**Root Cause (Updated):** After checking WordPress and finding no redirect rules, the redirects are likely happening at the AWS Amplify/CloudFront level or due to Next.js routing priority. The `/blog/[slug]` route may be matching `/blog/tag/*` and `/blog/category/*` URLs before the more specific routes can handle them.
+
+**Code Fix Applied:** Added guards in `/app/blog/[slug]/page.tsx` to prevent the blog post route from matching tag/category paths. This ensures tag/category URLs are handled by their dedicated routes.
 
 **Impact:**
 
@@ -1404,10 +1406,14 @@ The following redirects have been confirmed on the live site:
 
 **Next Steps:**
 
-1. Access WordPress admin at `https://admin.cowboykimono.com/wp-admin`
-2. Check redirect plugins for rules matching broken patterns
-3. Remove or disable redirects that redirect tag/category URLs to blog posts
-4. Verify fixes using validation script and direct URL testing
+1. ✅ **Code Fix Applied:** Added route guards in `/app/blog/[slug]/page.tsx` to prevent matching tag/category paths
+2. **Deploy Updated Code:** The fix needs to be deployed to production
+3. **Check AWS Amplify/CloudFront:** If issue persists after deployment, check for redirect rules in:
+   - AWS Amplify Console → Rewrites and redirects
+   - CloudFront Distribution → Behaviors → Origin Request Policy
+4. **Verify Fixes:** After deployment, test URLs:
+   - `https://cowboykimono.com/blog/tag/memorial-day` should return 200 (tag page)
+   - `https://cowboykimono.com/blog/category/uncategorized` should return 200 (category page)
 
 #### **Broken Redirect Patterns**
 

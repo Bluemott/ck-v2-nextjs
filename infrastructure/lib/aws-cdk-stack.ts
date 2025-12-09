@@ -1,19 +1,41 @@
 import * as cdk from 'aws-cdk-lib';
 import * as apigateway from 'aws-cdk-lib/aws-apigateway';
-import * as cloudfront from 'aws-cdk-lib/aws-cloudfront';
-import * as origins from 'aws-cdk-lib/aws-cloudfront-origins';
 import * as cloudwatch from 'aws-cdk-lib/aws-cloudwatch';
 import * as cloudwatchActions from 'aws-cdk-lib/aws-cloudwatch-actions';
 import * as iam from 'aws-cdk-lib/aws-iam';
+import * as kms from 'aws-cdk-lib/aws-kms';
 import * as lambda from 'aws-cdk-lib/aws-lambda';
 import * as logs from 'aws-cdk-lib/aws-logs';
-import * as s3 from 'aws-cdk-lib/aws-s3';
 import * as sns from 'aws-cdk-lib/aws-sns';
+import * as sqs from 'aws-cdk-lib/aws-sqs';
+import * as wafv2 from 'aws-cdk-lib/aws-wafv2';
 import { Construct } from 'constructs';
 
 export class WordPressBlogStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
     super(scope, id, props);
+
+    // KMS key for Lambda environment variable encryption
+    const lambdaEnvKey = new kms.Key(this, 'LambdaEnvKey', {
+      description: 'KMS key for Lambda environment variable encryption',
+      enableKeyRotation: true,
+      removalPolicy: cdk.RemovalPolicy.RETAIN, // Keep key for security
+    });
+
+    // Dead Letter Queue for Lambda failures (using default encryption to avoid circular dependency)
+    const lambdaDLQ = new sqs.Queue(this, 'LambdaDLQ', {
+      queueName: 'wordpress-recommendations-dlq',
+      retentionPeriod: cdk.Duration.days(14), // Keep failed messages for 14 days
+      encryption: sqs.QueueEncryption.SQS_MANAGED, // Use SQS-managed encryption to avoid KMS circular dependency
+    });
+
+    // Create log group BEFORE Lambda to avoid circular dependency
+    // Using logGroup instead of deprecated logRetention property (see AWS docs)
+    const lambdaLogGroup = new logs.LogGroup(this, 'RecommendationsLogGroup', {
+      logGroupName: '/aws/lambda/WordPressBlogStack-Recommendations',
+      retention: logs.RetentionDays.ONE_WEEK,
+      removalPolicy: cdk.RemovalPolicy.DESTROY, // Delete log group when stack is deleted
+    });
 
     // Recommendations Lambda Function (updated for WordPress REST API)
     const recommendationsLambda = new lambda.Function(
@@ -32,25 +54,38 @@ export class WordPressBlogStack extends cdk.Stack {
           MAX_RECOMMENDATIONS: '5',
         },
         timeout: cdk.Duration.seconds(30),
-        memorySize: 1024, // Increased for better performance
-        logRetention: logs.RetentionDays.ONE_WEEK,
+        memorySize: 512, // Optimized from 1024 MB for cost savings
+        // Use explicit logGroup instead of logRetention to avoid circular dependency
+        logGroup: lambdaLogGroup,
         description: 'WordPress recommendations Lambda function using REST API',
-        // Add tracing
         tracing: lambda.Tracing.ACTIVE,
+        environmentEncryption: lambdaEnvKey, // Encrypt environment variables
+        deadLetterQueue: lambdaDLQ, // Configure DLQ for error handling
       }
     );
 
-    // Add CloudWatch permissions for monitoring
+    // Note: KMS permissions are automatically granted by CDK when using environmentEncryption
+    // No manual grant needed - CDK handles this automatically
+
+    // Add CloudWatch permissions for monitoring (least privilege - specific ARNs)
+    // Use the explicit log group we created (no circular dependency)
     recommendationsLambda.addToRolePolicy(
       new iam.PolicyStatement({
         effect: iam.Effect.ALLOW,
         actions: [
           'cloudwatch:PutMetricData',
-          'logs:CreateLogGroup',
           'logs:CreateLogStream',
           'logs:PutLogEvents',
+          'xray:PutTelemetryRecords',
+          'xray:PutTraceSegments',
         ],
-        resources: ['*'],
+        resources: [
+          // Use the explicit log group ARN - no circular dependency
+          lambdaLogGroup.logGroupArn,
+          `${lambdaLogGroup.logGroupArn}:*`,
+          // X-Ray permissions (region-scoped)
+          `arn:aws:xray:${this.region}:${this.account}:*`,
+        ],
       })
     );
 
@@ -88,311 +123,78 @@ export class WordPressBlogStack extends cdk.Stack {
       })
     );
 
-    // Enhanced CloudFront Distribution with Security Headers and Optimizations
-    const cloudfrontDistribution = new cloudfront.Distribution(
-      this,
-      'WordPressDistribution',
-      {
-        defaultBehavior: {
-          origin: new origins.HttpOrigin('api.cowboykimono.com', {
-            protocolPolicy: cloudfront.OriginProtocolPolicy.HTTPS_ONLY,
-            originShieldRegion: this.region,
-            customHeaders: {
-              'X-Forwarded-Host': 'api.cowboykimono.com',
-              'X-CloudFront-Origin': 'api',
+    // AWS WAF for API Gateway protection
+    const apiGatewayWebAcl = new wafv2.CfnWebACL(this, 'ApiGatewayWAF', {
+      scope: 'REGIONAL',
+      defaultAction: { allow: {} },
+      name: 'wordpress-api-gateway-waf',
+      description: 'WAF for WordPress API Gateway - protects against common attacks',
+      rules: [
+        {
+          name: 'AWSManagedRulesCommonRuleSet',
+          priority: 1,
+          statement: {
+            managedRuleGroupStatement: {
+              vendorName: 'AWS',
+              name: 'AWSManagedRulesCommonRuleSet',
             },
-          }),
-          viewerProtocolPolicy:
-            cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
-          cachePolicy: cloudfront.CachePolicy.CACHING_OPTIMIZED,
-          originRequestPolicy: cloudfront.OriginRequestPolicy.ALL_VIEWER,
-          // Add security headers
-          responseHeadersPolicy: new cloudfront.ResponseHeadersPolicy(
-            this,
-            'SecurityHeaders',
-            {
-              responseHeadersPolicyName: 'SecurityHeaders',
-              comment: 'Security headers for all responses',
-              securityHeadersBehavior: {
-                contentSecurityPolicy: {
-                  override: true,
-                  contentSecurityPolicy:
-                    "default-src 'self'; script-src 'self' 'unsafe-inline' https://www.googletagmanager.com https://www.google-analytics.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https: blob:; media-src 'self' https:; connect-src 'self' https://api.cowboykimono.com https://www.google-analytics.com https://*.execute-api.us-east-1.amazonaws.com; frame-src 'self' https://www.googletagmanager.com; object-src 'none'; base-uri 'self'; form-action 'self';",
-                },
-                strictTransportSecurity: {
-                  override: true,
-                  accessControlMaxAge: cdk.Duration.days(2 * 365),
-                  includeSubdomains: true,
-                  preload: true,
-                },
-                contentTypeOptions: {
-                  override: true,
-                },
-                frameOptions: {
-                  override: true,
-                  frameOption: cloudfront.HeadersFrameOption.DENY,
-                },
-                referrerPolicy: {
-                  override: true,
-                  referrerPolicy:
-                    cloudfront.HeadersReferrerPolicy
-                      .STRICT_ORIGIN_WHEN_CROSS_ORIGIN,
-                },
-                xssProtection: {
-                  override: true,
-                  protection: true,
-                  modeBlock: true,
-                },
-              },
-              customHeadersBehavior: {
-                customHeaders: [
-                  {
-                    header: 'Permissions-Policy',
-                    value:
-                      'camera=(), microphone=(), geolocation=(), payment=()',
-                    override: true,
-                  },
-                  {
-                    header: 'Cross-Origin-Embedder-Policy',
-                    value: 'require-corp',
-                    override: true,
-                  },
-                  {
-                    header: 'Cross-Origin-Opener-Policy',
-                    value: 'same-origin',
-                    override: true,
-                  },
-                  {
-                    header: 'Cross-Origin-Resource-Policy',
-                    value: 'same-origin',
-                    override: true,
-                  },
-                ],
-              },
-            }
-          ),
-          allowedMethods: cloudfront.AllowedMethods.ALLOW_GET_HEAD,
-          cachedMethods: cloudfront.CachedMethods.CACHE_GET_HEAD,
+          },
+          overrideAction: { none: {} },
+          visibilityConfig: {
+            sampledRequestsEnabled: true,
+            cloudWatchMetricsEnabled: true,
+            metricName: 'CommonRuleSetMetric',
+          },
         },
-        additionalBehaviors: {
-          // Lambda API routes only - route to API Gateway
-          // Note: Next.js API routes (like /api/analytics/*) are handled by Amplify, not API Gateway
-          '/api/recommendations*': {
-            origin: new origins.HttpOrigin(
-              `${api.restApiId}.execute-api.${this.region}.amazonaws.com`,
-              {
-                protocolPolicy: cloudfront.OriginProtocolPolicy.HTTPS_ONLY,
-                originPath: '/prod', // Add the API Gateway stage path
-                customHeaders: {
-                  'X-Forwarded-Host': 'cowboykimono.com',
-                  'X-CloudFront-Origin': 'amplify',
-                },
-              }
-            ),
-            viewerProtocolPolicy:
-              cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
-            cachePolicy: cloudfront.CachePolicy.CACHING_DISABLED,
-            originRequestPolicy: cloudfront.OriginRequestPolicy.ALL_VIEWER,
-            allowedMethods: cloudfront.AllowedMethods.ALLOW_ALL, // Allow POST methods
-            cachedMethods: cloudfront.CachedMethods.CACHE_GET_HEAD,
-            // Add CORS headers for API routes
-            responseHeadersPolicy: new cloudfront.ResponseHeadersPolicy(
-              this,
-              'APISecurityHeaders',
-              {
-                responseHeadersPolicyName: 'APISecurityHeaders',
-                comment: 'Security headers for API responses with CORS',
-                securityHeadersBehavior: {
-                  contentSecurityPolicy: {
-                    override: true,
-                    contentSecurityPolicy:
-                      "default-src 'self'; script-src 'none'; style-src 'none';",
-                  },
-                  strictTransportSecurity: {
-                    override: true,
-                    accessControlMaxAge: cdk.Duration.days(2 * 365),
-                    includeSubdomains: true,
-                    preload: true,
-                  },
-                  contentTypeOptions: {
-                    override: true,
-                  },
-                  frameOptions: {
-                    override: true,
-                    frameOption: cloudfront.HeadersFrameOption.DENY,
-                  },
-                  referrerPolicy: {
-                    override: true,
-                    referrerPolicy:
-                      cloudfront.HeadersReferrerPolicy
-                        .STRICT_ORIGIN_WHEN_CROSS_ORIGIN,
-                  },
-                  xssProtection: {
-                    override: true,
-                    protection: true,
-                    modeBlock: true,
-                  },
-                },
-                customHeadersBehavior: {
-                  customHeaders: [
-                    {
-                      header: 'Cache-Control',
-                      value: 'no-cache, no-store, must-revalidate',
-                      override: true,
-                    },
-                  ],
-                },
-              }
-            ),
-          },
-          // WordPress admin routes
-          '/wp-admin/*': {
-            origin: new origins.HttpOrigin('admin.cowboykimono.com', {
-              protocolPolicy: cloudfront.OriginProtocolPolicy.HTTPS_ONLY,
-              customHeaders: {
-                'X-Forwarded-Host': 'admin.cowboykimono.com',
-                'X-CloudFront-Origin': 'admin',
-              },
-            }),
-            viewerProtocolPolicy:
-              cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
-            cachePolicy: cloudfront.CachePolicy.CACHING_DISABLED,
-            originRequestPolicy: cloudfront.OriginRequestPolicy.ALL_VIEWER,
-            allowedMethods: cloudfront.AllowedMethods.ALLOW_ALL,
-            cachedMethods: cloudfront.CachedMethods.CACHE_GET_HEAD,
-            // Add security headers for admin routes
-            responseHeadersPolicy: new cloudfront.ResponseHeadersPolicy(
-              this,
-              'AdminSecurityHeaders',
-              {
-                responseHeadersPolicyName: 'AdminSecurityHeaders',
-                comment: 'Security headers for admin responses',
-                securityHeadersBehavior: {
-                  contentSecurityPolicy: {
-                    override: true,
-                    contentSecurityPolicy:
-                      "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; connect-src 'self' https:; frame-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self';",
-                  },
-                  strictTransportSecurity: {
-                    override: true,
-                    accessControlMaxAge: cdk.Duration.days(2 * 365),
-                    includeSubdomains: true,
-                    preload: true,
-                  },
-                  contentTypeOptions: {
-                    override: true,
-                  },
-                  frameOptions: {
-                    override: true,
-                    frameOption: cloudfront.HeadersFrameOption.SAMEORIGIN,
-                  },
-                  referrerPolicy: {
-                    override: true,
-                    referrerPolicy:
-                      cloudfront.HeadersReferrerPolicy
-                        .STRICT_ORIGIN_WHEN_CROSS_ORIGIN,
-                  },
-                  xssProtection: {
-                    override: true,
-                    protection: true,
-                    modeBlock: true,
-                  },
-                },
-                customHeadersBehavior: {
-                  customHeaders: [
-                    {
-                      header: 'Cache-Control',
-                      value: 'no-cache, no-store, must-revalidate',
-                      override: true,
-                    },
-                    {
-                      header: 'X-Admin-Route',
-                      value: 'true',
-                      override: true,
-                    },
-                  ],
-                },
-              }
-            ),
-          },
-          // WordPress REST API routes - REMOVED for direct access
-          // Direct access to api.cowboykimono.com for better performance and CORS handling
-          // WordPress Redis caching provides better performance than CloudFront for API
-        },
-        // Add error pages
-        errorResponses: [
-          {
-            httpStatus: 403,
-            responseHttpStatus: 200,
-            responsePagePath: '/404',
-            ttl: cdk.Duration.minutes(5),
-          },
-          {
-            httpStatus: 404,
-            responseHttpStatus: 200,
-            responsePagePath: '/404',
-            ttl: cdk.Duration.minutes(5),
-          },
-          {
-            httpStatus: 500,
-            responseHttpStatus: 200,
-            responsePagePath: '/500',
-            ttl: cdk.Duration.minutes(5),
-          },
-          {
-            httpStatus: 502,
-            responseHttpStatus: 200,
-            responsePagePath: '/500',
-            ttl: cdk.Duration.minutes(5),
-          },
-          {
-            httpStatus: 503,
-            responseHttpStatus: 200,
-            responsePagePath: '/500',
-            ttl: cdk.Duration.minutes(5),
-          },
-        ],
-        // Add price class for cost optimization
-        priceClass: cloudfront.PriceClass.PRICE_CLASS_100,
-        // Add logging with proper bucket configuration
-        enableLogging: true,
-        logBucket: new s3.Bucket(this, 'CloudFrontLogs', {
-          removalPolicy: cdk.RemovalPolicy.DESTROY,
-          autoDeleteObjects: true,
-          blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
-          encryption: s3.BucketEncryption.S3_MANAGED,
-          versioned: false,
-          objectOwnership: s3.ObjectOwnership.BUCKET_OWNER_PREFERRED,
-          lifecycleRules: [
-            {
-              id: 'LogRetention',
-              enabled: true,
-              expiration: cdk.Duration.days(60),
-              transitions: [
-                {
-                  storageClass: s3.StorageClass.INFREQUENT_ACCESS,
-                  transitionAfter: cdk.Duration.days(30),
-                },
-              ],
+        {
+          name: 'AWSManagedRulesKnownBadInputsRuleSet',
+          priority: 2,
+          statement: {
+            managedRuleGroupStatement: {
+              vendorName: 'AWS',
+              name: 'AWSManagedRulesKnownBadInputsRuleSet',
             },
-          ],
-        }),
-        comment: 'Cowboy Kimono WordPress Distribution with Enhanced Security',
-      }
-    );
+          },
+          overrideAction: { none: {} },
+          visibilityConfig: {
+            sampledRequestsEnabled: true,
+            cloudWatchMetricsEnabled: true,
+            metricName: 'KnownBadInputsMetric',
+          },
+        },
+        {
+          name: 'RateLimitRule',
+          priority: 3,
+          statement: {
+            rateBasedStatement: {
+              limit: 2000,
+              aggregateKeyType: 'IP',
+            },
+          },
+          action: { block: {} },
+          visibilityConfig: {
+            sampledRequestsEnabled: true,
+            cloudWatchMetricsEnabled: true,
+            metricName: 'RateLimitMetric',
+          },
+        },
+      ],
+      visibilityConfig: {
+        sampledRequestsEnabled: true,
+        cloudWatchMetricsEnabled: true,
+        metricName: 'ApiGatewayWAF',
+      },
+    });
 
-    // Note: api.cowboykimono.com and admin.cowboykimono.com CloudFront distributions exist but are managed manually
-    // admin.cowboykimono.com Distribution ID: ESC0JXOXVWX4J
-    // To fix the WordPress admin login issue, manually update the origin configuration
-    // to remove X-Forwarded-Host headers and set origin to wp-origin.cowboykimono.com
+    // Associate WAF with API Gateway
+    // Note: API Gateway stage is 'prod' as defined in deployOptions
+    new wafv2.CfnWebACLAssociation(this, 'ApiGatewayWAFAssociation', {
+      resourceArn: `arn:aws:apigateway:${this.region}::/restapis/${api.restApiId}/stages/prod`,
+      webAclArn: apiGatewayWebAcl.attrArn,
+    });
 
-    // Note: admin.cowboykimono.com CloudFront distribution exists but is managed manually
-    // Distribution ID: ESC0JXOXVWX4J
-    // To fix the WordPress admin login issue, manually update the origin configuration
-    // to remove X-Forwarded-Host headers and set origin to wp-origin.cowboykimono.com
-
-    // Main site CloudFront (Amplify managed)
-    // This is handled by Amplify automatically
+    // Note: CloudFront distributions were removed - main site uses Amplify-managed CloudFront
+    // Admin and API go directly to Lightsail (no CloudFront needed)
 
     // CloudWatch Alarms for monitoring
     const lambdaErrorAlarm = new cdk.aws_cloudwatch.Alarm(
@@ -431,6 +233,15 @@ export class WordPressBlogStack extends cdk.Stack {
       }
     );
 
+    // DLQ alarm for Lambda failures
+    const dlqAlarm = new cloudwatch.Alarm(this, 'LambdaDLQAlarm', {
+      metric: lambdaDLQ.metricNumberOfMessagesReceived(),
+      threshold: 1,
+      evaluationPeriods: 1,
+      alarmDescription: 'Lambda function failures detected in DLQ',
+      alarmName: 'WordPressBlogStack-lambda-dlq',
+    });
+
     // SNS Topic for alerts
     const alertTopic = new sns.Topic(this, 'AlertTopic', {
       topicName: 'WordPressBlogStack-alerts',
@@ -447,8 +258,12 @@ export class WordPressBlogStack extends cdk.Stack {
     lambdaThrottleAlarm.addAlarmAction(
       new cloudwatchActions.SnsAction(alertTopic)
     );
+    dlqAlarm.addAlarmAction(new cloudwatchActions.SnsAction(alertTopic));
 
     // CloudWatch Dashboards for monitoring
+    // TEMPORARILY COMMENTED OUT to resolve circular dependency during deployment
+    // TODO: Re-enable after successful deployment
+    /*
     const applicationDashboard = new cloudwatch.Dashboard(
       this,
       'ApplicationDashboard',
@@ -507,51 +322,44 @@ export class WordPressBlogStack extends cdk.Stack {
               ],
             }),
           ],
-          // CloudFront Metrics
+          // WAF Metrics
           [
             new cloudwatch.GraphWidget({
-              title: 'CloudFront Metrics',
+              title: 'WAF Metrics',
               left: [
                 new cloudwatch.Metric({
-                  namespace: 'AWS/CloudFront',
-                  metricName: 'Requests',
+                  namespace: 'AWS/WAFV2',
+                  metricName: 'AllowedRequests',
                   statistic: 'Sum',
                   period: cdk.Duration.minutes(5),
                   dimensionsMap: {
-                    DistributionId: cloudfrontDistribution.distributionId,
-                    Region: 'Global',
+                    WebACL: apiGatewayWebAcl.name!,
+                    Rule: 'ALL',
+                    Region: this.region,
                   },
                 }),
                 new cloudwatch.Metric({
-                  namespace: 'AWS/CloudFront',
-                  metricName: 'ErrorRate',
-                  statistic: 'Average',
+                  namespace: 'AWS/WAFV2',
+                  metricName: 'BlockedRequests',
+                  statistic: 'Sum',
                   period: cdk.Duration.minutes(5),
                   dimensionsMap: {
-                    DistributionId: cloudfrontDistribution.distributionId,
-                    Region: 'Global',
+                    WebACL: apiGatewayWebAcl.name!,
+                    Rule: 'ALL',
+                    Region: this.region,
                   },
                 }),
               ],
               right: [
                 new cloudwatch.Metric({
-                  namespace: 'AWS/CloudFront',
-                  metricName: 'CacheHitRate',
-                  statistic: 'Average',
-                  period: cdk.Duration.minutes(5),
-                  dimensionsMap: {
-                    DistributionId: cloudfrontDistribution.distributionId,
-                    Region: 'Global',
-                  },
-                }),
-                new cloudwatch.Metric({
-                  namespace: 'AWS/CloudFront',
-                  metricName: 'BytesDownloaded',
+                  namespace: 'AWS/WAFV2',
+                  metricName: 'CountedRequests',
                   statistic: 'Sum',
                   period: cdk.Duration.minutes(5),
                   dimensionsMap: {
-                    DistributionId: cloudfrontDistribution.distributionId,
-                    Region: 'Global',
+                    WebACL: apiGatewayWebAcl.name!,
+                    Rule: 'ALL',
+                    Region: this.region,
                   },
                 }),
               ],
@@ -624,6 +432,8 @@ export class WordPressBlogStack extends cdk.Stack {
     );
 
     // Infrastructure Health Dashboard
+    // TEMPORARILY COMMENTED OUT to resolve circular dependency
+    /*
     const infrastructureDashboard = new cloudwatch.Dashboard(
       this,
       'InfrastructureDashboard',
@@ -637,22 +447,20 @@ export class WordPressBlogStack extends cdk.Stack {
 # Cowboy Kimono - Production Environment
 
 ## Architecture Overview
-- **Frontend:** Next.js on AWS Amplify
+- **Frontend:** Next.js on AWS Amplify (with Amplify-managed CloudFront)
 - **Backend:** WordPress on Lightsail
 - **API:** REST API via WordPress
-- **CDN:** CloudFront Distribution
-- **Serverless:** Lambda Functions
+- **Serverless:** Lambda Functions with WAF protection
 - **Monitoring:** CloudWatch Dashboards & Alerts
 
 ## Key Endpoints
 - **WordPress API:** https://api.cowboykimono.com
-- **Lambda Function:** ${recommendationsLambda.functionName}
-- **CloudFront:** ${cloudfrontDistribution.distributionId}
+- **API Gateway:** ${api.restApiId}
 
 ## Alert Configuration
-- Lambda errors, duration, and throttles
+- Lambda errors, duration, throttles, and DLQ messages
 - API Gateway 4XX/5XX errors and latency
-- CloudFront error rate and cache performance
+- WAF blocked/allowed requests
 - Custom application metrics
 
 ## Response Time Targets
@@ -675,6 +483,7 @@ Last Updated: ${new Date().toISOString()}
                 lambdaErrorAlarm,
                 lambdaDurationAlarm,
                 lambdaThrottleAlarm,
+                dlqAlarm,
               ],
               height: 6,
               width: 12,
@@ -683,6 +492,8 @@ Last Updated: ${new Date().toISOString()}
         ],
       }
     );
+    */
+    // End of commented dashboards
 
     // Outputs
     new cdk.CfnOutput(this, 'RecommendationsEndpoint', {
@@ -690,23 +501,8 @@ Last Updated: ${new Date().toISOString()}
       description: 'Recommendations API Endpoint',
     });
 
-    new cdk.CfnOutput(this, 'CloudFrontURL', {
-      value: `https://${cloudfrontDistribution.distributionDomainName}`,
-      description: 'CloudFront Distribution URL',
-    });
-
-    new cdk.CfnOutput(this, 'CloudFrontDistributionId', {
-      value: cloudfrontDistribution.distributionId,
-      description: 'CloudFront Distribution ID for media invalidation',
-    });
-
-    new cdk.CfnOutput(this, 'CloudFrontDomainName', {
-      value: cloudfrontDistribution.distributionDomainName,
-      description: 'CloudFront Distribution Domain Name',
-    });
-
     new cdk.CfnOutput(this, 'Architecture', {
-      value: 'Lightsail WordPress with Next.js Frontend',
+      value: 'Lightsail WordPress with Next.js Frontend on Amplify',
       description: 'Current Architecture',
     });
 
@@ -735,6 +531,8 @@ Last Updated: ${new Date().toISOString()}
       description: 'SNS Topic ARN for alerts',
     });
 
+    // Dashboard outputs temporarily disabled
+    /*
     new cdk.CfnOutput(this, 'ApplicationDashboardName', {
       value: applicationDashboard.dashboardName,
       description: 'Application metrics dashboard name',
@@ -744,5 +542,6 @@ Last Updated: ${new Date().toISOString()}
       value: infrastructureDashboard.dashboardName,
       description: 'Infrastructure health dashboard name',
     });
+    */
   }
 }

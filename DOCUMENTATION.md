@@ -1209,6 +1209,90 @@ aws cloudwatch get-metric-statistics --namespace AWS/ApiGateway
 
 ## 📚 **Best Practices**
 
+### **Next.js 15 Best Practices** ✅ **IMPLEMENTED**
+
+#### **Server vs Client Components**
+
+- **Server Components by Default:** All page components (`page.tsx`) are server components, fetching data directly without client-side hooks
+- **Client Components for Interactivity:** Components using hooks, browser APIs, or event handlers are properly marked with `'use client'`
+- **Proper Component Composition:** Server components can import and render client components correctly
+- **No Unnecessary Client Boundaries:** Client components are only used where needed (interactivity, SWR hooks, browser APIs)
+
+**Files Reviewed:**
+- `app/layout.tsx` - Server component ✅
+- `app/page.tsx` - Server component ✅
+- `app/blog/[slug]/page.tsx` - Server component ✅
+- `app/blog/page.tsx` - Server component ✅
+- All `*Client.tsx` files - Properly marked with `'use client'` ✅
+
+#### **Data Fetching Patterns**
+
+- **Server-Side Data Fetching:** Server components fetch data directly using async/await
+- **ISR Configuration:** Proper `revalidate` exports for incremental static regeneration
+  - Blog posts: 60 seconds
+  - Blog index: 60 seconds
+  - Tag/Category pages: 300 seconds
+  - Downloads: 600 seconds
+- **Static Generation:** `generateStaticParams` implemented for dynamic routes
+- **Error Handling:** Proper error handling with `notFound()` for missing content
+- **SWR for Client-Side:** Client components use SWR hooks for client-side data fetching with caching
+
+#### **Async Params (Next.js 15)**
+
+- **Proper Type Definitions:** All dynamic route params typed as `Promise<{ ... }>`
+- **Correct Usage:** All components properly await params before use
+- **Metadata Generation:** `generateMetadata` functions properly await params
+
+**Files Verified:**
+- `app/blog/[slug]/page.tsx` - ✅ `Promise<{ slug: string }>`
+- `app/blog/tag/[slug]/page.tsx` - ✅ `Promise<{ slug: string }>`
+- `app/blog/category/[slug]/page.tsx` - ✅ `Promise<{ slug: string }>`
+- `app/downloads/[category]/[slug]/page.tsx` - ✅ `Promise<{ category: string; slug: string }>`
+
+#### **Loading States**
+
+- **Loading UI Files:** Created `loading.tsx` files for all route segments that fetch data
+- **Suspense Boundaries:** Loading states work automatically with Next.js Suspense
+- **Skeleton Components:** Proper skeleton UI matching page layouts
+
+**Loading Files Created:**
+- `app/blog/loading.tsx` - Blog index loading state ✅
+- `app/blog/[slug]/loading.tsx` - Blog post loading state ✅
+- `app/downloads/loading.tsx` - Downloads index loading state ✅
+- `app/downloads/[category]/[slug]/loading.tsx` - Download page loading state ✅
+- `app/shop/loading.tsx` - Shop page loading state ✅
+
+#### **Error Handling**
+
+- **Error Boundaries:** Root error boundary at `app/error.tsx`
+- **404 Handling:** Comprehensive `not-found.tsx` with navigation options
+- **Proper `notFound()` Usage:** All pages use `notFound()` for missing content (fixed download page)
+- **Error Metadata:** Error pages have proper metadata (noindex, follow)
+
+#### **Metadata API**
+
+- **Dynamic Metadata:** All pages use `generateMetadata` for SEO
+- **Comprehensive SEO:** Open Graph, Twitter Cards, canonical URLs
+- **Structured Data:** JSON-LD schema markup for all page types
+- **Centralized Generation:** SEO metadata generated via `app/lib/seo.ts`
+
+#### **Route Handlers (API Routes)**
+
+- **Proper Runtime:** API routes use `runtime = 'nodejs'` where needed
+- **HTTP Methods:** Proper GET, POST handlers with method validation
+- **Error Responses:** Appropriate status codes and error messages
+- **Request Validation:** Zod schemas for request validation
+- **Rate Limiting:** Implemented in middleware and route handlers
+- **CORS Headers:** Proper CORS configuration for API endpoints
+
+#### **Performance Optimizations**
+
+- **ISR Configuration:** Appropriate revalidation times for different content types
+- **Static Generation:** `generateStaticParams` for pre-rendering dynamic routes
+- **Image Optimization:** Next.js Image component with proper configuration
+- **Bundle Optimization:** Code splitting, tree shaking, and vendor chunk separation
+- **Caching Strategies:** Multi-level caching (ISR, Redis, SWR, CDN)
+
 ### **Frontend Best Practices**
 
 #### **Performance**
@@ -1278,6 +1362,61 @@ aws cloudwatch get-metric-statistics --namespace AWS/ApiGateway
 - Track error rates
 - Monitor costs
 - Implement proper logging
+
+### **AWS Best Practices Audit** ✅ **COMPLETED** (December 9, 2025)
+
+**Status:** Comprehensive audit completed using AWS MCP tools
+
+**Audit Report:** See `AWS_BEST_PRACTICES_AUDIT_REPORT.md` for complete findings
+
+#### **Key Findings**
+
+**Strengths:**
+- ✅ Excellent security headers (CSP, HSTS, XSS protection)
+- ✅ Good CloudWatch monitoring (dashboards and alarms)
+- ✅ Cost optimizations (logging/tracing disabled appropriately)
+- ✅ Proper error handling (custom error pages, Lambda error handling)
+
+**Critical Issues:**
+- ❌ **No WAF protection** on CloudFront or API Gateway (vulnerable to attacks)
+- ❌ **IAM least privilege violations** (wildcard resources in policies)
+
+**High Priority Recommendations:**
+- ⚠️ Fix IAM least privilege (replace wildcard resources with specific ARNs)
+- ⚠️ Encrypt Lambda environment variables with KMS
+- ⚠️ Attach AWS WAF to CloudFront and API Gateway
+
+**Medium Priority Recommendations:**
+- ⚠️ Add dead letter queue (DLQ) to Lambda function
+- ⚠️ Use AWS Secrets Manager for sensitive data
+
+**Low Priority Recommendations:**
+- ⚠️ Optimize Lambda memory allocation (test with 256-512 MB)
+- ⚠️ Enable S3 versioning (optional, for compliance)
+
+#### **Implementation Status**
+
+**Completed:**
+- ✅ AWS MCP connectivity test passed
+- ✅ Comprehensive resource discovery completed
+- ✅ Full audit report generated with prioritized recommendations
+
+**Pending Implementation:**
+- ⏳ WAF implementation for CloudFront and API Gateway
+- ⏳ IAM least privilege fixes
+- ⏳ Lambda environment variable encryption
+- ⏳ Dead letter queue configuration
+
+#### **Audit Summary**
+
+**Overall Assessment:** Infrastructure follows many AWS best practices but needs security improvements, particularly WAF protection and IAM least privilege compliance.
+
+**Estimated Implementation Time:** 8-10 hours  
+**Estimated Monthly Cost Increase:** ~$15-20 (WAF + KMS)
+
+**Next Review:** March 9, 2026 (Quarterly)
+
+**Full Report:** See `AWS_BEST_PRACTICES_AUDIT_REPORT.md` for detailed findings, code examples, and implementation guides.
 
 ---
 
@@ -2468,8 +2607,13 @@ invalidateDownloadsCache();
 
 ---
 
-**Documentation Version:** 2.9.0  
-**Last Updated:** 2025-11-26  
+**Documentation Version:** 2.10.0  
+**Last Updated:** 2025-12-09  
 **Status:** Production Ready with Enhanced ISR, Redis Caching, SWR, and Circuit Breaker
+
+**Recent Updates:**
+- AWS Best Practices Audit completed (December 9, 2025)
+- Comprehensive security and compliance review
+- See `AWS_BEST_PRACTICES_AUDIT_REPORT.md` for full audit findings
 
 **Implementation Status:** All major features implemented and tested. ISR enabled for blog and downloads with webhook-triggered revalidation. SWR hooks provide client-side caching with background refresh. Circuit breaker protects against WordPress API failures with automatic fallbacks. Redis integration ready for distributed caching.

@@ -75,23 +75,7 @@ export default async function IndividualDownloadPage({
       console.warn(
         `[Download Page] Download not found for ${category}/${slug}`
       );
-      // Instead of calling notFound() immediately, let's return a 404 page
-      return (
-        <div className="min-h-screen flex items-center justify-center">
-          <div className="text-center">
-            <h1 className="text-4xl font-bold text-gray-900 mb-4">404</h1>
-            <p className="text-xl text-gray-600 mb-8">
-              Download not found: {category}/{slug}
-            </p>
-            <Link
-              href="/downloads"
-              className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors"
-            >
-              Back to Downloads
-            </Link>
-          </div>
-        </div>
-      );
+      notFound();
     }
 
     const acfData = download.acf || download.meta || {};

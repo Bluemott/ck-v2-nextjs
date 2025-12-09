@@ -91,6 +91,7 @@
     "husky": "^9.1.7",
     "lint-staged": "^16.1.4",
     "prettier": "^3.6.2",
+    "shadcn": "^3.5.1",
     "terser": "^5.43.1",
     "typescript": "5.9.2"
   },
